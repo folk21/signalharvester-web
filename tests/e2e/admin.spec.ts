@@ -6,15 +6,21 @@ import {
   createdMonitoringProfileFixture,
   createdSourceFixture,
   monitoringProfileFixture,
+  observedAnalysisEventFixture,
+  observedEventLiveFixture,
+  observedRawEventFixture,
   resultDetailFixture,
+  resultLiveEventFixture,
   resultSummaryFixture,
   sourceFixture,
   sourceTestFixture,
   startedCollectionRunFixture,
 } from './fixtures/api';
 import { fulfillJson, rejectUnexpectedApi } from './support/http';
+import { emitSse, installMockEventSource } from './support/sse';
 
 test('application shell navigates across the current admin screens', async ({ page }) => {
+  await installMockEventSource(page, true);
   await page.route('**/api/v1/**', async (route) => {
     const url = new URL(route.request().url());
     if (route.request().method() !== 'GET') {
@@ -36,6 +42,9 @@ test('application shell navigates across the current admin screens', async ({ pa
     if (url.pathname === '/api/v1/results') {
       return fulfillJson(route, [resultSummaryFixture]);
     }
+    if (url.pathname === '/api/v1/events') {
+      return fulfillJson(route, [observedRawEventFixture]);
+    }
     return rejectUnexpectedApi(route);
   });
 
@@ -50,6 +59,7 @@ test('application shell navigates across the current admin screens', async ({ pa
     ['Collection Runs', 'Collection Runs'],
     ['Analysis Items', 'Analysis Items'],
     ['Results', 'Analyzed Results'],
+    ['Event Explorer', 'Event Explorer'],
   ] as const;
 
   for (const [linkName, heading] of destinations) {
@@ -238,6 +248,7 @@ test('Analysis applies profile and source filters through the REST query', async
 });
 
 test('Results applies filters and loads bounded detail on selection', async ({ page }) => {
+  await installMockEventSource(page, true);
   await page.route('**/api/v1/**', async (route) => {
     const request = route.request();
     const url = new URL(request.url());
@@ -281,3 +292,49 @@ test('Results applies filters and loads bounded detail on selection', async ({ p
   await expect(page.getByText('en', { exact: true })).toBeVisible();
   await expect(page.getByText(resultDetailFixture.correlationId, { exact: true })).toBeVisible();
 });
+
+
+test('Results and Event Explorer merge REST snapshots with live SSE updates', async ({ page }) => {
+  await installMockEventSource(page);
+
+  let resultsSnapshotRequested = false;
+  let eventsSnapshotRequested = false;
+
+  await page.route('**/api/v1/**', async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+
+    if (url.pathname === '/api/v1/results' && request.method() === 'GET') {
+      resultsSnapshotRequested = true;
+      return fulfillJson(route, []);
+    }
+    if (url.pathname === '/api/v1/events' && request.method() === 'GET') {
+      eventsSnapshotRequested = true;
+      return fulfillJson(route, [observedRawEventFixture]);
+    }
+    return rejectUnexpectedApi(route);
+  });
+
+  await page.goto('/results');
+  await expect.poll(() => resultsSnapshotRequested).toBe(false);
+  await emitSse(page, 'ready', { cursor: 76, result: null });
+  await expect.poll(() => resultsSnapshotRequested).toBe(true);
+  await expect(page.getByText('No analyzed results match the current filters.')).toBeVisible();
+
+  await emitSse(page, 'result', resultLiveEventFixture);
+  await expect(page.getByText(resultSummaryFixture.title!, { exact: true })).toBeVisible();
+  await expect(page.getByText('Live', { exact: true })).toBeVisible();
+
+  await page.getByRole('link', { name: 'Event Explorer' }).click();
+  await expect.poll(() => eventsSnapshotRequested).toBe(false);
+  await emitSse(page, 'ready', { cursor: 41, event: null });
+  await expect.poll(() => eventsSnapshotRequested).toBe(true);
+  await expect(page.getByText('RawItemDiscovered', { exact: true })).toBeVisible();
+
+  await emitSse(page, 'event', observedEventLiveFixture);
+  await expect(page.getByText('ItemAnalyzed', { exact: true })).toBeVisible();
+  await page.getByRole('row', { name: /ItemAnalyzed/ }).click();
+  await expect(page.getByText(observedAnalysisEventFixture.eventId, { exact: true })).toBeVisible();
+  await expect(page.getByText('analyzed-items', { exact: true })).toBeVisible();
+});
+

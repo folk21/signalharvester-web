@@ -4,6 +4,9 @@ import type {
   MonitoringProfile,
   ResultDetail,
   ResultSummary,
+  ObservedEvent,
+  ResultLiveEvent,
+  ObservedEventLiveEvent,
   Source,
   SourceTestResult,
 } from '../../../src/api/types';
@@ -175,3 +178,60 @@ export const resultDetailFixture: ResultDetail = {
   correlationId: startedCollectionRunFixture.collectionRunId,
   traceparent: '00-11111111111111111111111111111111-2222222222222222-01',
 };
+
+
+export const observedRawEventFixture: ObservedEvent = {
+  cursor: 41,
+  eventId: 'observed-event-raw-1',
+  eventType: 'RawItemDiscovered',
+  occurredAt: '2026-09-14T08:05:01Z',
+  observedAt: '2026-09-14T08:05:01.050Z',
+  correlationId: startedCollectionRunFixture.collectionRunId,
+  traceparent: resultDetailFixture.traceparent,
+  producer: 'collection',
+  schemaVersion: '1',
+  kafka: { topic: 'raw-items', partition: 0, offset: 11, key: 'raw-browser-1' },
+  payload: {
+    type: 'RawItemDiscovered',
+    sourceEventId: resultDetailFixture.sourceEventId,
+    rawItemId: resultDetailFixture.rawItemId,
+    normalizedItemId: null,
+    sourceId: resultDetailFixture.sourceId,
+    monitoringProfileId: resultDetailFixture.monitoringProfileId,
+    informationCategory: resultDetailFixture.informationCategory,
+    externalId: resultDetailFixture.externalId,
+    title: resultDetailFixture.title,
+    url: resultDetailFixture.url,
+    contentType: resultDetailFixture.contentType,
+    relevant: null,
+    classification: null,
+    score: null,
+    analyzer: null,
+    reasonCode: null,
+    explanation: null,
+  },
+};
+
+export const observedAnalysisEventFixture: ObservedEvent = {
+  ...observedRawEventFixture,
+  cursor: 42,
+  eventId: 'observed-event-analysis-1',
+  eventType: 'ItemAnalyzed',
+  occurredAt: resultDetailFixture.analyzedAt,
+  observedAt: '2026-09-14T08:05:03.050Z',
+  producer: 'analysis',
+  kafka: { topic: 'analyzed-items', partition: 1, offset: 22, key: resultDetailFixture.normalizedItemId },
+  payload: {
+    ...observedRawEventFixture.payload,
+    type: 'ItemAnalyzed',
+    normalizedItemId: resultDetailFixture.normalizedItemId,
+    relevant: resultDetailFixture.relevant,
+    classification: resultDetailFixture.classification,
+    score: 91,
+    analyzer: resultDetailFixture.analyzer,
+    explanation: resultDetailFixture.explanation,
+  },
+};
+
+export const resultLiveEventFixture: ResultLiveEvent = { cursor: 77, result: resultSummaryFixture };
+export const observedEventLiveFixture: ObservedEventLiveEvent = { cursor: 42, event: observedAnalysisEventFixture };

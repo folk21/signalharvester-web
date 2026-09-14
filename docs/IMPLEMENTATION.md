@@ -9,7 +9,7 @@ description: Current implemented SignalHarvester Web screens, API usage, code or
 
 This document describes what the frontend currently implements. Active specifications describe intended changes and must not be read as evidence that a feature already exists.
 
-The current branch includes the Monitoring Profiles / Source Test slice. Its automated acceptance is still pending until `./run_checks.sh` and the opt-in live browser workflow pass in the developer environment.
+The accepted baseline includes Monitoring Profiles, Source Test, and profile-driven manual Collection Runs. The current branch adds live Results and the Event Explorer; its automated acceptance is pending `./run_checks.sh`.
 
 ## Current screens
 
@@ -20,9 +20,10 @@ The current branch includes the Monitoring Profiles / Source Test slice. Its aut
 | Monitoring Profiles | `/profiles` | CRUD for persisted profiles, interval, source membership, criteria, and scheduled enabled state | `/api/v1/monitoring-profiles` |
 | Collection Runs | `/runs` | Starts persisted profiles manually, lists recent runs, and inspects durable source outcomes | `/api/v1/admin/collection-runs` |
 | Analysis Items | `/analysis` | Inspects normalized/deduplication state with profile/source filters | `/api/v1/admin/analysis/items` |
-| Results | `/results` | Lists analyzed Results with filters and loads full detail on selection | `/api/v1/results` |
+| Results | `/results` | Lists analyzed Results, loads detail on selection, and merges live SSE updates with durable REST snapshots | `/api/v1/results`, `/api/v1/results/stream` |
+| Event Explorer | `/events` | Shows bounded technical event history and live observed events with diagnostic filters/detail | `/api/v1/events`, `/api/v1/events/stream` |
 
-The application shell remains one coherent operational/product frontend. Live Results and diagnostic event/flow screens are the next major frontend slice.
+The application shell remains one coherent operational/product frontend. Processing-flow visualization is the next diagnostic frontend slice.
 
 ## Sources
 
@@ -92,7 +93,7 @@ The list supports current backend filters for:
 
 The list intentionally uses the summary representation and does not request full normalized content for every row. Selecting one result loads its detail separately and shows content, attributes, tags, analysis metadata, and provenance.
 
-The backend now exposes Results SSE, but the current browser still uses REST only. Live Results integration belongs to the next frontend slice.
+Results SSE supplements the durable REST snapshot. The browser establishes SSE first, waits for `ready`, loads the REST snapshot while buffering live updates, then merges both into the TanStack Query cache. Connection/reconnect state is visible.
 
 ## Dashboard
 
@@ -106,7 +107,7 @@ The frontend REST boundary is `src/api/client.ts`.
 
 The current application uses the browser `fetch` API and converts non-success responses into a shared `ApiError`. REST schema types come from the checked-in OpenAPI document through `openapi-typescript`.
 
-The checked-in OpenAPI snapshot now includes the backend Monitoring Profiles, Source Test, Results SSE, Event Observation, and processing-flow contracts. Only the REST configuration/run subset is consumed in this frontend slice.
+The checked-in OpenAPI snapshot now includes the backend Monitoring Profiles, Source Test, Results SSE, Event Observation, and processing-flow contracts. The frontend now consumes the configuration/run REST APIs plus Results and Event Observation REST/SSE contracts. Processing-flow contracts remain available for the next slice.
 
 No frontend code reads PostgreSQL or Kafka directly.
 
@@ -136,15 +137,13 @@ The deterministic browser suite now covers:
 
 The opt-in live Playwright workflow now owns a temporary RSS source and monitoring profile. It tests the source, runs the profile manually, waits for matching Analysis and Results data, and removes the profile before removing the source so backend referential integrity is respected.
 
-The previously accepted browser-verification baseline passed in the developer environment on 2026-09-14. The current Monitoring Profiles / Source Test slice remains verification-pending until the updated routine and live checks pass.
+The Monitoring Profiles / Source Test slice was accepted on 2026-09-14 after repository verification passed. The current live Results / Event Explorer slice remains verification-pending until the updated routine checks pass.
 
 ## Current limitations
 
 The following product capabilities are not implemented in the frontend:
 
 - dedicated analysis-setting configuration beyond the current profile criteria map;
-- automatic live Results updates through SSE;
-- live technical Event Explorer;
 - visual processing-flow inspection;
 - authentication and authorization.
 

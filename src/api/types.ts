@@ -17,3 +17,7 @@ export type AnalysisItemInspection = components['schemas']['AnalysisItemInspecti
 
 export type ResultSummary = components['schemas']['ResultSummary'];
 export type ResultDetail = components['schemas']['ResultDetail'];
+
+export type ResultLiveEvent = components['schemas']['ResultLiveEvent'];
+export type ObservedEvent = components['schemas']['ObservedEvent'];
+export type ObservedEventLiveEvent = components['schemas']['ObservedEventLiveEvent'];

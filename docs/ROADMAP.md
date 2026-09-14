@@ -7,9 +7,9 @@ description: Compact frontend roadmap, backend dependencies, and current impleme
 
 ## Current focus
 
-The current bounded focus is persisted Monitoring Profiles, Source Test diagnostics, and profile-driven manual Collection Runs. The required backend contracts are now available and the frontend implementation is complete pending verification.
+The current bounded focus is live Results and Event Explorer integration over the backend SSE contracts. Monitoring Profiles, Source Test, and profile-driven manual runs are accepted.
 
-The accepted baseline already covers Sources CRUD, Collection Run inspection, Analysis inspection, Results browsing, deterministic Playwright coverage, and the opt-in live-backend workflow. Backend contracts are also available for Results SSE, Event Observation, and processing-flow reconstruction, so the next frontend slice can implement live Results and diagnostic visualization without additional backend contract work.
+The next bounded slice after this work is processing-flow visualization over the already available reconstruction API.
 
 ## Completed baseline
 
@@ -30,7 +30,7 @@ Browser verification was accepted on 2026-09-14 after both `./run_checks.sh` and
 
 ## P1 — complete configuration experience
 
-Implemented in the current verification-pending slice:
+Implemented and accepted:
 
 - monitoring-profile CRUD;
 - ordered source assignment to profiles;
@@ -43,7 +43,7 @@ Dedicated analysis-setting controls remain deferred until the backend publishes 
 
 ## P1 — live Results
 
-The backend Results SSE contract is available. The next live-data frontend slice should:
+Implemented in the current verification-pending slice:
 
 - subscribe to new Results without manual refresh;
 - reconnect safely after transient network failure;
@@ -55,7 +55,7 @@ Polling should not become the long-term replacement for the planned SSE boundary
 
 ## P1 — event diagnostics
 
-The backend Event Observation REST/SSE APIs are available. The next diagnostic frontend slice should:
+Implemented in the current verification-pending slice:
 
 - add a bounded live Event Explorer;
 - filter by event type, producer/service, topic, correlation ID, run, and item where supported;

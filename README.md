@@ -22,7 +22,8 @@ The application intentionally starts without authentication and is intended for 
 - Monitoring Profiles — configure category, interval, source membership, criteria, and scheduled enabled state.
 - Collection Runs — start a persisted monitoring profile manually and inspect durable run/source outcomes.
 - Analysis Items — inspect persisted normalized/deduplication state with profile/source filters.
-- Results — browse analyzed result projections with backend-supported filters and inspect content, attributes, and provenance.
+- Results — browse analyzed result projections, receive matching live SSE updates, and inspect content, attributes, and provenance.
+- Event Explorer — inspect bounded technical event history and follow live observed pipeline events.
 
 ## Technology
 

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { installMockEventSource } from './support/sse';
 import { fulfillJson, rejectUnexpectedApi } from './support/http';
 
 test('Sources exposes loading and successful empty states', async ({ page }) => {
@@ -25,6 +26,7 @@ test('Sources exposes loading and successful empty states', async ({ page }) => 
 });
 
 test('Results presents backend request failures with useful error text', async ({ page }) => {
+  await installMockEventSource(page, true);
   await page.route('**/api/v1/**', async (route) => {
     const request = route.request();
     const url = new URL(request.url());

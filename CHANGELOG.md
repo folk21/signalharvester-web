@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+2026-09-14 Added race-free Results SSE integration, bounded Event Explorer history/live updates, and deterministic browser coverage for the SSE `ready` bootstrap.
+
 2026-09-14 Added persisted Monitoring Profiles, bounded Source Test diagnostics, profile-driven manual Collection Runs, and synchronized the frontend OpenAPI snapshot with the current backend contract.
 
 2026-09-14 Accepted browser verification after routine checks and the deterministic live RSS-to-Results Playwright workflow passed; archived the completed verification sub-spec.

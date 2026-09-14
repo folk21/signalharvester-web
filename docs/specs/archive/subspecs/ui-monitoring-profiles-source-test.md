@@ -3,14 +3,14 @@ type: Specification
 title: Monitoring profile and source-test UI
 summary: Add persisted monitoring-profile configuration, source diagnostics, and profile-driven manual collection to the frontend.
 document_role: subspec
-spec_status: verification-pending
+spec_status: completed
 parent: ../spec-signal-harvester-web.md
 ---
 # Monitoring profile and source-test UI
 
 ## Status
 
-Implementation complete. Verification pending.
+Completed and accepted after repository verification on 2026-09-14.
 
 ## Goal
 

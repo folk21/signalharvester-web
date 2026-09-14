@@ -136,7 +136,7 @@ Backend state must not be copied into a second global client store without a con
 
 The shared `QueryClient` currently uses a short stale period, one retry, and no automatic refetch on window focus.
 
-This is appropriate for the current operational UI because explicit refresh and mutation invalidation make data changes understandable during development. Live result delivery will use SSE when the backend contract exists rather than aggressive polling.
+This remains appropriate for durable server state. Live Results and Event Observation now supplement REST snapshots through SSE and merge updates into the same TanStack Query cache rather than introducing polling or a second global store.
 
 ## Error, loading, and empty states
 
@@ -151,7 +151,7 @@ HTTP failures should preserve useful backend error text when available. Browser-
 
 ## Live updates
 
-The current browser application uses REST only. The backend now publishes explicit SSE contracts for live Results and technical event observation, but browser integration remains a later frontend slice.
+The browser uses REST for durable snapshots and backend SSE for live Results and technical Event Observation. Native `EventSource` owns reconnect and `Last-Event-ID` behavior. The frontend waits for SSE `ready` before loading the REST snapshot, buffers later live messages during that request, and then merges both into the TanStack Query cache.
 
 When browser SSE is implemented:
 

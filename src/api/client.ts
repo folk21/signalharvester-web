@@ -4,6 +4,7 @@ import type {
   CollectionRunRequest,
   MonitoringProfile,
   MonitoringProfileUpsertRequest,
+  ObservedEvent,
   ResultDetail,
   ResultSummary,
   Source,
@@ -12,6 +13,18 @@ import type {
 } from './types';
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
+
+
+export interface EventFilters {
+  limit?: number;
+  eventType?: string;
+  producer?: string;
+  topic?: string;
+  correlationId?: string;
+  collectionRunId?: string;
+  itemId?: string;
+  traceId?: string;
+}
 
 export interface ResultFilters {
   limit?: number;
@@ -185,6 +198,16 @@ export const api = {
     return request<ResultSummary[]>(`/api/v1/results?${search}`);
   },
 
+  resultStreamUrl: (query: ResultFilters) => buildUrl('/api/v1/results/stream', resultStreamSearch(query)),
+
+  listObservedEvents: (query: EventFilters) => {
+    const search = eventSearch(query, true);
+    return request<ObservedEvent[]>(`/api/v1/events?${search}`);
+  },
+
+  eventStreamUrl: (query: EventFilters) =>
+    buildUrl('/api/v1/events/stream', eventSearch(query, false)),
+
   getResult: (monitoringProfileId: string, normalizedItemId: string) => {
     const search = new URLSearchParams({ monitoringProfileId });
     return request<ResultDetail>(
@@ -198,4 +221,37 @@ function appendIfPresent(search: URLSearchParams, name: string, value?: string) 
   if (trimmed) {
     search.set(name, trimmed);
   }
+}
+
+
+function resultStreamSearch(query: ResultFilters): URLSearchParams {
+  const search = new URLSearchParams();
+  appendIfPresent(search, 'monitoringProfileId', query.monitoringProfileId);
+  appendIfPresent(search, 'sourceId', query.sourceId);
+  appendIfPresent(search, 'informationCategory', query.informationCategory);
+  appendIfPresent(search, 'classification', query.classification);
+  if (query.relevant !== undefined) {
+    search.set('relevant', String(query.relevant));
+  }
+  return search;
+}
+
+function eventSearch(query: EventFilters, includeLimit: boolean): URLSearchParams {
+  const search = new URLSearchParams();
+  if (includeLimit) {
+    search.set('limit', String(query.limit ?? 100));
+  }
+  appendIfPresent(search, 'eventType', query.eventType);
+  appendIfPresent(search, 'producer', query.producer);
+  appendIfPresent(search, 'topic', query.topic);
+  appendIfPresent(search, 'correlationId', query.correlationId);
+  appendIfPresent(search, 'collectionRunId', query.collectionRunId);
+  appendIfPresent(search, 'itemId', query.itemId);
+  appendIfPresent(search, 'traceId', query.traceId);
+  return search;
+}
+
+function buildUrl(path: string, search: URLSearchParams): string {
+  const query = search.toString();
+  return `${apiBaseUrl}${path}${query ? `?${query}` : ''}`;
 }

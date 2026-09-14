@@ -22,8 +22,9 @@ A useful current workflow is:
 5. start the Monitoring Profile manually from Collection Runs when immediate execution is useful;
 6. inspect per-source run outcomes;
 7. inspect normalization/deduplication state when diagnosing processing;
-8. browse analyzed Results;
-9. open one Result to inspect content, analysis metadata, and provenance.
+8. browse analyzed Results and keep the page open for live matching updates;
+9. open one Result to inspect content, analysis metadata, and provenance;
+10. open Event Explorer for bounded technical history and live processing events.
 
 The backend repository's `tools/live-backend/` workflow remains useful when you need to distinguish a frontend problem from a backend pipeline problem.
 
@@ -111,7 +112,15 @@ The current filters are:
 
 Selecting a list row loads the detailed representation separately. Detail includes normalized content, attributes, tags, analysis metadata, and event/correlation provenance.
 
-The backend exposes a Results SSE contract, but this frontend slice still uses REST refresh. Live Results belongs to the next frontend stage.
+The Results page opens the backend SSE stream before loading its durable REST snapshot. Matching live updates then appear without manual refresh. A visible connection indicator shows live or reconnecting state. Result detail can open Event Explorer pre-filtered by collection run and item identity.
+
+## Event Explorer
+
+Open `/events`.
+
+The Event Explorer loads bounded retained history and then follows new observed events through backend SSE. Filters include event type, producer, Kafka topic, correlation ID, Collection Run ID, item ID, and trace ID. Selecting an event shows Kafka position/key, trace/correlation context, producer/schema metadata, and the decoded diagnostic payload.
+
+This is a bounded backend projection, not direct Kafka history. Backend retention determines how much older data remains available.
 
 ## Cross-check UI data against REST
 

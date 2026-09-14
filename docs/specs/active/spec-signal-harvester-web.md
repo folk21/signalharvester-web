@@ -4,7 +4,7 @@ title: SignalHarvester Web initial product specification
 description: Active frontend umbrella specification for configuration, operational inspection, Results, live updates, and event-flow diagnostics.
 document_role: umbrella
 spec_status: active
-current_focus: subspecs/ui-monitoring-profiles-source-test.md
+current_focus: subspecs/ui-live-results-event-explorer.md
 ---
 # SignalHarvester Web initial product specification
 
@@ -18,9 +18,9 @@ Frontend implementation details belong here rather than in the backend repositor
 
 ## Current implementation focus
 
-The current bounded focus is [`subspecs/ui-monitoring-profiles-source-test.md`](subspecs/ui-monitoring-profiles-source-test.md). It adds persisted Monitoring Profiles, bounded Source Test diagnostics, and profile-driven manual Collection Runs against the now-available backend contracts.
+The current bounded focus is [`subspecs/ui-live-results-event-explorer.md`](subspecs/ui-live-results-event-explorer.md). It connects Results SSE and bounded Event Observation REST/SSE to the browser while keeping durable snapshots in TanStack Query.
 
-The accepted baseline already provides Dashboard, Sources CRUD, manual Collection Run inspection, Analysis inspection, Results list/filter/detail, deterministic Playwright browser coverage, and an opt-in live-backend browser flow. Backend contracts are also now available for Results SSE, Event Observation, and processing-flow reconstruction; those browser capabilities remain the next frontend work after this configuration slice is accepted.
+The accepted baseline already provides Dashboard, Sources CRUD and Source Test, Monitoring Profiles, profile-driven Collection Runs, Analysis inspection, Results list/filter/detail, deterministic Playwright coverage, and an opt-in live-backend browser flow. Processing-flow visualization remains the next frontend slice after this live diagnostics work is accepted.
 
 ## Goal
 
@@ -59,10 +59,10 @@ The frontend does not own:
 | Analysis inspection | Implemented |
 | Results list/filter/detail | Implemented |
 | Browser automation | Implemented and accepted |
-| Monitoring profiles and schedules | Implemented in current focus; verification pending |
-| Source test/preview | Implemented in current focus; verification pending |
-| Live Results via SSE | Backend available; frontend pending |
-| Event Explorer | Backend available; frontend pending |
+| Monitoring profiles and schedules | Implemented and accepted |
+| Source test/preview | Implemented and accepted |
+| Live Results via SSE | Implemented in current focus; verification pending |
+| Event Explorer | Implemented in current focus; verification pending |
 | Processing-flow visualization | Backend available; frontend pending |
 | Authentication/authorization | Pending |
 

@@ -67,8 +67,9 @@ Umbrella:
 
 Current implementation focus:
 
-- [`active/subspecs/ui-monitoring-profiles-source-test.md`](active/subspecs/ui-monitoring-profiles-source-test.md) — persisted Monitoring Profiles, Source Test diagnostics, and profile-driven manual Collection Runs; implementation complete, verification pending.
+- [`active/subspecs/ui-live-results-event-explorer.md`](active/subspecs/ui-live-results-event-explorer.md) — Results SSE and bounded Event Explorer history/live delivery; implementation complete, verification pending.
 
 Recently completed:
 
+- [`archive/subspecs/ui-monitoring-profiles-source-test.md`](archive/subspecs/ui-monitoring-profiles-source-test.md) — Monitoring Profiles, Source Test, and profile-driven manual Collection Runs, accepted on 2026-09-14.
 - [`archive/subspecs/ui-browser-verification.md`](archive/subspecs/ui-browser-verification.md) — deterministic browser automation and one bounded live-backend E2E workflow, accepted on 2026-09-14.

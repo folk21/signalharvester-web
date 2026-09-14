@@ -7,6 +7,7 @@ const navigation = [
   { to: '/runs', label: 'Collection Runs', end: false },
   { to: '/analysis', label: 'Analysis Items', end: false },
   { to: '/results', label: 'Results', end: false },
+  { to: '/events', label: 'Event Explorer', end: false },
 ];
 
 export function AppShell() {
