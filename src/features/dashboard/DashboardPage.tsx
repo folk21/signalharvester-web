@@ -15,9 +15,14 @@ export function DashboardPage() {
     queryKey: ['analysis-items', { limit: 8 }],
     queryFn: () => api.listAnalysisItems({ limit: 8 }),
   });
+  const resultsQuery = useQuery({
+    queryKey: ['results', { limit: 8 }],
+    queryFn: () => api.listResults({ limit: 8 }),
+  });
 
-  const loading = sourcesQuery.isPending || runsQuery.isPending || analysisQuery.isPending;
-  const error = sourcesQuery.error ?? runsQuery.error ?? analysisQuery.error;
+  const loading =
+    sourcesQuery.isPending || runsQuery.isPending || analysisQuery.isPending || resultsQuery.isPending;
+  const error = sourcesQuery.error ?? runsQuery.error ?? analysisQuery.error ?? resultsQuery.error;
 
   if (loading) {
     return <LoadingState label="Loading operational overview…" />;
@@ -29,6 +34,7 @@ export function DashboardPage() {
   const sources = sourcesQuery.data ?? [];
   const runs = runsQuery.data ?? [];
   const analysisItems = analysisQuery.data ?? [];
+  const results = resultsQuery.data ?? [];
   const latestRun = runs[0];
 
   return (
@@ -36,7 +42,7 @@ export function DashboardPage() {
       <PageHeader
         eyebrow="Operational overview"
         title="Dashboard"
-        description="A compact view of configured sources, recent collection activity, and durable analysis state."
+        description="A compact view of configured sources, recent collection activity, durable analysis state, and persisted results."
       />
 
       <section className="stat-grid" aria-label="System statistics">
@@ -54,6 +60,11 @@ export function DashboardPage() {
           <span>Analysis items</span>
           <strong>{analysisItems.length}</strong>
           <small>latest persisted normalized items</small>
+        </article>
+        <article className="stat-card">
+          <span>Analyzed results</span>
+          <strong>{results.length}</strong>
+          <small>latest durable result projections</small>
         </article>
         <article className="stat-card stat-card--accent">
           <span>Latest run</span>
@@ -93,26 +104,26 @@ export function DashboardPage() {
         <article className="panel">
           <div className="panel__header">
             <div>
-              <span className="eyebrow">Analysis</span>
-              <h2>Recently seen items</h2>
+              <span className="eyebrow">Results</span>
+              <h2>Recently analyzed</h2>
             </div>
           </div>
-          {analysisItems.length === 0 ? (
-            <div className="panel__empty">No normalized analysis items have been persisted yet.</div>
+          {results.length === 0 ? (
+            <div className="panel__empty">No analyzed results have been persisted yet.</div>
           ) : (
             <div className="compact-list">
-              {analysisItems.slice(0, 5).map((item) => (
+              {results.slice(0, 5).map((result) => (
                 <div
                   className="compact-list__row"
-                  key={`${item.monitoringProfileId}:${item.normalizedItemId}`}
+                  key={`${result.monitoringProfileId}:${result.normalizedItemId}`}
                 >
                   <div>
-                    <strong>{shortId(item.normalizedItemId)}</strong>
-                    <span>{item.monitoringProfileId}</span>
+                    <strong>{result.title?.trim() || shortId(result.normalizedItemId)}</strong>
+                    <span>{result.informationCategory} · {result.classification}</span>
                   </div>
                   <div className="compact-list__meta">
-                    <span>{item.discoveryCount} discoveries</span>
-                    <span>{formatDateTime(item.lastSeenAt)}</span>
+                    <span>{result.relevant ? 'relevant' : 'not relevant'} · score {result.score}</span>
+                    <span>{formatDateTime(result.analyzedAt)}</span>
                   </div>
                 </div>
               ))}

@@ -1,8 +1,19 @@
 # SignalHarvester Web
 
-Initial administrative frontend for SignalHarvester.
+Web frontend for SignalHarvester. The current implemented slice is an administrative and operational UI over the backend REST APIs.
 
 The application intentionally starts without authentication and is intended for local or otherwise trusted environments only. It uses the backend REST/OpenAPI contract and does not access Kafka or PostgreSQL directly.
+
+## Start here
+
+| Goal | Read |
+|---|---|
+| Repository development rules | [`AGENTS.md`](AGENTS.md) |
+| Frontend product target and active work | [`docs/specs/README.md`](docs/specs/README.md) |
+| Stable frontend architecture | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
+| Current implemented behavior | [`docs/IMPLEMENTATION.md`](docs/IMPLEMENTATION.md) |
+| Current UI workflows | [`docs/USAGE.md`](docs/USAGE.md) |
+| Frontend roadmap | [`docs/ROADMAP.md`](docs/ROADMAP.md) |
 
 ## Current screens
 
@@ -10,6 +21,7 @@ The application intentionally starts without authentication and is intended for 
 - Sources — create, edit, enable/disable, and delete configured sources.
 - Collection Runs — start a manual collection run and inspect durable run/source outcomes.
 - Analysis Items — inspect persisted normalized/deduplication state with profile/source filters.
+- Results — browse analyzed result projections with backend-supported filters and inspect content, attributes, and provenance.
 
 ## Technology
 
@@ -67,3 +79,9 @@ npm run typecheck
 ## Authentication status
 
 There is deliberately no login, session, token, or role model in this first version. Keep the admin UI and backend on a trusted local/private environment until authentication and authorization are implemented.
+
+## Documentation model
+
+Current-state documentation and active specifications have different roles. `docs/ARCHITECTURE.md`, `docs/IMPLEMENTATION.md`, and `docs/USAGE.md` describe accepted current behavior. `docs/specs/active/` defines intended frontend changes and acceptance targets.
+
+The backend repository remains authoritative for REST/OpenAPI and future SSE contracts. This repository owns browser behavior and frontend implementation details.

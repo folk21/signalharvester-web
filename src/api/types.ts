@@ -7,3 +7,6 @@ export type CollectionRunRequest = components['schemas']['CollectionRunRequest']
 export type CollectionRun = components['schemas']['CollectionRun'];
 export type CollectionSourceRun = components['schemas']['CollectionSourceRun'];
 export type AnalysisItemInspection = components['schemas']['AnalysisItemInspection'];
+
+export type ResultSummary = components['schemas']['ResultSummary'];
+export type ResultDetail = components['schemas']['ResultDetail'];

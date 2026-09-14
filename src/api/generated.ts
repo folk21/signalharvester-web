@@ -119,6 +119,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List recent analyzed results */
+        get: operations["listResults"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/results/{normalizedItemId}": {
+        parameters: {
+            query: {
+                monitoringProfileId: string;
+            };
+            header?: never;
+            path: {
+                normalizedItemId: string;
+            };
+            cookie?: never;
+        };
+        /** Get one profile-scoped analyzed result */
+        get: operations["getResult"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -149,6 +187,10 @@ export interface components {
              * @description Absolute HTTP(S) source URL without embedded credentials or a fragment.
              */
             location: string;
+            /**
+             * @description Whether collection is enabled. Omitted requests default to false.
+             * @default false
+             */
             enabled: boolean;
             /**
              * @description Source-type-specific string configuration interpreted by the owning collector.
@@ -162,11 +204,12 @@ export interface components {
             monitoringProfileId: string;
             informationCategory: string;
         };
+        /** @description One terminal source/item outcome. RSS/Atom sources may contribute multiple outcomes with the same sourceId. */
         CollectionSourceRun: {
             /** Format: uuid */
             sourceId: string;
             /** @enum {string} */
-            status: "PUBLISHED" | "FETCH_FAILED" | "PUBLICATION_FAILED";
+            status: "PUBLISHED" | "NO_ITEMS" | "FETCH_FAILED" | "EXTRACTION_FAILED" | "PUBLICATION_FAILED";
             rawItemId: string | null;
             eventId: string | null;
             failureMessage: string | null;
@@ -182,9 +225,15 @@ export interface components {
             finishedAt: string;
             /** @enum {string} */
             status: "SUCCEEDED" | "PARTIALLY_SUCCEEDED" | "FAILED";
-            /** Format: int64 */
+            /**
+             * Format: int64
+             * @description Number of semantic items successfully published to Kafka.
+             */
             publishedCount: number;
-            /** Format: int64 */
+            /**
+             * Format: int64
+             * @description Number of fetch, extraction, or item-publication failures.
+             */
             failedCount: number;
             sources: components["schemas"]["CollectionSourceRun"][];
         };
@@ -205,6 +254,59 @@ export interface components {
             lastSeenAt: string;
             /** Format: int64 */
             discoveryCount: number;
+        };
+        ResultSummary: {
+            monitoringProfileId: string;
+            normalizedItemId: string;
+            sourceId: string;
+            informationCategory: string;
+            externalId: string | null;
+            title: string | null;
+            /** Format: uri */
+            url: string;
+            relevant: boolean;
+            classification: string;
+            score: number;
+            attributes: {
+                [key: string]: string;
+            };
+            tags: string[];
+            explanation: string;
+            analyzer: string;
+            /** Format: date-time */
+            publishedAt: string | null;
+            /** Format: date-time */
+            analyzedAt: string;
+        };
+        ResultDetail: {
+            monitoringProfileId: string;
+            normalizedItemId: string;
+            analysisEventId: string;
+            sourceEventId: string;
+            rawItemId: string;
+            sourceId: string;
+            informationCategory: string;
+            externalId: string | null;
+            title: string | null;
+            /** Format: uri */
+            url: string;
+            normalizedContent: string;
+            contentType: string;
+            attributes: {
+                [key: string]: string;
+            };
+            relevant: boolean;
+            classification: string;
+            score: number;
+            tags: string[];
+            explanation: string;
+            analyzer: string;
+            /** Format: date-time */
+            publishedAt: string | null;
+            /** Format: date-time */
+            analyzedAt: string;
+            correlationId: string;
+            traceparent: string | null;
         };
     };
     responses: never;
@@ -497,6 +599,80 @@ export interface operations {
                 };
             };
             /** @description Analysis item not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listResults: {
+        parameters: {
+            query?: {
+                limit?: number;
+                monitoringProfileId?: string;
+                sourceId?: string;
+                informationCategory?: string;
+                relevant?: boolean;
+                classification?: string;
+                analyzedFrom?: string;
+                analyzedTo?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Recent analyzed results matching the supplied filters */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultSummary"][];
+                };
+            };
+            /** @description Invalid result query parameters */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getResult: {
+        parameters: {
+            query: {
+                monitoringProfileId: string;
+            };
+            header?: never;
+            path: {
+                normalizedItemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Detailed analyzed result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultDetail"];
+                };
+            };
+            /** @description Invalid result identity */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Result not found */
             404: {
                 headers: {
                     [name: string]: unknown;

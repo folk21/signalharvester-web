@@ -41,3 +41,12 @@ Do not hand-edit `src/api/generated.ts` after dependencies are available and gen
 ## Security
 
 Authentication is intentionally absent in the initial local admin UI. Do not present this build as internet-safe. Authentication, authorization, CSRF/CORS policy, and deployment exposure must be addressed before public or shared deployment.
+
+## Documentation and specifications
+
+- Read `docs/specs/active/spec-signal-harvester-web.md` before significant product or architectural work.
+- Read the current active sub-spec when the change belongs to that bounded increment.
+- Treat active specs as intended change, not current implementation truth.
+- Keep stable accepted architecture in `docs/ARCHITECTURE.md` and current behavior in `docs/IMPLEMENTATION.md` / `docs/USAGE.md`.
+- After a sub-spec is accepted, move stable knowledge into owning docs and archive the completed sub-spec.
+- Keep frontend implementation detail in this repository. Backend REST/SSE wire contracts remain backend-owned.

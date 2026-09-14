@@ -2,11 +2,24 @@ import type {
   AnalysisItemInspection,
   CollectionRun,
   CollectionRunRequest,
+  ResultDetail,
+  ResultSummary,
   Source,
   SourceUpsertRequest,
 } from './types';
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
+
+export interface ResultFilters {
+  limit?: number;
+  monitoringProfileId?: string;
+  sourceId?: string;
+  informationCategory?: string;
+  relevant?: boolean;
+  classification?: string;
+  analyzedFrom?: string;
+  analyzedTo?: string;
+}
 
 export class ApiError extends Error {
   readonly status: number;
@@ -126,4 +139,33 @@ export const api = {
       `/api/v1/admin/analysis/items/${encodeURIComponent(normalizedItemId)}?${search}`,
     );
   },
+
+  listResults: (query: ResultFilters) => {
+    const search = new URLSearchParams();
+    search.set('limit', String(query.limit ?? 50));
+    appendIfPresent(search, 'monitoringProfileId', query.monitoringProfileId);
+    appendIfPresent(search, 'sourceId', query.sourceId);
+    appendIfPresent(search, 'informationCategory', query.informationCategory);
+    appendIfPresent(search, 'classification', query.classification);
+    appendIfPresent(search, 'analyzedFrom', query.analyzedFrom);
+    appendIfPresent(search, 'analyzedTo', query.analyzedTo);
+    if (query.relevant !== undefined) {
+      search.set('relevant', String(query.relevant));
+    }
+    return request<ResultSummary[]>(`/api/v1/results?${search}`);
+  },
+
+  getResult: (monitoringProfileId: string, normalizedItemId: string) => {
+    const search = new URLSearchParams({ monitoringProfileId });
+    return request<ResultDetail>(
+      `/api/v1/results/${encodeURIComponent(normalizedItemId)}?${search}`,
+    );
+  },
 };
+
+function appendIfPresent(search: URLSearchParams, name: string, value?: string) {
+  const trimmed = value?.trim();
+  if (trimmed) {
+    search.set(name, trimmed);
+  }
+}
