@@ -116,6 +116,26 @@ curl -s \
   | jq
 ```
 
+## Automated browser verification
+
+After installing Playwright Chromium with `npm run e2e:install`, run the deterministic browser suite with:
+
+```bash
+npm run e2e
+```
+
+This suite uses controlled REST responses and can run while the backend is stopped. It is the preferred fast check for navigation, forms, filters, request construction, detail rendering, and async states.
+
+To verify the browser against a real backend that is already running on the host:
+
+```bash
+SIGNALHARVESTER_BACKEND_URL=http://127.0.0.1:8080 npm run e2e:live
+```
+
+The live workflow owns a temporary RSS fixture and temporary source. It uses a unique monitoring-profile ID so earlier Analysis deduplication state does not suppress the expected Results. Other already-enabled sources may participate in the same Collection Run, so the test asserts the two outcomes belonging to its temporary source rather than requiring the whole run to be globally successful.
+
+By default the backend must be able to reach a loopback fixture on the same host. For a backend in a container, set `SIGNALHARVESTER_LIVE_FIXTURE_HOST` to a hostname that the backend container can use to reach the host fixture, when such routing is configured.
+
 ## Browser troubleshooting
 
 When a screen looks inconsistent, use browser developer tools and check the Network panel first.

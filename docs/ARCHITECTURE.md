@@ -52,6 +52,10 @@ signalharvester-web/
 │   ├── styles/                 # Application CSS
 │   ├── App.tsx                 # Route composition
 │   └── main.tsx                # React/query/router composition root
+├── tests/e2e/                  # Deterministic and opt-in live Playwright tests
+├── playwright.config.ts        # Fast route-mocked browser suite
+├── playwright.live.config.ts   # Real-backend browser suite
+├── run_checks.sh               # Canonical routine verification
 ├── package.json
 └── vite.config.ts
 ```
@@ -176,16 +180,20 @@ Before public/shared deployment, the design must address at least:
 
 ## Testing architecture
 
-Current fast tests use Vitest for deterministic TypeScript logic.
+Verification is split by ownership and dependency cost.
 
-The intended browser-testing layers are:
+Vitest owns small deterministic TypeScript logic. Its discovery is limited to `src/**/*.{test,spec}.{ts,tsx}` and optional `tests/unit/**/*.{test,spec}.{ts,tsx}` so it never imports Playwright suites. Playwright owns browser behavior under `tests/e2e/**`. The fast browser suite uses route-controlled REST responses and therefore does not require the backend, PostgreSQL, Kafka/Redpanda, or public internet sources. Its fixtures are typed with the same OpenAPI-derived aliases used by application code.
 
-1. fast UI tests with controlled REST responses for navigation, forms, query states, filters, and error presentation;
-2. a small live browser E2E suite against a separately running real backend for cross-project contract verification.
+The browser layers are:
+
+1. `npm run e2e` — deterministic navigation, rendering, mutation/request construction, filters, detail loading, and representative async states with controlled REST responses;
+2. `npm run e2e:live` — one bounded cross-project path against a separately running real backend and a temporary deterministic RSS fixture.
+
+The live suite remains opt-in because the frontend repository does not own backend process or infrastructure lifecycle. It verifies browser-visible cross-project behavior, not Kafka offsets, database rows, transactions, or backend analysis internals.
+
+Playwright retains traces and screenshots on failure under ignored generated directories. Successful runs do not create checked-in test artifacts. `./run_checks.sh` is the canonical routine frontend verification and includes the fast Playwright suite. The live suite stays opt-in because this repository does not own backend lifecycle.
 
 Frontend tests should not reimplement backend business behavior. Backend integration tests remain responsible for persistence, Kafka, deduplication, analysis semantics, and other backend-owned guarantees.
-
-The active browser-verification sub-spec owns the next testing increment.
 
 ## Delivery model
 

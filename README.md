@@ -30,6 +30,7 @@ The application intentionally starts without authentication and is intended for 
 - TanStack Query
 - React Router
 - OpenAPI-derived TypeScript types
+- Playwright browser verification
 
 ## Requirements
 
@@ -58,6 +59,38 @@ VITE_DEV_PROXY_TARGET=http://localhost:8081 npm run dev
 ```
 
 For a separately hosted frontend build, set `VITE_API_BASE_URL` to the backend origin before building. If frontend and backend use different origins, the backend must explicitly allow that origin.
+
+## Browser verification
+
+Install the Playwright Chromium browser once after installing npm dependencies:
+
+```bash
+npm run e2e:install
+```
+
+Run deterministic browser tests with controlled REST responses:
+
+```bash
+npm run e2e
+```
+
+These tests start their own Vite server. They do not require the SignalHarvester backend, PostgreSQL, Kafka/Redpanda, or public internet sources. Failed tests retain Playwright traces and screenshots under ignored `test-results/` directories.
+
+Run the opt-in live browser workflow against a separately running backend:
+
+```bash
+SIGNALHARVESTER_BACKEND_URL=http://127.0.0.1:8080 npm run e2e:live
+```
+
+The live test starts a temporary two-entry RSS server, creates a temporary RSS source through the UI, starts a manual Collection Run through the UI, waits for matching Analysis and Results state, opens Result detail, and removes the temporary source. The default fixture address assumes the backend runs on the same host. If a containerized backend can reach the host through another hostname, advertise it with `SIGNALHARVESTER_LIVE_FIXTURE_HOST`, for example `host.docker.internal`.
+
+A complete routine frontend verification is:
+
+```bash
+./run_checks.sh
+```
+
+The script regenerates OpenAPI types, typechecks application and browser-test code, runs Vitest, runs the deterministic Playwright suite, and builds the production frontend. `npm run e2e:live` remains separate because it requires a real backend and its infrastructure.
 
 ## OpenAPI workflow
 

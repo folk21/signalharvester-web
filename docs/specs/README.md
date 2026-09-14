@@ -67,4 +67,8 @@ Umbrella:
 
 Current implementation focus:
 
-- [`active/subspecs/ui-browser-verification.md`](active/subspecs/ui-browser-verification.md) — deterministic browser automation and one bounded live-backend E2E workflow.
+- no bounded sub-spec is active; the next sub-spec should be created when a concrete frontend slice is ready to implement.
+
+Recently completed:
+
+- [`archive/subspecs/ui-browser-verification.md`](archive/subspecs/ui-browser-verification.md) — deterministic browser automation and one bounded live-backend E2E workflow, accepted on 2026-09-14.

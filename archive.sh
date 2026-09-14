@@ -10,6 +10,9 @@ zip -qr "$OUT" signalharvester-web \
   -x 'signalharvester-web/node_modules/*' \
   -x 'signalharvester-web/dist/*' \
   -x 'signalharvester-web/coverage/*' \
+  -x 'signalharvester-web/test-results/*' \
+  -x 'signalharvester-web/playwright-report/*' \
+  -x 'signalharvester-web/blob-report/*' \
   -x 'signalharvester-web/.vite/*' \
   -x 'signalharvester-web/.env' \
   -x 'signalharvester-web/.env.local' \

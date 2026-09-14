@@ -167,8 +167,11 @@ function RunDetail({ run }: { run: CollectionRun }) {
       <div>
         <h3>Source outcomes</h3>
         <div className="outcome-list">
-          {run.sources.map((source) => (
-            <div className="outcome-card" key={source.sourceId}>
+          {run.sources.map((source, index) => (
+            <div
+              className="outcome-card"
+              key={`${source.sourceId}:${source.rawItemId ?? source.eventId ?? index}`}
+            >
               <div className="outcome-card__header">
                 <span className="mono">{shortId(source.sourceId, 14)}</span>
                 <StatusBadge value={source.status} />

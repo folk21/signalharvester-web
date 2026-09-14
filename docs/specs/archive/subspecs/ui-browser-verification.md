@@ -3,14 +3,14 @@ type: Specification
 title: UI browser verification
 description: Deterministic browser automation for current SignalHarvester Web workflows plus one bounded live-backend E2E path.
 document_role: subspec
-spec_status: active
-parent: ../spec-signal-harvester-web.md
+spec_status: completed
+parent: ../../active/spec-signal-harvester-web.md
 ---
 # UI browser verification
 
 ## Status
 
-Active — next frontend implementation focus.
+Completed and accepted on 2026-09-14.
 
 ## Goal
 
@@ -26,9 +26,9 @@ It does not add new backend product behavior.
 
 ## Current state
 
-The repository has strict TypeScript checks and Vitest coverage for deterministic helper logic, but no real browser automation.
+The repository contains Playwright browser automation in two layers. `npm run e2e` uses controlled REST responses and does not require a backend. `npm run e2e:live` exercises a separately running backend with a temporary deterministic two-entry RSS source.
 
-The current UI already talks to a running backend successfully in manual developer testing. The next step is to make that confidence reproducible.
+Vitest discovery is explicitly restricted to unit/component test locations so `npm test` cannot collect Playwright specs from `tests/e2e/**`. The canonical routine checks and the opt-in live backend workflow were both accepted in the developer environment on 2026-09-14.
 
 ## Requirements
 
@@ -141,12 +141,33 @@ The slice is accepted when:
 - the live scenario uses deterministic data and verifies visible UI state;
 - `npm run typecheck`, `npm test`, browser tests, and `npm run build` all pass in the developer environment.
 
-## Implementation tasks
+Run the acceptance sequence with:
 
-- add Playwright dependency and configuration;
-- add typed test fixtures/builders based on existing API types;
-- add deterministic route-mocked browser tests;
-- add one live backend E2E scenario;
-- add package scripts;
-- update README/testing documentation;
-- move stable test architecture into current-state docs after verification.
+```bash
+npm ci
+npm run e2e:install
+./run_checks.sh
+```
+
+With a backend already running on the host, also run:
+
+```bash
+SIGNALHARVESTER_BACKEND_URL=http://127.0.0.1:8080 npm run e2e:live
+```
+
+## Implementation status
+
+Implemented in this slice:
+
+- Playwright dependency and separate deterministic/live configurations;
+- explicit Vitest discovery that excludes the Playwright suite;
+- typed fixtures based on existing OpenAPI-derived API aliases;
+- route-mocked browser coverage for navigation and all current operational screens;
+- representative loading, error, empty, and populated states;
+- one live backend E2E scenario using a temporary two-entry RSS server;
+- package scripts, canonical `run_checks.sh`, and ignored failure artifacts;
+- README, architecture, implementation, usage, and roadmap updates.
+
+Acceptance was completed on 2026-09-14. `./run_checks.sh` passed OpenAPI generation, TypeScript checks, Vitest, seven deterministic Chromium Playwright scenarios, and the production build. `npm run e2e:live` also passed the deterministic RSS-to-Analysis-to-Results browser workflow against a real running backend.
+
+Stable verification behavior now belongs to the current-state documentation. This archived sub-spec remains historical implementation context.

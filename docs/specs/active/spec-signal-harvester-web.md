@@ -4,7 +4,6 @@ title: SignalHarvester Web initial product specification
 description: Active frontend umbrella specification for configuration, operational inspection, Results, live updates, and event-flow diagnostics.
 document_role: umbrella
 spec_status: active
-current_focus: subspecs/ui-browser-verification.md
 ---
 # SignalHarvester Web initial product specification
 
@@ -18,9 +17,9 @@ Frontend implementation details belong here rather than in the backend repositor
 
 ## Current implementation focus
 
-The current focus is browser verification under [`subspecs/ui-browser-verification.md`](subspecs/ui-browser-verification.md).
+There is no active bounded sub-spec at the moment. Browser verification was accepted and archived after both routine checks and the live backend E2E workflow passed.
 
-The existing frontend already provides Dashboard, Sources CRUD, manual Collection Run operation/inspection, Analysis inspection, and Results list/filter/detail against the current backend REST contract. The next increment should make those workflows reproducibly verifiable in a real browser before larger UI capabilities are added.
+The frontend provides Dashboard, Sources CRUD, manual Collection Run operation/inspection, Analysis inspection, Results list/filter/detail, deterministic Playwright browser coverage, and an opt-in live-backend browser flow. The next product sub-spec should be opened only when its required backend contract is available or when another independently actionable frontend slice is selected.
 
 ## Goal
 
@@ -58,7 +57,7 @@ The frontend does not own:
 | Collection Run inspection | Implemented |
 | Analysis inspection | Implemented |
 | Results list/filter/detail | Implemented |
-| Browser automation | Planned current focus |
+| Browser automation | Implemented and accepted |
 | Monitoring profiles and schedules | Pending backend + UI |
 | Source test/preview | Pending backend + UI |
 | Live Results via SSE | Pending backend + UI |
@@ -244,7 +243,7 @@ The verification strategy must include:
 - at least one opt-in live E2E path against a real separately running backend;
 - no mandatory dependency on public internet sources for deterministic acceptance.
 
-The active browser-verification sub-spec defines this increment.
+This requirement is implemented and accepted. Historical implementation details are preserved in [`../archive/subspecs/ui-browser-verification.md`](../archive/subspecs/ui-browser-verification.md).
 
 ### UI-R15 — independent delivery boundary
 

@@ -90,14 +90,22 @@ The application uses one repository-owned global stylesheet and small reusable p
 
 ## Current verification
 
+The repository's canonical routine verification is `./run_checks.sh`. It regenerates the checked-in API types, typechecks application and browser-test code, runs Vitest, runs deterministic Playwright browser tests, and builds the production frontend.
+
 The repository currently provides:
 
-- strict TypeScript compilation through `npm run typecheck`;
+- strict application and browser-test TypeScript compilation through `npm run typecheck`;
 - Vitest through `npm test`;
+- deterministic Playwright browser tests through `npm run e2e`;
+- an opt-in real-backend browser workflow through `npm run e2e:live`;
 - production build verification through `npm run build`;
 - OpenAPI type generation through `npm run api:generate`.
 
-Browser automation is not implemented yet. It is the current planned testing increment.
+The fast Playwright suite starts a Vite server and intercepts REST requests in the browser. Typed fixtures use the existing OpenAPI-derived frontend types. The suite covers the application shell, Sources mutation behavior, Collection Run request/detail behavior, Analysis filters, Results filters/detail, and representative loading/error/empty states.
+
+The live Playwright workflow creates a temporary deterministic RSS source through the UI, starts a Collection Run through the UI, waits for matching Analysis and Results data, and cleans up the source. It requires a separately running backend and is intentionally not part of routine fast verification.
+
+Browser verification was accepted in the developer environment on 2026-09-14. The canonical `./run_checks.sh` workflow passed, and the opt-in `npm run e2e:live` workflow passed against a real running backend.
 
 ## Current limitations
 
@@ -113,6 +121,5 @@ The following product capabilities are not implemented in the frontend because e
 - live technical Event Explorer;
 - visual processing-flow inspection;
 - authentication and authorization;
-- browser-level automated E2E verification.
 
 These items belong in active specs and the roadmap rather than being presented as current behavior.

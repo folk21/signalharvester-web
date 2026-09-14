@@ -34,9 +34,14 @@ Do not hand-edit `src/api/generated.ts` after dependencies are available and gen
 
 ## Testing
 
-- Unit-test deterministic formatting, validation, and mapping logic.
-- Prefer backend integration tests for backend behavior; do not reproduce them in the frontend.
-- UI tests should focus on navigation, form behavior, query states, and error presentation.
+- Unit-test deterministic formatting, validation, and mapping logic with Vitest.
+- Keep Vitest discovery separate from Playwright. Vitest owns `src/**` and optional `tests/unit/**`; browser tests stay under `tests/e2e/**`.
+- Use Playwright route mocks for fast browser behavior such as navigation, forms, filters, async states, and request construction.
+- Keep `npm run e2e` independent of the backend, PostgreSQL, Kafka/Redpanda, and public internet sources.
+- Keep `npm run e2e:live` opt-in. It may require a separately running backend and deterministic local fixture data.
+- Prefer backend integration tests for backend behavior; do not reproduce persistence, Kafka, deduplication, or analysis guarantees in the frontend.
+- Browser assertions should remain user-visible or request-boundary assertions.
+- `./run_checks.sh` is the canonical routine repository verification and must include fast browser checks when they change. Keep live-backend E2E separate.
 
 ## Security
 

@@ -7,9 +7,9 @@ description: Compact frontend roadmap, backend dependencies, and current impleme
 
 ## Current focus
 
-The current frontend already covers the backend operational/admin APIs for Sources, manual Collection Runs, Analysis inspection, and Results browsing.
+The current frontend covers the backend operational/admin APIs for Sources, manual Collection Runs, Analysis inspection, and Results browsing. Browser verification is implemented and accepted, including deterministic Playwright coverage and the opt-in live-backend workflow.
 
-The next focused increment is **browser verification**: add deterministic browser automation without duplicating backend integration tests. The active sub-spec is [`specs/active/subspecs/ui-browser-verification.md`](specs/active/subspecs/ui-browser-verification.md).
+There is no active bounded frontend sub-spec. The next planned product work is the configuration experience, which depends on new backend contracts. Results SSE and event diagnostics are also blocked on their backend contracts.
 
 ## Completed baseline
 
@@ -22,16 +22,11 @@ The current baseline includes:
 - manual Collection Run execution and inspection;
 - Analysis inspection;
 - Results list/filter/detail;
-- local Vite proxy for the standard backend development workflow.
+- local Vite proxy for the standard backend development workflow;
+- deterministic Playwright browser coverage plus an opt-in live-backend E2E workflow;
+- canonical routine frontend verification through `run_checks.sh`.
 
-## P0 — browser verification
-
-- add Playwright-based browser automation;
-- cover route/navigation health and core page rendering;
-- verify important form and filter behavior with controlled REST responses;
-- add a small opt-in live E2E path against a separately running backend;
-- keep deterministic tests independent of public internet sources;
-- document the canonical frontend verification commands.
+Browser verification was accepted on 2026-09-14 after both `./run_checks.sh` and `npm run e2e:live` passed in the developer environment.
 
 ## P1 — complete configuration experience
 
