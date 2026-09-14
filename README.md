@@ -18,8 +18,9 @@ The application intentionally starts without authentication and is intended for 
 ## Current screens
 
 - Dashboard — quick counts and recent collection status.
-- Sources — create, edit, enable/disable, and delete configured sources.
-- Collection Runs — start a manual collection run and inspect durable run/source outcomes.
+- Sources — create, edit, enable/disable, delete, and diagnostically test configured sources.
+- Monitoring Profiles — configure category, interval, source membership, criteria, and scheduled enabled state.
+- Collection Runs — start a persisted monitoring profile manually and inspect durable run/source outcomes.
 - Analysis Items — inspect persisted normalized/deduplication state with profile/source filters.
 - Results — browse analyzed result projections with backend-supported filters and inspect content, attributes, and provenance.
 
@@ -82,7 +83,7 @@ Run the opt-in live browser workflow against a separately running backend:
 SIGNALHARVESTER_BACKEND_URL=http://127.0.0.1:8080 npm run e2e:live
 ```
 
-The live test starts a temporary two-entry RSS server, creates a temporary RSS source through the UI, starts a manual Collection Run through the UI, waits for matching Analysis and Results state, opens Result detail, and removes the temporary source. The default fixture address assumes the backend runs on the same host. If a containerized backend can reach the host through another hostname, advertise it with `SIGNALHARVESTER_LIVE_FIXTURE_HOST`, for example `host.docker.internal`.
+The live test starts a temporary two-entry RSS server, creates and diagnostically tests a temporary RSS source, creates a temporary monitoring profile through the UI, starts that profile manually, waits for matching Analysis and Results state, opens Result detail, then deletes the profile before removing the source. The default fixture address assumes the backend runs on the same host. If a containerized backend can reach the host through another hostname, advertise it with `SIGNALHARVESTER_LIVE_FIXTURE_HOST`, for example `host.docker.internal`.
 
 A complete routine frontend verification is:
 

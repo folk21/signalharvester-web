@@ -9,21 +9,24 @@ description: Current implemented SignalHarvester Web screens, API usage, code or
 
 This document describes what the frontend currently implements. Active specifications describe intended changes and must not be read as evidence that a feature already exists.
 
+The current branch includes the Monitoring Profiles / Source Test slice. Its automated acceptance is still pending until `./run_checks.sh` and the opt-in live browser workflow pass in the developer environment.
+
 ## Current screens
 
 | Screen | Route | Current capability | Backend boundary |
 |---|---|---|---|
-| Dashboard | `/` | Shows source, collection, analysis, and recent Results summaries | Existing REST reads |
-| Sources | `/sources` | Lists, creates, edits, enables/disables, and deletes sources | `/api/v1/sources` |
-| Collection Runs | `/runs` | Starts manual runs, lists recent runs, and inspects durable source outcomes | `/api/v1/admin/collection-runs` |
+| Dashboard | `/` | Shows source/profile, collection, analysis, and recent Results summaries | Existing REST reads |
+| Sources | `/sources` | Lists, creates, edits, enables/disables, deletes, and diagnostically tests sources | `/api/v1/sources`, `/api/v1/sources/{sourceId}/test` |
+| Monitoring Profiles | `/profiles` | CRUD for persisted profiles, interval, source membership, criteria, and scheduled enabled state | `/api/v1/monitoring-profiles` |
+| Collection Runs | `/runs` | Starts persisted profiles manually, lists recent runs, and inspects durable source outcomes | `/api/v1/admin/collection-runs` |
 | Analysis Items | `/analysis` | Inspects normalized/deduplication state with profile/source filters | `/api/v1/admin/analysis/items` |
 | Results | `/results` | Lists analyzed Results with filters and loads full detail on selection | `/api/v1/results` |
 
-The current operational screens are useful on their own, but they are only part of the complete product UI defined by the active umbrella specification.
+The application shell remains one coherent operational/product frontend. Live Results and diagnostic event/flow screens are the next major frontend slice.
 
 ## Sources
 
-The Sources screen currently supports the backend source CRUD contract:
+The Sources screen supports the backend source CRUD contract:
 
 - list configured sources;
 - create a source;
@@ -31,15 +34,42 @@ The Sources screen currently supports the backend source CRUD contract:
 - enable or disable a source by updating its configuration;
 - delete a source.
 
-The form exposes the current backend source fields, including the source-specific settings map as JSON.
+The form exposes the backend source-specific settings map as JSON.
 
-Interactive source testing and extracted-item preview are not implemented because the required backend source-test API does not exist yet.
+Persisted sources also expose a `Test` action. The diagnostic response is rendered separately from normal pipeline state and includes available backend-provided information such as:
+
+- diagnostic status;
+- HTTP status and response metadata;
+- fetch and extraction duration;
+- extracted candidate count;
+- failure text;
+- bounded item previews.
+
+Disabled persisted sources may be tested. Source Test does not create a Collection Run or imply that preview items were published into Results.
+
+## Monitoring Profiles
+
+The Monitoring Profiles screen consumes the persisted backend profile contract.
+
+It supports:
+
+- create, edit, enable/disable, and delete;
+- information category;
+- collection interval in minutes;
+- ordered source membership;
+- criteria as a JSON string map.
+
+Existing profile source order is preserved when the user edits other profile fields without changing membership. Newly selected sources are appended to the membership order.
+
+The UI presents source enabled/disabled state for context, but the backend remains authoritative for scheduling and collection semantics.
 
 ## Collection Runs
 
-The Collection Runs screen can start a manual collection run by providing the current request fields and can inspect recent durable runs and per-source outcomes.
+The Collection Runs screen starts manual collection by selecting a persisted Monitoring Profile.
 
-It is an operational view. Automatic schedule management is not present because persisted monitoring profiles and scheduling remain backend work.
+The request contains only `monitoringProfileId`. Information category and ordered source membership come from backend profile configuration; the browser no longer asks the user to duplicate that state in the run form.
+
+The screen also lists recent durable runs and per-source/item terminal outcomes. Manual execution remains available independently of the profile's scheduled enabled state.
 
 ## Analysis Items
 
@@ -62,13 +92,13 @@ The list supports current backend filters for:
 
 The list intentionally uses the summary representation and does not request full normalized content for every row. Selecting one result loads its detail separately and shows content, attributes, tags, analysis metadata, and provenance.
 
-Results are currently REST-driven and do not update through SSE.
+The backend now exposes Results SSE, but the current browser still uses REST only. Live Results integration belongs to the next frontend slice.
 
 ## Dashboard
 
-The Dashboard combines small recent reads from the existing APIs. It is an operational overview rather than a separate backend aggregation contract.
+The Dashboard combines small recent reads from Sources, Monitoring Profiles, Collection Runs, Analysis, and Results.
 
-As the product grows, dashboard queries should remain bounded. A dedicated backend summary endpoint should be introduced only if multiple independent reads become inefficient or semantically inconsistent.
+It is an operational overview rather than a separate backend aggregation contract. Dashboard queries should remain bounded; a dedicated backend summary endpoint should be introduced only if independent reads become inefficient or semantically inconsistent.
 
 ## API implementation
 
@@ -76,13 +106,15 @@ The frontend REST boundary is `src/api/client.ts`.
 
 The current application uses the browser `fetch` API and converts non-success responses into a shared `ApiError`. REST schema types come from the checked-in OpenAPI document through `openapi-typescript`.
 
+The checked-in OpenAPI snapshot now includes the backend Monitoring Profiles, Source Test, Results SSE, Event Observation, and processing-flow contracts. Only the REST configuration/run subset is consumed in this frontend slice.
+
 No frontend code reads PostgreSQL or Kafka directly.
 
 ## Client state
 
-TanStack Query owns remote/server state. Page-local React state owns forms, filters, and selections.
+TanStack Query owns remote/server state, including sources, monitoring profiles, runs, analysis items, and Results.
 
-The application does not currently use a global client-state library.
+Page-local React state owns forms, filters, source-test presentation, and current selections. The application does not use a second global client-state library.
 
 ## Styling
 
@@ -92,34 +124,28 @@ The application uses one repository-owned global stylesheet and small reusable p
 
 The repository's canonical routine verification is `./run_checks.sh`. It regenerates the checked-in API types, typechecks application and browser-test code, runs Vitest, runs deterministic Playwright browser tests, and builds the production frontend.
 
-The repository currently provides:
+The deterministic browser suite now covers:
 
-- strict application and browser-test TypeScript compilation through `npm run typecheck`;
-- Vitest through `npm test`;
-- deterministic Playwright browser tests through `npm run e2e`;
-- an opt-in real-backend browser workflow through `npm run e2e:live`;
-- production build verification through `npm run build`;
-- OpenAPI type generation through `npm run api:generate`.
+- application-shell navigation including Monitoring Profiles;
+- Sources create behavior and Source Test diagnostics;
+- Monitoring Profile create request construction and source membership;
+- profile-driven manual Collection Run request/detail behavior;
+- Analysis filters;
+- Results filters/detail;
+- representative loading/error/empty states.
 
-The fast Playwright suite starts a Vite server and intercepts REST requests in the browser. Typed fixtures use the existing OpenAPI-derived frontend types. The suite covers the application shell, Sources mutation behavior, Collection Run request/detail behavior, Analysis filters, Results filters/detail, and representative loading/error/empty states.
+The opt-in live Playwright workflow now owns a temporary RSS source and monitoring profile. It tests the source, runs the profile manually, waits for matching Analysis and Results data, and removes the profile before removing the source so backend referential integrity is respected.
 
-The live Playwright workflow creates a temporary deterministic RSS source through the UI, starts a Collection Run through the UI, waits for matching Analysis and Results data, and cleans up the source. It requires a separately running backend and is intentionally not part of routine fast verification.
-
-Browser verification was accepted in the developer environment on 2026-09-14. The canonical `./run_checks.sh` workflow passed, and the opt-in `npm run e2e:live` workflow passed against a real running backend.
+The previously accepted browser-verification baseline passed in the developer environment on 2026-09-14. The current Monitoring Profiles / Source Test slice remains verification-pending until the updated routine and live checks pass.
 
 ## Current limitations
 
-The following product capabilities are not implemented in the frontend because either the frontend slice or the supporting backend contract is still pending:
+The following product capabilities are not implemented in the frontend:
 
-- monitoring-profile CRUD;
-- source-to-profile assignment;
-- schedule configuration;
-- search/matching criteria configuration;
-- analysis-setting configuration;
-- interactive source testing and bounded extraction preview;
+- dedicated analysis-setting configuration beyond the current profile criteria map;
 - automatic live Results updates through SSE;
 - live technical Event Explorer;
 - visual processing-flow inspection;
-- authentication and authorization;
+- authentication and authorization.
 
-These items belong in active specs and the roadmap rather than being presented as current behavior.
+Backend contracts are already available for Results SSE, Event Observation, and processing-flow reconstruction. These are frontend work rather than backend blockers.

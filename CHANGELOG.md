@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+2026-09-14 Added persisted Monitoring Profiles, bounded Source Test diagnostics, profile-driven manual Collection Runs, and synchronized the frontend OpenAPI snapshot with the current backend contract.
+
 2026-09-14 Accepted browser verification after routine checks and the deterministic live RSS-to-Results Playwright workflow passed; archived the completed verification sub-spec.
 
 2026-09-14 Isolated Vitest discovery from Playwright browser suites so `npm test` only runs unit/component tests.

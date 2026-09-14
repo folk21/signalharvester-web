@@ -76,8 +76,9 @@ Feature folders own screen-specific presentation and interaction logic. Shared a
 The current route set is:
 
 - `/` — Dashboard;
-- `/sources` — source configuration;
-- `/runs` — collection runs;
+- `/sources` — source configuration and bounded source diagnostics;
+- `/profiles` — monitoring-profile configuration;
+- `/runs` — profile-driven collection runs;
 - `/analysis` — normalized/deduplication inspection;
 - `/results` — analyzed result browsing and detail.
 
@@ -120,7 +121,7 @@ The adapter is intentionally small. A larger generated API client or additional 
 
 ## State ownership
 
-Server state belongs to TanStack Query. Examples include configured sources, collection runs, analysis inspection records, and Results projections.
+Server state belongs to TanStack Query. Examples include configured sources, monitoring profiles, collection runs, analysis inspection records, and Results projections.
 
 Local React state owns transient browser concerns such as:
 
@@ -150,9 +151,9 @@ HTTP failures should preserve useful backend error text when available. Browser-
 
 ## Live updates
 
-The current application uses REST only. Live Results and technical event observation are planned features.
+The current browser application uses REST only. The backend now publishes explicit SSE contracts for live Results and technical event observation, but browser integration remains a later frontend slice.
 
-When implemented:
+When browser SSE is implemented:
 
 - the browser will consume backend SSE endpoints;
 - SSE payloads must have explicit versionable application contracts;

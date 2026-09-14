@@ -2,9 +2,12 @@ import type {
   AnalysisItemInspection,
   CollectionRun,
   CollectionRunRequest,
+  MonitoringProfile,
+  MonitoringProfileUpsertRequest,
   ResultDetail,
   ResultSummary,
   Source,
+  SourceTestResult,
   SourceUpsertRequest,
 } from './types';
 
@@ -100,6 +103,33 @@ export const api = {
 
   deleteSource: (sourceId: string) =>
     request<void>(`/api/v1/sources/${encodeURIComponent(sourceId)}`, {
+      method: 'DELETE',
+    }),
+
+  testSource: (sourceId: string) =>
+    request<SourceTestResult>(`/api/v1/sources/${encodeURIComponent(sourceId)}/test`, {
+      method: 'POST',
+    }),
+
+  listMonitoringProfiles: () => request<MonitoringProfile[]>('/api/v1/monitoring-profiles'),
+
+  getMonitoringProfile: (profileId: string) =>
+    request<MonitoringProfile>(`/api/v1/monitoring-profiles/${encodeURIComponent(profileId)}`),
+
+  createMonitoringProfile: (payload: MonitoringProfileUpsertRequest) =>
+    request<MonitoringProfile>('/api/v1/monitoring-profiles', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  updateMonitoringProfile: (profileId: string, payload: MonitoringProfileUpsertRequest) =>
+    request<MonitoringProfile>(`/api/v1/monitoring-profiles/${encodeURIComponent(profileId)}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+
+  deleteMonitoringProfile: (profileId: string) =>
+    request<void>(`/api/v1/monitoring-profiles/${encodeURIComponent(profileId)}`, {
       method: 'DELETE',
     }),
 

@@ -1,7 +1,7 @@
 ---
 type: Usage Guide
 title: SignalHarvester Web usage
-description: Current UI workflows for source configuration, collection operations, analysis inspection, Results browsing, and manual contract verification.
+description: Current UI workflows for source/profile configuration, collection operations, analysis inspection, Results browsing, and manual contract verification.
 ---
 # SignalHarvester Web usage
 
@@ -15,20 +15,23 @@ The current build has no authentication. Use it only with a trusted local/privat
 
 A useful current workflow is:
 
-1. configure or enable one or more sources;
-2. start a manual Collection Run;
-3. inspect per-source run outcomes;
-4. inspect normalization/deduplication state when diagnosing processing;
-5. browse analyzed Results;
-6. open one Result to inspect content, analysis metadata, and provenance.
+1. create or edit one or more Sources;
+2. use **Test** on a persisted Source to verify fetch/extraction and inspect bounded preview items;
+3. create a Monitoring Profile with category, interval, criteria, and ordered source membership;
+4. enable scheduled collection when desired;
+5. start the Monitoring Profile manually from Collection Runs when immediate execution is useful;
+6. inspect per-source run outcomes;
+7. inspect normalization/deduplication state when diagnosing processing;
+8. browse analyzed Results;
+9. open one Result to inspect content, analysis metadata, and provenance.
 
-The current backend also supports deterministic live pipeline verification outside the browser. Use the backend repository's `tools/live-backend/` workflow when you need to distinguish a frontend problem from a backend pipeline problem.
+The backend repository's `tools/live-backend/` workflow remains useful when you need to distinguish a frontend problem from a backend pipeline problem.
 
 ## Dashboard
 
 Open `/`.
 
-The Dashboard shows bounded recent information from the current source, collection, analysis, and Results APIs. It is intended as a quick operational overview.
+The Dashboard shows bounded recent information from Sources, Monitoring Profiles, Collection Runs, Analysis, and Results.
 
 Use the dedicated screens for complete actions and details.
 
@@ -42,27 +45,53 @@ The screen supports:
 - creating a source;
 - editing source fields;
 - enabling/disabling collection for a source;
-- deleting a source.
+- deleting a source;
+- diagnostically testing a persisted source.
 
-Source settings are currently entered as a JSON string map because that is the shape exposed by the backend contract.
+Source settings are entered as a JSON string map because that is the backend contract shape.
+
+### Source Test
+
+Choose **Test** on a persisted source. The backend uses the normal fetch/extraction boundary without publishing normal pipeline events or creating collection-run history.
+
+The UI shows available diagnostic fields including HTTP status, response size/content type, fetch/extraction durations, candidate count, failure text, and bounded extracted-item previews.
+
+Testing is allowed for disabled sources. A successful preview does not mean that the items were inserted into Results.
 
 A configured source can authorize outbound backend HTTP access to its destination. Do not expose source management to untrusted users while the application has no authentication/authorization and before backend outbound-destination policy is hardened.
+
+## Monitoring Profiles
+
+Open `/profiles`.
+
+A Monitoring Profile currently contains:
+
+- a display name;
+- information category;
+- enabled/disabled scheduled state;
+- collection interval in minutes;
+- one or more ordered Source references;
+- a criteria string map entered as JSON.
+
+The source list shows each source's type and enabled state. Selection order is preserved as profile source order; newly selected sources are appended.
+
+A disabled profile may still be selected for a manual Collection Run. The enabled flag controls scheduled collection rather than whether the persisted profile exists.
 
 ## Collection Runs
 
 Open `/runs`.
 
-Use this screen to start a manual run and inspect recent completed run state. Run detail exposes durable per-source outcomes returned by the backend.
+Select a persisted Monitoring Profile and choose **Start collection run**. The browser sends only the selected profile identity. Information category and source membership come from the backend profile configuration.
 
-RSS/Atom sources may produce multiple published semantic items from one fetched feed. The run's published counts and source outcomes therefore describe extracted items rather than merely successful HTTP responses.
+Run detail exposes durable per-source/item outcomes returned by the backend.
 
-Automatic schedule management is not available yet.
+RSS/Atom sources may produce multiple published semantic items from one fetched feed. Published counts and source outcomes therefore describe extracted items rather than merely successful HTTP responses.
 
 ## Analysis Items
 
 Open `/analysis`.
 
-This screen is a technical inspection view for normalized/deduplication state. It supports the current backend filters for monitoring profile and source.
+This screen is a technical inspection view for normalized/deduplication state. It supports the backend filters for monitoring profile and source.
 
 Use this screen when diagnosing why raw discoveries were accepted, deduplicated, or associated with a particular processing context. User-facing terminal analysis belongs to Results.
 
@@ -82,16 +111,22 @@ The current filters are:
 
 Selecting a list row loads the detailed representation separately. Detail includes normalized content, attributes, tags, analysis metadata, and event/correlation provenance.
 
-The Results page does not yet receive SSE updates. Use the page refresh action to fetch current state after new processing completes.
+The backend exposes a Results SSE contract, but this frontend slice still uses REST refresh. Live Results belongs to the next frontend stage.
 
 ## Cross-check UI data against REST
 
-During development, the simplest way to verify what the UI displays is to call the same backend REST APIs directly.
-
-Assuming the backend is running on `http://localhost:8080`:
+Assuming the backend is running on `http://localhost:8080`, the following calls use the same public boundaries as the browser:
 
 ```bash
 curl -s http://localhost:8080/api/v1/sources | jq
+```
+
+```bash
+curl -s http://localhost:8080/api/v1/monitoring-profiles | jq
+```
+
+```bash
+curl -s -X POST http://localhost:8080/api/v1/sources/<SOURCE_ID>/test | jq
 ```
 
 ```bash
@@ -106,9 +141,7 @@ curl -s 'http://localhost:8080/api/v1/admin/analysis/items?limit=20' | jq
 curl -s 'http://localhost:8080/api/v1/results?limit=20' | jq
 ```
 
-This checks the same public application boundary used by the browser. It is usually more useful than comparing the UI directly with database tables because the REST contract is the frontend source of truth.
-
-For one Result detail, first take `monitoringProfileId` and `normalizedItemId` from the Results list, then call:
+For one Result detail, take `monitoringProfileId` and `normalizedItemId` from the Results list, then call:
 
 ```bash
 curl -s \
@@ -124,7 +157,7 @@ After installing Playwright Chromium with `npm run e2e:install`, run the determi
 npm run e2e
 ```
 
-This suite uses controlled REST responses and can run while the backend is stopped. It is the preferred fast check for navigation, forms, filters, request construction, detail rendering, and async states.
+The suite uses controlled REST responses and can run while the backend is stopped. It is the preferred fast check for navigation, configuration forms, Source Test presentation, request construction, filters, detail rendering, and async states.
 
 To verify the browser against a real backend that is already running on the host:
 
@@ -132,7 +165,7 @@ To verify the browser against a real backend that is already running on the host
 SIGNALHARVESTER_BACKEND_URL=http://127.0.0.1:8080 npm run e2e:live
 ```
 
-The live workflow owns a temporary RSS fixture and temporary source. It uses a unique monitoring-profile ID so earlier Analysis deduplication state does not suppress the expected Results. Other already-enabled sources may participate in the same Collection Run, so the test asserts the two outcomes belonging to its temporary source rather than requiring the whole run to be globally successful.
+The live workflow creates a temporary RSS source, diagnostically tests it, creates a temporary Monitoring Profile referencing that source, starts that profile manually, waits for matching Analysis and Results, and then deletes the profile before deleting the source.
 
 By default the backend must be able to reach a loopback fixture on the same host. For a backend in a container, set `SIGNALHARVESTER_LIVE_FIXTURE_HOST` to a hostname that the backend container can use to reach the host fixture, when such routing is configured.
 
@@ -143,7 +176,7 @@ When a screen looks inconsistent, use browser developer tools and check the Netw
 Useful questions are:
 
 - which `/api/...` request was sent;
-- which query parameters were included;
+- which query parameters or request body fields were included;
 - what HTTP status came back;
 - whether the JSON response matches what the page renders;
 - whether the backend response itself is stale or unexpected.

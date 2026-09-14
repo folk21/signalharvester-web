@@ -7,9 +7,9 @@ description: Compact frontend roadmap, backend dependencies, and current impleme
 
 ## Current focus
 
-The current frontend covers the backend operational/admin APIs for Sources, manual Collection Runs, Analysis inspection, and Results browsing. Browser verification is implemented and accepted, including deterministic Playwright coverage and the opt-in live-backend workflow.
+The current bounded focus is persisted Monitoring Profiles, Source Test diagnostics, and profile-driven manual Collection Runs. The required backend contracts are now available and the frontend implementation is complete pending verification.
 
-There is no active bounded frontend sub-spec. The next planned product work is the configuration experience, which depends on new backend contracts. Results SSE and event diagnostics are also blocked on their backend contracts.
+The accepted baseline already covers Sources CRUD, Collection Run inspection, Analysis inspection, Results browsing, deterministic Playwright coverage, and the opt-in live-backend workflow. Backend contracts are also available for Results SSE, Event Observation, and processing-flow reconstruction, so the next frontend slice can implement live Results and diagnostic visualization without additional backend contract work.
 
 ## Completed baseline
 
@@ -30,22 +30,20 @@ Browser verification was accepted on 2026-09-14 after both `./run_checks.sh` and
 
 ## P1 — complete configuration experience
 
-This work depends on backend contracts that are not implemented yet.
-
-Planned UI capabilities:
+Implemented in the current verification-pending slice:
 
 - monitoring-profile CRUD;
-- source assignment to profiles;
-- schedule/interval configuration;
-- search or matching criteria;
-- initial analysis settings;
-- source validation/test action with bounded extracted-item preview.
+- ordered source assignment to profiles;
+- interval and scheduled enabled-state configuration;
+- information category and criteria configuration;
+- source validation/test action with bounded extracted-item preview;
+- profile selection for manual Collection Runs.
 
-The browser must validate known input constraints, while backend validation remains authoritative.
+Dedicated analysis-setting controls remain deferred until the backend publishes a corresponding contract. The browser validates known input constraints while backend validation remains authoritative.
 
 ## P1 — live Results
 
-After the backend exposes the Results SSE contract:
+The backend Results SSE contract is available. The next live-data frontend slice should:
 
 - subscribe to new Results without manual refresh;
 - reconnect safely after transient network failure;
@@ -57,7 +55,7 @@ Polling should not become the long-term replacement for the planned SSE boundary
 
 ## P1 — event diagnostics
 
-After event-observation backend APIs exist:
+The backend Event Observation REST/SSE APIs are available. The next diagnostic frontend slice should:
 
 - add a bounded live Event Explorer;
 - filter by event type, producer/service, topic, correlation ID, run, and item where supported;
@@ -66,7 +64,7 @@ After event-observation backend APIs exist:
 
 ## P1 — processing-flow visualization
 
-Once the backend can reconstruct bounded correlated flows:
+The backend can now reconstruct bounded correlated flows. The diagnostic frontend slice should:
 
 - visualize source -> collection -> Kafka -> analysis -> persistence -> result stages;
 - show timestamps and durations where available;
@@ -95,13 +93,11 @@ After core behavior stabilizes:
 
 ## Backend dependencies
 
-The frontend roadmap intentionally does not invent contracts for missing backend capabilities. Major pending backend dependencies include:
+The frontend roadmap intentionally does not invent contracts for missing backend capabilities. The backend contracts required for the current configuration and planned live-diagnostic frontend work are available: monitoring profiles, Source Test, Results SSE, Event Observation, and processing-flow reconstruction.
 
-- persisted monitoring profiles and schedules;
-- source-test/preview capability;
-- Results SSE;
-- event-observation APIs and persistence;
-- correlated processing-flow read model;
+Remaining major backend/product dependencies include:
+
+- dedicated analysis-setting configuration beyond the current criteria map;
 - authentication/authorization contract;
 - production deployment and observability integration.
 

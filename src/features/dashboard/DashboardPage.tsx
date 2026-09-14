@@ -7,6 +7,7 @@ import { formatDateTime, formatDuration, shortId } from '../../lib/format';
 
 export function DashboardPage() {
   const sourcesQuery = useQuery({ queryKey: ['sources'], queryFn: api.listSources });
+  const profilesQuery = useQuery({ queryKey: ['monitoring-profiles'], queryFn: api.listMonitoringProfiles });
   const runsQuery = useQuery({
     queryKey: ['collection-runs', 8],
     queryFn: () => api.listCollectionRuns(8),
@@ -21,8 +22,13 @@ export function DashboardPage() {
   });
 
   const loading =
-    sourcesQuery.isPending || runsQuery.isPending || analysisQuery.isPending || resultsQuery.isPending;
-  const error = sourcesQuery.error ?? runsQuery.error ?? analysisQuery.error ?? resultsQuery.error;
+    sourcesQuery.isPending ||
+    profilesQuery.isPending ||
+    runsQuery.isPending ||
+    analysisQuery.isPending ||
+    resultsQuery.isPending;
+  const error =
+    sourcesQuery.error ?? profilesQuery.error ?? runsQuery.error ?? analysisQuery.error ?? resultsQuery.error;
 
   if (loading) {
     return <LoadingState label="Loading operational overview…" />;
@@ -32,6 +38,7 @@ export function DashboardPage() {
   }
 
   const sources = sourcesQuery.data ?? [];
+  const profiles = profilesQuery.data ?? [];
   const runs = runsQuery.data ?? [];
   const analysisItems = analysisQuery.data ?? [];
   const results = resultsQuery.data ?? [];
@@ -50,6 +57,11 @@ export function DashboardPage() {
           <span>Configured sources</span>
           <strong>{sources.length}</strong>
           <small>{sources.filter((source) => source.enabled).length} enabled</small>
+        </article>
+        <article className="stat-card">
+          <span>Monitoring profiles</span>
+          <strong>{profiles.length}</strong>
+          <small>{profiles.filter((profile) => profile.enabled).length} scheduled</small>
         </article>
         <article className="stat-card">
           <span>Recent runs</span>

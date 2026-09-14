@@ -1,11 +1,17 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
-import type { Source, SourceType, SourceUpsertRequest } from '../../api/types';
+import type {
+  Source,
+  SourceTestResult,
+  SourceType,
+  SourceUpsertRequest,
+} from '../../api/types';
 import { EmptyState, ErrorState, LoadingState } from '../../components/AsyncState';
 import { PageHeader } from '../../components/PageHeader';
 import { StatusBadge } from '../../components/StatusBadge';
 import { validateSourceForm, type SourceFormValues } from '../../lib/source-form';
+import { formatDateTime } from '../../lib/format';
 
 const emptyForm: SourceFormValues = {
   name: '',
@@ -15,12 +21,19 @@ const emptyForm: SourceFormValues = {
   settingsText: '{}',
 };
 
+interface TestedSource {
+  source: Source;
+  result: SourceTestResult;
+}
+
 export function SourcesPage() {
   const queryClient = useQueryClient();
   const sourcesQuery = useQuery({ queryKey: ['sources'], queryFn: api.listSources });
   const [editing, setEditing] = useState<Source | null>(null);
   const [form, setForm] = useState<SourceFormValues>(emptyForm);
   const [formError, setFormError] = useState<string | null>(null);
+  const [testedSource, setTestedSource] = useState<TestedSource | null>(null);
+  const [testingSourceId, setTestingSourceId] = useState<string | null>(null);
 
   const saveMutation = useMutation({
     mutationFn: async (payload: SourceUpsertRequest) =>
@@ -33,8 +46,11 @@ export function SourcesPage() {
 
   const deleteMutation = useMutation({
     mutationFn: api.deleteSource,
-    onSuccess: async () => {
+    onSuccess: async (_, sourceId) => {
       await queryClient.invalidateQueries({ queryKey: ['sources'] });
+      if (testedSource?.source.id === sourceId) {
+        setTestedSource(null);
+      }
       resetForm();
     },
   });
@@ -44,6 +60,22 @@ export function SourcesPage() {
       api.updateSource(source.id, toPayload(source, enabled)),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['sources'] });
+    },
+  });
+
+  const testMutation = useMutation({
+    mutationFn: api.testSource,
+    onMutate: (sourceId) => {
+      setTestingSourceId(sourceId);
+    },
+    onSuccess: (result, sourceId) => {
+      const source = sourcesQuery.data?.find((candidate) => candidate.id === sourceId);
+      if (source) {
+        setTestedSource({ source, result });
+      }
+    },
+    onSettled: () => {
+      setTestingSourceId(null);
     },
   });
 
@@ -100,7 +132,7 @@ export function SourcesPage() {
       <PageHeader
         eyebrow="Configuration"
         title="Sources"
-        description="Manage external sources used by collection runs. Changes are persisted by the configuration module."
+        description="Manage external sources and run bounded fetch/extraction diagnostics without publishing normal pipeline events."
         actions={
           <button className="button button--primary" onClick={resetForm} type="button">
             New source
@@ -148,6 +180,14 @@ export function SourcesPage() {
                       </td>
                       <td>
                         <div className="table-actions">
+                          <button
+                            className="button button--ghost"
+                            disabled={testMutation.isPending}
+                            onClick={() => testMutation.mutate(source.id)}
+                            type="button"
+                          >
+                            {testingSourceId === source.id ? 'Testing…' : 'Test'}
+                          </button>
                           <button className="button button--ghost" onClick={() => beginEdit(source)} type="button">
                             Edit
                           </button>
@@ -247,7 +287,59 @@ export function SourcesPage() {
           </form>
         </article>
       </section>
+
+      {testMutation.error ? <div className="inline-error">Source test failed: {testMutation.error.message}</div> : null}
+      {testedSource ? <SourceTestPanel tested={testedSource} /> : null}
     </div>
+  );
+}
+
+function SourceTestPanel({ tested }: { tested: TestedSource }) {
+  const { source, result } = tested;
+  return (
+    <section className="panel source-test-panel" aria-label="Source test result">
+      <div className="panel__header">
+        <div>
+          <span className="eyebrow">Diagnostic preview</span>
+          <h2>{source.name}</h2>
+        </div>
+        <StatusBadge value={result.status} />
+      </div>
+
+      <div className="diagnostic-grid">
+        <div><span>HTTP status</span><strong>{result.httpStatus ?? '—'}</strong></div>
+        <div><span>Response bytes</span><strong>{result.responseBytes}</strong></div>
+        <div><span>Fetch</span><strong>{result.fetchDurationMs} ms</strong></div>
+        <div><span>Extraction</span><strong>{result.extractionDurationMs} ms</strong></div>
+        <div><span>Candidates</span><strong>{result.candidateItemCount}</strong></div>
+        <div><span>Content type</span><strong>{result.responseContentType ?? '—'}</strong></div>
+      </div>
+
+      {result.failureMessage ? <div className="inline-error source-test-panel__error">{result.failureMessage}</div> : null}
+
+      {result.preview.length === 0 ? (
+        <EmptyState>No extracted items were available for preview.</EmptyState>
+      ) : (
+        <div className="source-preview-list">
+          {result.preview.map((item, index) => (
+            <article className="source-preview-card" key={`${item.externalId ?? item.url}:${index}`}>
+              <div className="source-preview-card__header">
+                <div>
+                  <strong>{item.title?.trim() || item.externalId?.trim() || `Item ${index + 1}`}</strong>
+                  <a href={item.url} target="_blank" rel="noreferrer">{item.url}</a>
+                </div>
+                <span>{item.contentType}</span>
+              </div>
+              <p className="content-preview">{item.contentPreview}</p>
+              <div className="source-preview-card__meta">
+                <span>{item.publishedAt ? formatDateTime(item.publishedAt) : 'No publication time'}</span>
+                {item.contentTruncated ? <span>Preview truncated</span> : null}
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 

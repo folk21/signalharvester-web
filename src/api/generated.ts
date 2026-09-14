@@ -44,6 +44,68 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sources/{sourceId}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Stable source identifier. */
+                sourceId: components["parameters"]["SourceId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Test one persisted external source configuration
+         * @description Uses the normal collection fetch and extraction boundary without publishing Kafka events or collection-run history. Disabled sources may be tested before activation.
+         */
+        post: operations["testSource"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/monitoring-profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List monitoring profiles */
+        get: operations["listMonitoringProfiles"];
+        put?: never;
+        /** Create a monitoring profile */
+        post: operations["createMonitoringProfile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/monitoring-profiles/{profileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        /** Get a monitoring profile */
+        get: operations["getMonitoringProfile"];
+        /** Replace a monitoring profile */
+        put: operations["updateMonitoringProfile"];
+        post?: never;
+        /** Delete a monitoring profile */
+        delete: operations["deleteMonitoringProfile"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/collection-runs": {
         parameters: {
             query?: never;
@@ -119,6 +181,83 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List recent technical processing events */
+        get: operations["listObservedEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stream live technical processing events
+         * @description Server-Sent Events stream over the bounded persisted Event Explorer history. The server emits named `ready`, `event`, and `keepalive` events with numeric durable cursors. Browser reconnection may resume with Last-Event-ID. A fresh connection starts after the current cursor; use GET /api/v1/events for an initial bounded history snapshot. For a race-free browser bootstrap, establish the stream and receive `ready` before fetching GET /api/v1/events, buffering later `event` messages until the REST snapshot has been applied. History retention is bounded, so a reconnect cursor older than retained records resumes with the oldest still-retained matching events.
+         */
+        get: operations["streamObservedEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/flows/collection-runs/{collectionRunId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Reconstruct a processing graph for one collection run
+         * @description Builds a bounded diagnostic graph from retained Event Observation history. Each node states whether its evidence is directly observed, derived from a published event, or currently not observed.
+         */
+        get: operations["getCollectionRunProcessingFlow"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/flows/collection-runs/{collectionRunId}/items/{itemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Reconstruct one item branch within a collection run
+         * @description The item identifier may be a raw or normalized item id. Collection-run scoping prevents repeated logical items from different runs from being merged into one graph.
+         */
+        get: operations["getItemProcessingFlow"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/results": {
         parameters: {
             query?: never;
@@ -128,6 +267,26 @@ export interface paths {
         };
         /** List recent analyzed results */
         get: operations["listResults"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/results/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stream live analyzed-result updates
+         * @description Server-Sent Events stream. The server emits named `ready`, `result`, and `keepalive` events. Each event has a numeric `id` cursor and a JSON `data` payload matching ResultLiveEvent. Browser EventSource reconnection resumes from the automatically supplied Last-Event-ID header. A connection without Last-Event-ID starts after the current durable cursor; clients should use GET /api/v1/results for initial browsing. The stream represents current result projections rather than an append-only event history, so repeated updates to one logical result while disconnected may collapse to the latest current projection. A resume cursor ahead of the current database watermark is normalized back to that watermark. For a race-free initial page load, establish the stream and receive `ready` before fetching GET /api/v1/results, buffering later `result` events until the REST snapshot has been applied.
+         */
+        get: operations["streamResults"];
         put?: never;
         post?: never;
         delete?: never;
@@ -174,7 +333,7 @@ export interface components {
              */
             location: string;
             enabled: boolean;
-            /** @description Source-type-specific string configuration interpreted by the owning collector. */
+            /** @description Source-type-specific string configuration interpreted by the owning collector. REST JSON extraction uses json.* JSON Pointer settings; HTML extraction uses html.* CSS selector settings. */
             settings: {
                 [key: string]: string;
             };
@@ -193,16 +352,69 @@ export interface components {
              */
             enabled: boolean;
             /**
-             * @description Source-type-specific string configuration interpreted by the owning collector.
+             * @description Source-type-specific string configuration interpreted by the owning collector. REST JSON extraction uses json.* JSON Pointer settings; HTML extraction uses html.* CSS selector settings.
              * @default {}
              */
             settings: {
                 [key: string]: string;
             };
         };
-        CollectionRunRequest: {
-            monitoringProfileId: string;
+        /** @enum {string} */
+        SourceTestStatus: "SUCCEEDED" | "FETCH_FAILED" | "EXTRACTION_FAILED";
+        SourceTestPreviewItem: {
+            externalId: string | null;
+            title: string | null;
+            /** Format: uri */
+            url: string;
+            /** @description Bounded prefix of extracted semantic content. */
+            contentPreview: string;
+            contentType: string;
+            /** Format: date-time */
+            publishedAt: string | null;
+            contentTruncated: boolean;
+        };
+        SourceTestResult: {
+            /** Format: uuid */
+            sourceId: string;
+            status: components["schemas"]["SourceTestStatus"];
+            httpStatus: number | null;
+            responseContentType: string | null;
+            responseBytes: number;
+            /** Format: int64 */
+            fetchDurationMs: number;
+            /** Format: int64 */
+            extractionDurationMs: number;
+            candidateItemCount: number;
+            preview: components["schemas"]["SourceTestPreviewItem"][];
+            failureMessage: string | null;
+        };
+        MonitoringProfile: {
+            /** Format: uuid */
+            id: string;
+            name: string;
             informationCategory: string;
+            enabled: boolean;
+            collectionIntervalMinutes: number;
+            sourceIds: string[];
+            criteria: {
+                [key: string]: string;
+            };
+        };
+        MonitoringProfileUpsertRequest: {
+            name: string;
+            informationCategory: string;
+            /** @default false */
+            enabled: boolean;
+            collectionIntervalMinutes: number;
+            sourceIds: string[];
+            /** @default {} */
+            criteria: {
+                [key: string]: string;
+            };
+        };
+        CollectionRunRequest: {
+            /** Format: uuid */
+            monitoringProfileId: string;
         };
         /** @description One terminal source/item outcome. RSS/Atom sources may contribute multiple outcomes with the same sourceId. */
         CollectionSourceRun: {
@@ -255,6 +467,106 @@ export interface components {
             /** Format: int64 */
             discoveryCount: number;
         };
+        ObservedKafkaMetadata: {
+            topic: string;
+            partition: number;
+            /** Format: int64 */
+            offset: number;
+            key: string;
+        };
+        ObservedEventPayload: {
+            type: string;
+            sourceEventId: string | null;
+            rawItemId: string | null;
+            normalizedItemId: string | null;
+            sourceId: string | null;
+            monitoringProfileId: string | null;
+            informationCategory: string | null;
+            externalId: string | null;
+            title: string | null;
+            url: string | null;
+            contentType: string | null;
+            relevant: boolean | null;
+            classification: string | null;
+            score: number | null;
+            analyzer: string | null;
+            reasonCode: string | null;
+            explanation: string | null;
+        };
+        ObservedEvent: {
+            /** Format: int64 */
+            cursor: number;
+            eventId: string;
+            eventType: string;
+            /** Format: date-time */
+            occurredAt: string;
+            /** Format: date-time */
+            observedAt: string;
+            correlationId: string;
+            traceparent: string | null;
+            producer: string;
+            schemaVersion: string;
+            kafka: components["schemas"]["ObservedKafkaMetadata"];
+            payload: components["schemas"]["ObservedEventPayload"];
+        };
+        ObservedEventLiveEvent: {
+            /** Format: int64 */
+            cursor: number;
+            event: components["schemas"]["ObservedEvent"] | null;
+        };
+        ProcessingFlowKafkaMetadata: {
+            topic: string;
+            partition: number;
+            /** Format: int64 */
+            offset: number;
+            key: string;
+        };
+        ProcessingFlowNode: {
+            id: string;
+            /** @description Published raw discovery event id that owns this item branch. */
+            branchId: string;
+            /** @enum {string} */
+            stage: "EXTERNAL_SOURCE" | "COLLECTION" | "RAW_KAFKA" | "NORMALIZATION" | "DEDUPLICATION" | "ANALYSIS" | "TERMINAL_KAFKA" | "RESULTS_PERSISTENCE";
+            /** @enum {string} */
+            status: "REACHED" | "COMPLETED" | "PUBLISHED" | "PASSED" | "REJECTED" | "SKIPPED" | "UNKNOWN";
+            /** @enum {string} */
+            evidence: "OBSERVED_EVENT" | "OBSERVED_KAFKA_METADATA" | "DERIVED_FROM_EVENT" | "NOT_OBSERVED";
+            /** Format: date-time */
+            occurredAt: string | null;
+            eventId: string | null;
+            eventType: string | null;
+            producer: string | null;
+            traceparent: string | null;
+            sourceEventId: string | null;
+            rawItemId: string | null;
+            normalizedItemId: string | null;
+            sourceId: string | null;
+            monitoringProfileId: string | null;
+            outcome: string | null;
+            score: number | null;
+            kafka: components["schemas"]["ProcessingFlowKafkaMetadata"] | null;
+        };
+        ProcessingFlowEdge: {
+            from: string;
+            to: string;
+            /** @enum {string} */
+            kind: "PROCESSING" | "PUBLICATION" | "ASYNC_PROCESSING" | "EXPECTED_PERSISTENCE";
+            /** Format: int64 */
+            durationMs: number | null;
+        };
+        ProcessingFlow: {
+            /** @enum {string} */
+            scope: "COLLECTION_RUN" | "ITEM";
+            collectionRunId: string;
+            itemId: string | null;
+            /** @enum {string} */
+            state: "TERMINAL_EVENT_REACHED" | "IN_PROGRESS" | "PARTIAL_HISTORY";
+            observedEventCount: number;
+            traceIds: string[];
+            nodes: components["schemas"]["ProcessingFlowNode"][];
+            edges: components["schemas"]["ProcessingFlowEdge"][];
+            limitations: ("HISTORY_QUERY_LIMIT_REACHED" | "MISSING_RAW_DISCOVERY" | "RESULTS_PERSISTENCE_NOT_OBSERVED")[];
+        };
         ResultSummary: {
             monitoringProfileId: string;
             normalizedItemId: string;
@@ -277,6 +589,15 @@ export interface components {
             publishedAt: string | null;
             /** Format: date-time */
             analyzedAt: string;
+        };
+        ResultLiveEvent: {
+            /**
+             * Format: int64
+             * @description Durable cursor also written to the SSE id field.
+             */
+            cursor: number;
+            /** @description Present for `result` events and null for `ready` or `keepalive` events. */
+            result: components["schemas"]["ResultSummary"] | null;
         };
         ResultDetail: {
             monitoringProfileId: string;
@@ -468,6 +789,190 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Source is referenced by a monitoring profile */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    testSource: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Stable source identifier. */
+                sourceId: components["parameters"]["SourceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Diagnostic source-test result, including fetch or extraction failures */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourceTestResult"];
+                };
+            };
+            /** @description Source not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMonitoringProfiles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Persisted monitoring profiles */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonitoringProfile"][];
+                };
+            };
+        };
+    };
+    createMonitoringProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MonitoringProfileUpsertRequest"];
+            };
+        };
+        responses: {
+            /** @description Monitoring profile created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonitoringProfile"];
+                };
+            };
+            /** @description Invalid monitoring profile configuration */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMonitoringProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Persisted monitoring profile */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonitoringProfile"];
+                };
+            };
+            /** @description Monitoring profile not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateMonitoringProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MonitoringProfileUpsertRequest"];
+            };
+        };
+        responses: {
+            /** @description Monitoring profile updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonitoringProfile"];
+                };
+            };
+            /** @description Invalid monitoring profile configuration */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Monitoring profile not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteMonitoringProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Monitoring profile deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Monitoring profile not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     listCollectionRuns: {
@@ -516,6 +1021,13 @@ export interface operations {
             };
             /** @description Invalid run request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Monitoring profile not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -607,6 +1119,141 @@ export interface operations {
             };
         };
     };
+    listObservedEvents: {
+        parameters: {
+            query?: {
+                limit?: number;
+                eventType?: string;
+                producer?: string;
+                topic?: string;
+                correlationId?: string;
+                /** @description Alias for the current pipeline correlation identifier. */
+                collectionRunId?: string;
+                /** @description Matches either rawItemId or normalizedItemId. */
+                itemId?: string;
+                /** @description W3C trace id matched inside traceparent when present. */
+                traceId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Recent observed events matching the supplied filters */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ObservedEvent"][];
+                };
+            };
+            /** @description Invalid event-observation query parameters */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    streamObservedEvents: {
+        parameters: {
+            query?: {
+                eventType?: string;
+                producer?: string;
+                topic?: string;
+                correlationId?: string;
+                collectionRunId?: string;
+                itemId?: string;
+                traceId?: string;
+            };
+            header?: {
+                "Last-Event-ID"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Resumable live technical-event stream */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ObservedEventLiveEvent"];
+                };
+            };
+            /** @description Invalid filters or Last-Event-ID cursor */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getCollectionRunProcessingFlow: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                collectionRunId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reconstructed collection-run processing graph */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProcessingFlow"];
+                };
+            };
+            /** @description No retained technical events exist for the collection run */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getItemProcessingFlow: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                collectionRunId: string;
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reconstructed item processing graph */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProcessingFlow"];
+                };
+            };
+            /** @description No retained technical events exist for the selected item in the collection run */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listResults: {
         parameters: {
             query?: {
@@ -635,6 +1282,42 @@ export interface operations {
                 };
             };
             /** @description Invalid result query parameters */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    streamResults: {
+        parameters: {
+            query?: {
+                monitoringProfileId?: string;
+                sourceId?: string;
+                informationCategory?: string;
+                relevant?: boolean;
+                classification?: string;
+            };
+            header?: {
+                /** @description Last numeric SSE cursor received by the client. */
+                "Last-Event-ID"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Resumable live result stream */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ResultLiveEvent"];
+                };
+            };
+            /** @description Invalid filters or Last-Event-ID cursor */
             400: {
                 headers: {
                     [name: string]: unknown;

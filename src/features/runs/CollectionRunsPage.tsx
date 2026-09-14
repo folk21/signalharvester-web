@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
-import type { CollectionRun } from '../../api/types';
+import type { CollectionRun, MonitoringProfile } from '../../api/types';
 import { EmptyState, ErrorState, LoadingState } from '../../components/AsyncState';
 import { PageHeader } from '../../components/PageHeader';
 import { StatusBadge } from '../../components/StatusBadge';
@@ -9,13 +9,16 @@ import { formatDateTime, formatDuration, shortId } from '../../lib/format';
 
 export function CollectionRunsPage() {
   const queryClient = useQueryClient();
-  const [monitoringProfileId, setMonitoringProfileId] = useState('manual-admin');
-  const [informationCategory, setInformationCategory] = useState('JOB');
+  const [monitoringProfileId, setMonitoringProfileId] = useState('');
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
 
   const runsQuery = useQuery({
     queryKey: ['collection-runs', 50],
     queryFn: () => api.listCollectionRuns(50),
+  });
+  const profilesQuery = useQuery({
+    queryKey: ['monitoring-profiles'],
+    queryFn: api.listMonitoringProfiles,
   });
 
   const startMutation = useMutation({
@@ -27,27 +30,38 @@ export function CollectionRunsPage() {
     },
   });
 
-  const runs = runsQuery.data ?? [];
-  const selectedRun = useMemo(
-    () => runs.find((run) => run.collectionRunId === selectedRunId) ?? runs[0] ?? null,
-    [runs, selectedRunId],
+  const profiles = useMemo(
+    () => [...(profilesQuery.data ?? [])].sort((a, b) => a.name.localeCompare(b.name)),
+    [profilesQuery.data],
   );
+
+  useEffect(() => {
+    if (!monitoringProfileId && profiles.length > 0) {
+      const preferred = profiles.find((profile) => profile.enabled) ?? profiles[0];
+      setMonitoringProfileId(preferred.id);
+    }
+  }, [monitoringProfileId, profiles]);
+
+  const loading = runsQuery.isPending || profilesQuery.isPending;
+  const error = runsQuery.error ?? profilesQuery.error;
+  if (loading) {
+    return <LoadingState label="Loading collection history…" />;
+  }
+  if (error) {
+    return <ErrorState error={error} />;
+  }
+
+  const runs = runsQuery.data ?? [];
+  const profileById = new Map(profiles.map((profile) => [profile.id, profile]));
+  const selectedRun =
+    runs.find((run) => run.collectionRunId === selectedRunId) ?? runs[0] ?? null;
 
   function startRun(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const profile = monitoringProfileId.trim();
-    const category = informationCategory.trim();
-    if (!profile || !category) {
+    if (!monitoringProfileId) {
       return;
     }
-    startMutation.mutate({ monitoringProfileId: profile, informationCategory: category });
-  }
-
-  if (runsQuery.isPending) {
-    return <LoadingState label="Loading collection history…" />;
-  }
-  if (runsQuery.error) {
-    return <ErrorState error={runsQuery.error} />;
+    startMutation.mutate({ monitoringProfileId });
   }
 
   return (
@@ -55,30 +69,40 @@ export function CollectionRunsPage() {
       <PageHeader
         eyebrow="Operations"
         title="Collection Runs"
-        description="Start a manual collection run and inspect the durable outcome recorded for each source."
+        description="Start a persisted monitoring profile manually and inspect the durable outcome recorded for each configured source."
       />
 
       <section className="panel run-launcher">
         <div>
           <span className="eyebrow">Manual execution</span>
-          <h2>Run enabled sources</h2>
+          <h2>Run a monitoring profile</h2>
           <p>
-            The current backend accepts profile and category context explicitly. Monitoring profiles are not yet a persisted configuration model.
+            Manual execution uses the selected persisted profile. Category and ordered source membership come from backend configuration.
           </p>
         </div>
-        <form className="run-launcher__form" onSubmit={startRun}>
-          <label>
-            <span>Monitoring profile ID</span>
-            <input value={monitoringProfileId} onChange={(event) => setMonitoringProfileId(event.target.value)} />
-          </label>
-          <label>
-            <span>Information category</span>
-            <input value={informationCategory} onChange={(event) => setInformationCategory(event.target.value)} />
-          </label>
-          <button className="button button--primary" disabled={startMutation.isPending} type="submit">
-            {startMutation.isPending ? 'Running…' : 'Start collection run'}
-          </button>
-        </form>
+        {profiles.length === 0 ? (
+          <EmptyState>Create a monitoring profile before starting a collection run.</EmptyState>
+        ) : (
+          <form className="run-launcher__form run-launcher__form--profile" onSubmit={startRun}>
+            <label>
+              <span>Monitoring profile</span>
+              <select
+                aria-label="Monitoring profile"
+                value={monitoringProfileId}
+                onChange={(event) => setMonitoringProfileId(event.target.value)}
+              >
+                {profiles.map((profile) => (
+                  <option value={profile.id} key={profile.id}>
+                    {profile.name} · {profile.informationCategory}{profile.enabled ? '' : ' · disabled schedule'}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button className="button button--primary" disabled={startMutation.isPending} type="submit">
+              {startMutation.isPending ? 'Running…' : 'Start collection run'}
+            </button>
+          </form>
+        )}
         {startMutation.error ? <div className="inline-error">{startMutation.error.message}</div> : null}
       </section>
 
@@ -101,7 +125,7 @@ export function CollectionRunsPage() {
                 <thead>
                   <tr>
                     <th>Run</th>
-                    <th>Context</th>
+                    <th>Profile</th>
                     <th>Finished</th>
                     <th>Published / failed</th>
                     <th>Status</th>
@@ -119,7 +143,7 @@ export function CollectionRunsPage() {
                         <small>{formatDuration(run.startedAt, run.finishedAt)}</small>
                       </td>
                       <td>
-                        <strong>{run.monitoringProfileId}</strong>
+                        <strong>{profileById.get(run.monitoringProfileId)?.name ?? run.monitoringProfileId}</strong>
                         <small>{run.informationCategory}</small>
                       </td>
                       <td>{formatDateTime(run.finishedAt)}</td>
@@ -144,19 +168,24 @@ export function CollectionRunsPage() {
               <h2>{selectedRun ? shortId(selectedRun.collectionRunId, 16) : 'No selection'}</h2>
             </div>
           </div>
-          {selectedRun ? <RunDetail run={selectedRun} /> : <EmptyState>Select a run to inspect it.</EmptyState>}
+          {selectedRun ? (
+            <RunDetail run={selectedRun} profile={profileById.get(selectedRun.monitoringProfileId)} />
+          ) : (
+            <EmptyState>Select a run to inspect it.</EmptyState>
+          )}
         </article>
       </section>
     </div>
   );
 }
 
-function RunDetail({ run }: { run: CollectionRun }) {
+function RunDetail({ run, profile }: { run: CollectionRun; profile?: MonitoringProfile }) {
   return (
     <div className="detail-stack">
       <dl className="detail-list">
         <div><dt>Status</dt><dd><StatusBadge value={run.status} /></dd></div>
-        <div><dt>Profile</dt><dd>{run.monitoringProfileId}</dd></div>
+        <div><dt>Profile</dt><dd>{profile?.name ?? run.monitoringProfileId}</dd></div>
+        <div><dt>Profile ID</dt><dd className="mono break-all">{run.monitoringProfileId}</dd></div>
         <div><dt>Category</dt><dd>{run.informationCategory}</dd></div>
         <div><dt>Started</dt><dd>{formatDateTime(run.startedAt)}</dd></div>
         <div><dt>Finished</dt><dd>{formatDateTime(run.finishedAt)}</dd></div>

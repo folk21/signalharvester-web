@@ -1,9 +1,11 @@
 import type {
   AnalysisItemInspection,
   CollectionRun,
+  MonitoringProfile,
   ResultDetail,
   ResultSummary,
   Source,
+  SourceTestResult,
 } from '../../../src/api/types';
 
 export const sourceFixture: Source = {
@@ -24,10 +26,53 @@ export const createdSourceFixture: Source = {
   settings: { maxItems: '25' },
 };
 
+export const sourceTestFixture: SourceTestResult = {
+  sourceId: sourceFixture.id,
+  status: 'SUCCEEDED',
+  httpStatus: 200,
+  responseContentType: 'application/json',
+  responseBytes: 486,
+  fetchDurationMs: 12,
+  extractionDurationMs: 3,
+  candidateItemCount: 1,
+  preview: [
+    {
+      externalId: 'fixture-item-1',
+      title: 'Fixture preview item',
+      url: 'https://example.test/api/items/1',
+      contentPreview: 'Bounded extracted content used by the deterministic source-test fixture.',
+      contentType: 'text/plain',
+      publishedAt: '2026-09-14T07:59:00Z',
+      contentTruncated: false,
+    },
+  ],
+  failureMessage: null,
+};
+
+export const monitoringProfileFixture: MonitoringProfile = {
+  id: '33333333-3333-4333-8333-111111111111',
+  name: 'Fixture monitoring profile',
+  informationCategory: 'GENERAL',
+  enabled: true,
+  collectionIntervalMinutes: 15,
+  sourceIds: [sourceFixture.id],
+  criteria: { query: 'backend' },
+};
+
+export const createdMonitoringProfileFixture: MonitoringProfile = {
+  id: '33333333-3333-4333-8333-222222222222',
+  name: 'Browser monitoring profile',
+  informationCategory: 'GENERAL',
+  enabled: false,
+  collectionIntervalMinutes: 30,
+  sourceIds: [createdSourceFixture.id, sourceFixture.id],
+  criteria: { query: 'java' },
+};
+
 export const collectionRunFixture: CollectionRun = {
   collectionRunId: '22222222-2222-4222-8222-111111111111',
-  monitoringProfileId: 'fixture-profile',
-  informationCategory: 'GENERAL',
+  monitoringProfileId: monitoringProfileFixture.id,
+  informationCategory: monitoringProfileFixture.informationCategory,
   startedAt: '2026-09-14T08:00:00Z',
   finishedAt: '2026-09-14T08:00:01Z',
   status: 'SUCCEEDED',
@@ -53,8 +98,8 @@ export const collectionRunFixture: CollectionRun = {
 
 export const startedCollectionRunFixture: CollectionRun = {
   collectionRunId: '22222222-2222-4222-8222-222222222222',
-  monitoringProfileId: 'browser-profile',
-  informationCategory: 'GENERAL',
+  monitoringProfileId: createdMonitoringProfileFixture.id,
+  informationCategory: createdMonitoringProfileFixture.informationCategory,
   startedAt: '2026-09-14T08:05:00Z',
   finishedAt: '2026-09-14T08:05:02Z',
   status: 'SUCCEEDED',
@@ -72,7 +117,7 @@ export const startedCollectionRunFixture: CollectionRun = {
 };
 
 export const analysisItemFixture: AnalysisItemInspection = {
-  monitoringProfileId: 'browser-profile',
+  monitoringProfileId: createdMonitoringProfileFixture.id,
   normalizedItemId: 'normalized-browser-1',
   sourceId: sourceFixture.id,
   externalId: 'external-browser-1',
@@ -87,7 +132,7 @@ export const analysisItemFixture: AnalysisItemInspection = {
 };
 
 export const resultSummaryFixture: ResultSummary = {
-  monitoringProfileId: 'browser-profile',
+  monitoringProfileId: createdMonitoringProfileFixture.id,
   normalizedItemId: 'normalized-browser-1',
   sourceId: sourceFixture.id,
   informationCategory: 'GENERAL',

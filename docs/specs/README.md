@@ -67,7 +67,7 @@ Umbrella:
 
 Current implementation focus:
 
-- no bounded sub-spec is active; the next sub-spec should be created when a concrete frontend slice is ready to implement.
+- [`active/subspecs/ui-monitoring-profiles-source-test.md`](active/subspecs/ui-monitoring-profiles-source-test.md) — persisted Monitoring Profiles, Source Test diagnostics, and profile-driven manual Collection Runs; implementation complete, verification pending.
 
 Recently completed:
 

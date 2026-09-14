@@ -2,17 +2,23 @@ openapi: 3.1.0
 info:
   title: SignalHarvester Backend API
   version: 0.1.0
-  description: Public HTTP contract for SignalHarvester configuration, results, and operational
+  description: Public HTTP contract for SignalHarvester configuration, results, event observation, processing-flow, and operational
     APIs.
 tags:
 - name: Sources
   description: External source configuration.
+- name: Monitoring Profiles
+  description: Persisted monitoring-profile configuration.
 - name: Collection Runs
   description: Manual collection execution and operational run history.
 - name: Analysis Inspection
   description: Read-only operational inspection of analysis deduplication state.
 - name: Results
   description: Read-only browsing of durable analyzed results.
+- name: Event Observation
+  description: Bounded technical event history and live Event Explorer delivery.
+- name: Processing Flows
+  description: Reconstructed collection-run and item processing graphs for the Event Explorer.
 paths:
   /api/v1/sources:
     get:
@@ -98,6 +104,115 @@ paths:
           description: Source deleted
         '404':
           description: Source not found
+        '409':
+          description: Source is referenced by a monitoring profile
+  /api/v1/sources/{sourceId}/test:
+    parameters:
+    - $ref: '#/components/parameters/SourceId'
+    post:
+      tags:
+      - Sources
+      operationId: testSource
+      summary: Test one persisted external source configuration
+      description: Uses the normal collection fetch and extraction boundary without publishing Kafka events or collection-run history. Disabled sources may be tested before activation.
+      responses:
+        '200':
+          description: Diagnostic source-test result, including fetch or extraction failures
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceTestResult'
+        '404':
+          description: Source not found
+  /api/v1/monitoring-profiles:
+    get:
+      tags:
+      - Monitoring Profiles
+      operationId: listMonitoringProfiles
+      summary: List monitoring profiles
+      responses:
+        '200':
+          description: Persisted monitoring profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MonitoringProfile'
+    post:
+      tags:
+      - Monitoring Profiles
+      operationId: createMonitoringProfile
+      summary: Create a monitoring profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MonitoringProfileUpsertRequest'
+      responses:
+        '201':
+          description: Monitoring profile created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitoringProfile'
+        '400':
+          description: Invalid monitoring profile configuration
+  /api/v1/monitoring-profiles/{profileId}:
+    parameters:
+    - name: profileId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    get:
+      tags:
+      - Monitoring Profiles
+      operationId: getMonitoringProfile
+      summary: Get a monitoring profile
+      responses:
+        '200':
+          description: Persisted monitoring profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitoringProfile'
+        '404':
+          description: Monitoring profile not found
+    put:
+      tags:
+      - Monitoring Profiles
+      operationId: updateMonitoringProfile
+      summary: Replace a monitoring profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MonitoringProfileUpsertRequest'
+      responses:
+        '200':
+          description: Monitoring profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitoringProfile'
+        '400':
+          description: Invalid monitoring profile configuration
+        '404':
+          description: Monitoring profile not found
+    delete:
+      tags:
+      - Monitoring Profiles
+      operationId: deleteMonitoringProfile
+      summary: Delete a monitoring profile
+      responses:
+        '204':
+          description: Monitoring profile deleted
+        '404':
+          description: Monitoring profile not found
   /api/v1/admin/collection-runs:
     get:
       tags:
@@ -141,6 +256,8 @@ paths:
                 $ref: '#/components/schemas/CollectionRun'
         '400':
           description: Invalid run request
+        '404':
+          description: Monitoring profile not found
   /api/v1/admin/collection-runs/{collectionRunId}:
     parameters:
     - name: collectionRunId
@@ -223,6 +340,177 @@ paths:
                 $ref: '#/components/schemas/AnalysisItemInspection'
         '404':
           description: Analysis item not found
+  /api/v1/events:
+    get:
+      tags:
+      - Event Observation
+      operationId: listObservedEvents
+      summary: List recent technical processing events
+      parameters:
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 500
+          default: 100
+      - name: eventType
+        in: query
+        schema:
+          type: string
+      - name: producer
+        in: query
+        schema:
+          type: string
+      - name: topic
+        in: query
+        schema:
+          type: string
+      - name: correlationId
+        in: query
+        schema:
+          type: string
+      - name: collectionRunId
+        in: query
+        description: Alias for the current pipeline correlation identifier.
+        schema:
+          type: string
+      - name: itemId
+        in: query
+        description: Matches either rawItemId or normalizedItemId.
+        schema:
+          type: string
+      - name: traceId
+        in: query
+        description: W3C trace id matched inside traceparent when present.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Recent observed events matching the supplied filters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ObservedEvent'
+        '400':
+          description: Invalid event-observation query parameters
+  /api/v1/events/stream:
+    get:
+      tags:
+      - Event Observation
+      operationId: streamObservedEvents
+      summary: Stream live technical processing events
+      description: >-
+        Server-Sent Events stream over the bounded persisted Event Explorer history. The server emits
+        named `ready`, `event`, and `keepalive` events with numeric durable cursors. Browser reconnection
+        may resume with Last-Event-ID. A fresh connection starts after the current cursor; use
+        GET /api/v1/events for an initial bounded history snapshot. For a race-free browser bootstrap,
+        establish the stream and receive `ready` before fetching GET /api/v1/events, buffering later `event`
+        messages until the REST snapshot has been applied. History retention is bounded, so a reconnect
+        cursor older than retained records resumes with the oldest still-retained matching events.
+      parameters:
+      - name: eventType
+        in: query
+        schema:
+          type: string
+      - name: producer
+        in: query
+        schema:
+          type: string
+      - name: topic
+        in: query
+        schema:
+          type: string
+      - name: correlationId
+        in: query
+        schema:
+          type: string
+      - name: collectionRunId
+        in: query
+        schema:
+          type: string
+      - name: itemId
+        in: query
+        schema:
+          type: string
+      - name: traceId
+        in: query
+        schema:
+          type: string
+      - name: Last-Event-ID
+        in: header
+        required: false
+        schema:
+          type: integer
+          format: int64
+          minimum: 0
+      responses:
+        '200':
+          description: Resumable live technical-event stream
+          content:
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/ObservedEventLiveEvent'
+        '400':
+          description: Invalid filters or Last-Event-ID cursor
+  /api/v1/flows/collection-runs/{collectionRunId}:
+    get:
+      tags:
+      - Processing Flows
+      operationId: getCollectionRunProcessingFlow
+      summary: Reconstruct a processing graph for one collection run
+      description: >-
+        Builds a bounded diagnostic graph from retained Event Observation history. Each node states whether
+        its evidence is directly observed, derived from a published event, or currently not observed.
+      parameters:
+      - name: collectionRunId
+        in: path
+        required: true
+        schema:
+          type: string
+          minLength: 1
+      responses:
+        '200':
+          description: Reconstructed collection-run processing graph
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessingFlow'
+        '404':
+          description: No retained technical events exist for the collection run
+  /api/v1/flows/collection-runs/{collectionRunId}/items/{itemId}:
+    get:
+      tags:
+      - Processing Flows
+      operationId: getItemProcessingFlow
+      summary: Reconstruct one item branch within a collection run
+      description: >-
+        The item identifier may be a raw or normalized item id. Collection-run scoping prevents repeated
+        logical items from different runs from being merged into one graph.
+      parameters:
+      - name: collectionRunId
+        in: path
+        required: true
+        schema:
+          type: string
+          minLength: 1
+      - name: itemId
+        in: path
+        required: true
+        schema:
+          type: string
+          minLength: 1
+      responses:
+        '200':
+          description: Reconstructed item processing graph
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessingFlow'
+        '404':
+          description: No retained technical events exist for the selected item in the collection run
   /api/v1/results:
     get:
       tags:
@@ -278,6 +566,62 @@ paths:
                   $ref: '#/components/schemas/ResultSummary'
         '400':
           description: Invalid result query parameters
+  /api/v1/results/stream:
+    get:
+      tags:
+      - Results
+      operationId: streamResults
+      summary: Stream live analyzed-result updates
+      description: >-
+        Server-Sent Events stream. The server emits named `ready`, `result`, and `keepalive`
+        events. Each event has a numeric `id` cursor and a JSON `data` payload matching
+        ResultLiveEvent. Browser EventSource reconnection resumes from the automatically
+        supplied Last-Event-ID header. A connection without Last-Event-ID starts after the
+        current durable cursor; clients should use GET /api/v1/results for initial browsing.
+        The stream represents current result projections rather than an append-only event history,
+        so repeated updates to one logical result while disconnected may collapse to the latest
+        current projection. A resume cursor ahead of the current database watermark is normalized
+        back to that watermark. For a race-free initial page load, establish the stream and receive
+        `ready` before fetching GET /api/v1/results, buffering later `result` events until the REST
+        snapshot has been applied.
+      parameters:
+      - name: monitoringProfileId
+        in: query
+        schema:
+          type: string
+      - name: sourceId
+        in: query
+        schema:
+          type: string
+      - name: informationCategory
+        in: query
+        schema:
+          type: string
+      - name: relevant
+        in: query
+        schema:
+          type: boolean
+      - name: classification
+        in: query
+        schema:
+          type: string
+      - name: Last-Event-ID
+        in: header
+        required: false
+        description: Last numeric SSE cursor received by the client.
+        schema:
+          type: integer
+          format: int64
+          minimum: 0
+      responses:
+        '200':
+          description: Resumable live result stream
+          content:
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/ResultLiveEvent'
+        '400':
+          description: Invalid filters or Last-Event-ID cursor
   /api/v1/results/{normalizedItemId}:
     parameters:
     - name: normalizedItemId
@@ -355,8 +699,7 @@ components:
           type: boolean
         settings:
           type: object
-          description: Source-type-specific string configuration interpreted by the
-            owning collector.
+          description: Source-type-specific string configuration interpreted by the owning collector. REST JSON extraction uses json.* JSON Pointer settings; HTML extraction uses html.* CSS selector settings.
           additionalProperties:
             type: string
     SourceUpsertRequest:
@@ -385,17 +728,115 @@ components:
         settings:
           type: object
           default: {}
-          description: Source-type-specific string configuration interpreted by the
-            owning collector.
+          description: Source-type-specific string configuration interpreted by the owning collector. REST JSON extraction uses json.* JSON Pointer settings; HTML extraction uses html.* CSS selector settings.
           additionalProperties:
             type: string
-    CollectionRunRequest:
+    SourceTestStatus:
+      type: string
+      enum:
+      - SUCCEEDED
+      - FETCH_FAILED
+      - EXTRACTION_FAILED
+    SourceTestPreviewItem:
       type: object
       required:
-      - monitoringProfileId
-      - informationCategory
+      - externalId
+      - title
+      - url
+      - contentPreview
+      - contentType
+      - publishedAt
+      - contentTruncated
       properties:
-        monitoringProfileId:
+        externalId:
+          type:
+          - string
+          - 'null'
+        title:
+          type:
+          - string
+          - 'null'
+        url:
+          type: string
+          format: uri
+        contentPreview:
+          type: string
+          description: Bounded prefix of extracted semantic content.
+        contentType:
+          type: string
+        publishedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        contentTruncated:
+          type: boolean
+    SourceTestResult:
+      type: object
+      required:
+      - sourceId
+      - status
+      - httpStatus
+      - responseContentType
+      - responseBytes
+      - fetchDurationMs
+      - extractionDurationMs
+      - candidateItemCount
+      - preview
+      - failureMessage
+      properties:
+        sourceId:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/SourceTestStatus'
+        httpStatus:
+          type:
+          - integer
+          - 'null'
+          minimum: 100
+          maximum: 599
+        responseContentType:
+          type:
+          - string
+          - 'null'
+        responseBytes:
+          type: integer
+          minimum: 0
+        fetchDurationMs:
+          type: integer
+          format: int64
+          minimum: 0
+        extractionDurationMs:
+          type: integer
+          format: int64
+          minimum: 0
+        candidateItemCount:
+          type: integer
+          minimum: 0
+        preview:
+          type: array
+          items:
+            $ref: '#/components/schemas/SourceTestPreviewItem'
+        failureMessage:
+          type:
+          - string
+          - 'null'
+    MonitoringProfile:
+      type: object
+      required:
+      - id
+      - name
+      - informationCategory
+      - enabled
+      - collectionIntervalMinutes
+      - sourceIds
+      - criteria
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
           type: string
           minLength: 1
           pattern: .*\S.*
@@ -403,6 +844,64 @@ components:
           type: string
           minLength: 1
           pattern: .*\S.*
+        enabled:
+          type: boolean
+        collectionIntervalMinutes:
+          type: integer
+          minimum: 1
+        sourceIds:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: string
+            format: uuid
+        criteria:
+          type: object
+          additionalProperties:
+            type: string
+    MonitoringProfileUpsertRequest:
+      type: object
+      required:
+      - name
+      - informationCategory
+      - collectionIntervalMinutes
+      - sourceIds
+      properties:
+        name:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+        informationCategory:
+          type: string
+          minLength: 1
+          pattern: .*\S.*
+        enabled:
+          type: boolean
+          default: false
+        collectionIntervalMinutes:
+          type: integer
+          minimum: 1
+        sourceIds:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: string
+            format: uuid
+        criteria:
+          type: object
+          default: {}
+          additionalProperties:
+            type: string
+    CollectionRunRequest:
+      type: object
+      required:
+      - monitoringProfileId
+      properties:
+        monitoringProfileId:
+          type: string
+          format: uuid
     CollectionSourceRun:
       type: object
       description: One terminal source/item outcome. RSS/Atom sources may contribute multiple outcomes with the same sourceId.
@@ -531,6 +1030,214 @@ components:
           format: int64
           minimum: 1
 
+    ObservedKafkaMetadata:
+      type: object
+      required: [topic, partition, offset, key]
+      properties:
+        topic:
+          type: string
+        partition:
+          type: integer
+          minimum: 0
+        offset:
+          type: integer
+          format: int64
+          minimum: 0
+        key:
+          type: string
+    ObservedEventPayload:
+      type: object
+      required:
+      - type
+      - sourceEventId
+      - rawItemId
+      - normalizedItemId
+      - sourceId
+      - monitoringProfileId
+      - informationCategory
+      - externalId
+      - title
+      - url
+      - contentType
+      - relevant
+      - classification
+      - score
+      - analyzer
+      - reasonCode
+      - explanation
+      properties:
+        type: {type: string}
+        sourceEventId: {type: [string, 'null']}
+        rawItemId: {type: [string, 'null']}
+        normalizedItemId: {type: [string, 'null']}
+        sourceId: {type: [string, 'null']}
+        monitoringProfileId: {type: [string, 'null']}
+        informationCategory: {type: [string, 'null']}
+        externalId: {type: [string, 'null']}
+        title: {type: [string, 'null']}
+        url: {type: [string, 'null']}
+        contentType: {type: [string, 'null']}
+        relevant: {type: [boolean, 'null']}
+        classification: {type: [string, 'null']}
+        score: {type: [integer, 'null']}
+        analyzer: {type: [string, 'null']}
+        reasonCode: {type: [string, 'null']}
+        explanation: {type: [string, 'null']}
+    ObservedEvent:
+      type: object
+      required:
+      - cursor
+      - eventId
+      - eventType
+      - occurredAt
+      - observedAt
+      - correlationId
+      - traceparent
+      - producer
+      - schemaVersion
+      - kafka
+      - payload
+      properties:
+        cursor:
+          type: integer
+          format: int64
+          minimum: 1
+        eventId: {type: string}
+        eventType: {type: string}
+        occurredAt: {type: string, format: date-time}
+        observedAt: {type: string, format: date-time}
+        correlationId: {type: string}
+        traceparent: {type: [string, 'null']}
+        producer: {type: string}
+        schemaVersion: {type: string}
+        kafka:
+          $ref: '#/components/schemas/ObservedKafkaMetadata'
+        payload:
+          $ref: '#/components/schemas/ObservedEventPayload'
+    ObservedEventLiveEvent:
+      type: object
+      required: [cursor, event]
+      properties:
+        cursor:
+          type: integer
+          format: int64
+          minimum: 0
+        event:
+          anyOf:
+          - $ref: '#/components/schemas/ObservedEvent'
+          - type: 'null'
+    ProcessingFlowKafkaMetadata:
+      type: object
+      required: [topic, partition, offset, key]
+      properties:
+        topic: {type: string}
+        partition: {type: integer, minimum: 0}
+        offset: {type: integer, format: int64, minimum: 0}
+        key: {type: string}
+    ProcessingFlowNode:
+      type: object
+      required:
+      - id
+      - branchId
+      - stage
+      - status
+      - evidence
+      - occurredAt
+      - eventId
+      - eventType
+      - producer
+      - traceparent
+      - sourceEventId
+      - rawItemId
+      - normalizedItemId
+      - sourceId
+      - monitoringProfileId
+      - outcome
+      - score
+      - kafka
+      properties:
+        id: {type: string}
+        branchId:
+          type: string
+          description: Published raw discovery event id that owns this item branch.
+        stage:
+          type: string
+          enum: [EXTERNAL_SOURCE, COLLECTION, RAW_KAFKA, NORMALIZATION, DEDUPLICATION, ANALYSIS, TERMINAL_KAFKA, RESULTS_PERSISTENCE]
+        status:
+          type: string
+          enum: [REACHED, COMPLETED, PUBLISHED, PASSED, REJECTED, SKIPPED, UNKNOWN]
+        evidence:
+          type: string
+          enum: [OBSERVED_EVENT, OBSERVED_KAFKA_METADATA, DERIVED_FROM_EVENT, NOT_OBSERVED]
+        occurredAt: {type: [string, 'null'], format: date-time}
+        eventId: {type: [string, 'null']}
+        eventType: {type: [string, 'null']}
+        producer: {type: [string, 'null']}
+        traceparent: {type: [string, 'null']}
+        sourceEventId: {type: [string, 'null']}
+        rawItemId: {type: [string, 'null']}
+        normalizedItemId: {type: [string, 'null']}
+        sourceId: {type: [string, 'null']}
+        monitoringProfileId: {type: [string, 'null']}
+        outcome: {type: [string, 'null']}
+        score: {type: [integer, 'null']}
+        kafka:
+          anyOf:
+          - $ref: '#/components/schemas/ProcessingFlowKafkaMetadata'
+          - type: 'null'
+    ProcessingFlowEdge:
+      type: object
+      required: [from, to, kind, durationMs]
+      properties:
+        from: {type: string}
+        to: {type: string}
+        kind:
+          type: string
+          enum: [PROCESSING, PUBLICATION, ASYNC_PROCESSING, EXPECTED_PERSISTENCE]
+        durationMs:
+          type: [integer, 'null']
+          format: int64
+          minimum: 0
+    ProcessingFlow:
+      type: object
+      required:
+      - scope
+      - collectionRunId
+      - itemId
+      - state
+      - observedEventCount
+      - traceIds
+      - nodes
+      - edges
+      - limitations
+      properties:
+        scope:
+          type: string
+          enum: [COLLECTION_RUN, ITEM]
+        collectionRunId: {type: string}
+        itemId: {type: [string, 'null']}
+        state:
+          type: string
+          enum: [TERMINAL_EVENT_REACHED, IN_PROGRESS, PARTIAL_HISTORY]
+        observedEventCount:
+          type: integer
+          minimum: 1
+        traceIds:
+          type: array
+          items: {type: string}
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessingFlowNode'
+        edges:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessingFlowEdge'
+        limitations:
+          type: array
+          items:
+            type: string
+            enum: [HISTORY_QUERY_LIMIT_REACHED, MISSING_RAW_DISCOVERY, RESULTS_PERSISTENCE_NOT_OBSERVED]
     ResultSummary:
       type: object
       required:
@@ -599,6 +1306,22 @@ components:
         analyzedAt:
           type: string
           format: date-time
+    ResultLiveEvent:
+      type: object
+      required:
+      - cursor
+      - result
+      properties:
+        cursor:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Durable cursor also written to the SSE id field.
+        result:
+          description: Present for `result` events and null for `ready` or `keepalive` events.
+          anyOf:
+          - $ref: '#/components/schemas/ResultSummary'
+          - type: 'null'
     ResultDetail:
       type: object
       required:

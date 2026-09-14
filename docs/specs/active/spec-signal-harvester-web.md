@@ -4,6 +4,7 @@ title: SignalHarvester Web initial product specification
 description: Active frontend umbrella specification for configuration, operational inspection, Results, live updates, and event-flow diagnostics.
 document_role: umbrella
 spec_status: active
+current_focus: subspecs/ui-monitoring-profiles-source-test.md
 ---
 # SignalHarvester Web initial product specification
 
@@ -17,9 +18,9 @@ Frontend implementation details belong here rather than in the backend repositor
 
 ## Current implementation focus
 
-There is no active bounded sub-spec at the moment. Browser verification was accepted and archived after both routine checks and the live backend E2E workflow passed.
+The current bounded focus is [`subspecs/ui-monitoring-profiles-source-test.md`](subspecs/ui-monitoring-profiles-source-test.md). It adds persisted Monitoring Profiles, bounded Source Test diagnostics, and profile-driven manual Collection Runs against the now-available backend contracts.
 
-The frontend provides Dashboard, Sources CRUD, manual Collection Run operation/inspection, Analysis inspection, Results list/filter/detail, deterministic Playwright browser coverage, and an opt-in live-backend browser flow. The next product sub-spec should be opened only when its required backend contract is available or when another independently actionable frontend slice is selected.
+The accepted baseline already provides Dashboard, Sources CRUD, manual Collection Run inspection, Analysis inspection, Results list/filter/detail, deterministic Playwright browser coverage, and an opt-in live-backend browser flow. Backend contracts are also now available for Results SSE, Event Observation, and processing-flow reconstruction; those browser capabilities remain the next frontend work after this configuration slice is accepted.
 
 ## Goal
 
@@ -58,11 +59,11 @@ The frontend does not own:
 | Analysis inspection | Implemented |
 | Results list/filter/detail | Implemented |
 | Browser automation | Implemented and accepted |
-| Monitoring profiles and schedules | Pending backend + UI |
-| Source test/preview | Pending backend + UI |
-| Live Results via SSE | Pending backend + UI |
-| Event Explorer | Pending backend + UI |
-| Processing-flow visualization | Pending backend + UI |
+| Monitoring profiles and schedules | Implemented in current focus; verification pending |
+| Source test/preview | Implemented in current focus; verification pending |
+| Live Results via SSE | Backend available; frontend pending |
+| Event Explorer | Backend available; frontend pending |
+| Processing-flow visualization | Backend available; frontend pending |
 | Authentication/authorization | Pending |
 
 ## Requirements
@@ -108,7 +109,7 @@ The UI should present available diagnostic information such as:
 - a bounded extracted-item preview;
 - parsing/validation errors.
 
-Current status: blocked on backend contract.
+Current status: implemented in the current frontend focus; verification pending.
 
 ### UI-R5 — monitoring profile configuration
 
@@ -124,7 +125,7 @@ When the backend monitoring-profile contract exists, the UI must support:
 
 The UI must make profile/source relationships understandable and editable without process restart or redeployment.
 
-Current status: blocked on backend persistence/API work.
+Current status: monitoring-profile CRUD, source assignment, interval, category, enabled state, and criteria are implemented in the current frontend focus; verification pending. Dedicated analysis-setting UI remains pending a backend contract.
 
 ### UI-R6 — collection operations and run inspection
 
@@ -178,7 +179,7 @@ The UI must:
 - avoid direct Kafka access;
 - make connection failure visible when it affects freshness.
 
-Current status: pending backend SSE.
+Current status: backend SSE is available; frontend integration is pending.
 
 ### UI-R10 — live technical Event Explorer
 
@@ -195,7 +196,7 @@ Filters should include backend-supported dimensions such as:
 
 The browser must not expose or emulate unlimited Kafka history.
 
-Current status: pending backend event-observation APIs.
+Current status: backend Event Observation REST/SSE is available; frontend integration is pending.
 
 ### UI-R11 — visual processing-flow inspection
 
@@ -214,7 +215,7 @@ The view should represent relevant stages such as:
 
 Where available, it should present timestamps, durations, Kafka metadata, retry state, analysis outcome, persisted identity, and trace/correlation identifiers.
 
-Current status: pending backend event-observation/correlation support.
+Current status: backend processing-flow reconstruction is available; frontend visualization is pending.
 
 ### UI-R12 — explicit async states
 
