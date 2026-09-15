@@ -86,7 +86,7 @@ export function ResultsPage() {
       />
 
       <section className="panel filter-panel">
-        <form className="filter-form filter-form--results" onSubmit={applyFilters}>
+        <form aria-label="Result filters" className="filter-form filter-form--results" onSubmit={applyFilters}>
           <TextFilter label="Monitoring profile ID" value={form.monitoringProfileId} onChange={(value) => setForm({ ...form, monitoringProfileId: value })} />
           <TextFilter label="Source ID" value={form.sourceId} onChange={(value) => setForm({ ...form, sourceId: value })} />
           <TextFilter label="Information category" value={form.informationCategory} onChange={(value) => setForm({ ...form, informationCategory: value })} />
@@ -112,7 +112,7 @@ export function ResultsPage() {
           {!liveResults.hasSnapshot && liveResults.syncing ? <LoadingState label="Loading analyzed results…" /> : results.length === 0 ? (
             <EmptyState>No analyzed results match the current filters.</EmptyState>
           ) : (
-            <div className="table-wrap"><table><thead><tr><th>Result</th><th>Category</th><th>Classification</th><th>Score</th><th>Relevant</th><th>Analyzed</th></tr></thead><tbody>{results.map((result) => (
+            <div className="table-wrap"><table aria-label="Analyzed results"><thead><tr><th>Result</th><th>Category</th><th>Classification</th><th>Score</th><th>Relevant</th><th>Analyzed</th></tr></thead><tbody>{results.map((result) => (
               <tr key={resultKey(result)} className={selectedKey === resultKey(result) ? 'table-row--selected' : ''} onClick={() => setSelectedKey(resultKey(result))}>
                 <td><button className="table-row-select" type="button" onClick={() => setSelectedKey(resultKey(result))} aria-label={`Inspect result ${result.title?.trim() || result.normalizedItemId}`}><strong>{result.title?.trim() || shortId(result.normalizedItemId, 18)}</strong><small>{shortId(result.normalizedItemId, 18)}</small></button></td><td>{result.informationCategory}</td><td><StatusBadge value={result.classification} /></td><td>{result.score}</td><td>{result.relevant ? 'Yes' : 'No'}</td><td>{formatDateTime(result.analyzedAt)}</td>
               </tr>

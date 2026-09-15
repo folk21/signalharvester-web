@@ -7,9 +7,9 @@ description: Compact frontend roadmap, backend dependencies, and current impleme
 
 ## Current focus
 
-The current bounded focus is live diagnostic acceptance against a separately running backend. Processing Flow visualization, Monitoring Profiles, Source Test, profile-driven manual runs, live Results, Event Explorer, and the UI resilience/edge-case suite are accepted.
+The current bounded focus is accessibility hardening. Processing Flow visualization, Monitoring Profiles, Source Test, profile-driven manual runs, live Results, Event Explorer, UI resilience/edge-case verification, and the real-backend diagnostic acceptance path are accepted.
 
-Targeted visual regression is implemented with one reviewed Results/detail golden and remains a verification-pending supporting track. The active live slice extends the real browser acceptance path through Results SSE, Event Observation SSE, and Processing Flow.
+Targeted visual regression is implemented with one reviewed Results/detail golden and remains a verification-pending supporting track. The active accessibility slice strengthens native landmarks/status semantics, repeated-action naming, and keyboard focus behavior without introducing another UI or accessibility framework.
 
 ## Completed baseline
 
@@ -97,7 +97,7 @@ Implemented; verification pending:
 
 ## P1 — live diagnostic acceptance
 
-Current focus; implementation complete and live verification pending:
+Implemented and accepted:
 
 - establish the filtered Results SSE stream before the first real Collection Run and receive both fixture Results without manual refresh;
 - establish Event Observation SSE before the second real Collection Run and receive a newly correlated observed event without manual refresh;
@@ -109,26 +109,34 @@ This stage strengthens frontend/backend contract acceptance without duplicating 
 
 ## P2 — accessibility hardening
 
-Build on the existing keyboard-selection coverage with focused checks for landmarks, accessible names, labels, focus order, focus restoration, and semantic error presentation. Prefer native semantic HTML and deterministic Playwright assertions. Add a dedicated accessibility dependency only when its maintenance cost and additional coverage are explicitly justified.
+Current focus; implementation complete and verification pending:
+
+- provide a first-focusable skip link into the main content landmark;
+- name core forms/tables and repeated Source/Profile actions for assistive technology;
+- move focus into configuration edit/create workflows and restore it after cancellation;
+- expose loading/live states as polite statuses and request/validation failures as alerts;
+- protect these behaviors with backend-independent Playwright assertions;
+- keep axe-core or another scanner deferred until a dedicated audit justifies the dependency and maintenance cost.
+
+## P2 — responsive and large-data UX hardening
+
+After the accessibility slice is accepted:
+
+- exercise 320–390 px and tablet layouts beyond the existing diagnostic overflow regression;
+- harden long Source/Profile names, tags, diagnostic payloads, and many-branch Processing Flow layouts;
+- exercise larger Source/Profile collections without inventing client-side pagination semantics;
+- improve large-table navigation only when backend pagination contracts justify it;
+- add reusable form primitives only where repetition demonstrates a real maintenance benefit.
 
 ## P2 — delivery and security hardening
 
-Before public/shared deployment:
+Before public/shared deployment, and in coordination with the backend security/exposure model:
 
 - add authentication and authorization;
 - define the cross-origin deployment policy;
-- verify keyboard/accessibility behavior across core workflows;
+- retain the accepted keyboard/accessibility behavior across protected workflows;
 - add production frontend deployment assets as required by the platform deployment design;
 - integrate frontend health/build verification into the intended deployment workflow.
-
-## P2 — UX hardening
-
-After core behavior stabilizes:
-
-- improve responsive behavior for narrower screens;
-- improve large-table navigation when backend pagination contracts exist;
-- add reusable form primitives only where repetition justifies them;
-- refine dashboard summaries as product priorities become clearer.
 
 ## Backend dependencies
 

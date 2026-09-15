@@ -86,7 +86,7 @@ export function ProcessingFlowPage() {
       />
 
       <section className="panel filter-panel">
-        <form className="flow-query-form" onSubmit={submit}>
+        <form aria-label="Processing flow query" className="flow-query-form" onSubmit={submit}>
           <label>
             <span>Collection run ID</span>
             <input

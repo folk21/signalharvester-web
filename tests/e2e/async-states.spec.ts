@@ -19,7 +19,7 @@ test('Sources exposes loading and successful empty states', async ({ page }) => 
   });
 
   await page.goto('/sources');
-  await expect(page.getByText('Loading source configuration…', { exact: true })).toBeVisible();
+  await expect(page.getByRole('status')).toHaveText('Loading source configuration…');
 
   releaseRequest?.();
   await expect(page.getByText('Create the first source using the form.', { exact: true })).toBeVisible();
@@ -38,6 +38,7 @@ test('Results presents backend request failures with useful error text', async (
 
   await page.goto('/results');
 
-  await expect(page.getByText('Request failed', { exact: true })).toBeVisible();
-  await expect(page.getByText('Results are temporarily unavailable.', { exact: true })).toBeVisible();
+  const alert = page.getByRole('alert');
+  await expect(alert.getByText('Request failed', { exact: true })).toBeVisible();
+  await expect(alert.getByText('Results are temporarily unavailable.', { exact: true })).toBeVisible();
 });

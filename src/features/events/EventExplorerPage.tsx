@@ -62,7 +62,7 @@ export function EventExplorerPage() {
     <PageHeader eyebrow="Diagnostics" title="Event Explorer" description="Inspect bounded technical pipeline history and follow new backend-observed events live without connecting the browser to Kafka." />
 
     <section className="panel filter-panel">
-      <form className="filter-form filter-form--events" onSubmit={applyFilters}>
+      <form aria-label="Event filters" className="filter-form filter-form--events" onSubmit={applyFilters}>
         <TextFilter label="Event type" value={form.eventType} onChange={(value) => setForm({ ...form, eventType: value })} />
         <TextFilter label="Producer" value={form.producer} onChange={(value) => setForm({ ...form, producer: value })} />
         <TextFilter label="Kafka topic" value={form.topic} onChange={(value) => setForm({ ...form, topic: value })} />
@@ -79,7 +79,7 @@ export function EventExplorerPage() {
     <section className="workspace-grid workspace-grid--events">
       <article className="panel table-panel">
         <div className="panel__header"><div><h2>Observed events</h2><span>{events.length} retained rows loaded</span></div><div className="panel-actions"><LiveConnectionStatus status={liveEvents.connectionStatus} /><button className="button button--ghost" onClick={() => void liveEvents.refresh()} type="button">Refresh</button></div></div>
-        {!liveEvents.hasSnapshot && liveEvents.syncing ? <LoadingState label="Loading technical event history…" /> : events.length === 0 ? <EmptyState>No retained events match the current filters.</EmptyState> : <div className="table-wrap"><table><thead><tr><th>Event</th><th>Producer</th><th>Topic</th><th>Correlation</th><th>Occurred</th></tr></thead><tbody>{events.map((event) => <tr key={event.eventId} className={selectedEventId === event.eventId ? 'table-row--selected' : ''} onClick={() => setSelectedEventId(event.eventId)}><td><button className="table-row-select" type="button" onClick={() => setSelectedEventId(event.eventId)} aria-label={`Inspect event ${event.eventType} ${event.eventId}`}><strong>{event.eventType}</strong><small>{shortId(event.eventId, 18)}</small></button></td><td>{event.producer}</td><td>{event.kafka.topic}</td><td className="mono">{shortId(event.correlationId, 18)}</td><td>{formatDateTime(event.occurredAt)}</td></tr>)}</tbody></table></div>}
+        {!liveEvents.hasSnapshot && liveEvents.syncing ? <LoadingState label="Loading technical event history…" /> : events.length === 0 ? <EmptyState>No retained events match the current filters.</EmptyState> : <div className="table-wrap"><table aria-label="Observed events"><thead><tr><th>Event</th><th>Producer</th><th>Topic</th><th>Correlation</th><th>Occurred</th></tr></thead><tbody>{events.map((event) => <tr key={event.eventId} className={selectedEventId === event.eventId ? 'table-row--selected' : ''} onClick={() => setSelectedEventId(event.eventId)}><td><button className="table-row-select" type="button" onClick={() => setSelectedEventId(event.eventId)} aria-label={`Inspect event ${event.eventType} ${event.eventId}`}><strong>{event.eventType}</strong><small>{shortId(event.eventId, 18)}</small></button></td><td>{event.producer}</td><td>{event.kafka.topic}</td><td className="mono">{shortId(event.correlationId, 18)}</td><td>{formatDateTime(event.occurredAt)}</td></tr>)}</tbody></table></div>}
       </article>
 
       <article className="panel detail-panel">

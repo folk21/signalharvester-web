@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+2026-09-15 Added focused accessibility hardening with a keyboard skip link, named repeated configuration actions, explicit form focus restoration, semantic async/error states, and deterministic Playwright coverage.
+
+2026-09-15 Accepted the real-backend diagnostic browser path after routine checks and live Results SSE, Event Observation SSE, and Processing Flow verification passed.
+
 2026-09-15 Extended the opt-in live-backend Playwright workflow through real Results SSE, Event Observation SSE, and backend-reconstructed item/run Processing Flow diagnostics.
 
 2026-09-15 Added a focused non-updating Playwright command for reviewing the targeted visual baseline and documented the post-visual live diagnostic/accessibility hardening plan.

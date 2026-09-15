@@ -168,7 +168,7 @@ The UI uses semantic buttons, text labels, and CSS layout rather than a graph li
 
 ## Presentation layer
 
-The current UI uses React components and repository-owned CSS without a component framework. This keeps the dependency surface small while the product model is still evolving.
+The current UI uses React components and repository-owned CSS without a component framework. This keeps the dependency surface small while the product model is still evolving. The application shell and shared async/live indicators prefer native landmarks, semantic status/alert roles, explicit accessible names, and normal keyboard focus behavior rather than accessibility behavior hidden inside a component framework.
 
 A UI component library should be added only when repeated interaction or accessibility patterns justify it. Visual consistency must not depend on duplicating backend domain rules in presentation components.
 

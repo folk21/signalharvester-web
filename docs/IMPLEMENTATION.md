@@ -9,7 +9,7 @@ description: Current implemented SignalHarvester Web screens, API usage, code or
 
 This document describes what the frontend currently implements. Active specifications describe intended changes and must not be read as evidence that a feature already exists.
 
-The accepted baseline includes Monitoring Profiles, Source Test, profile-driven manual Collection Runs, live Results, Event Explorer, Processing Flow visualization, and the resilience/edge-case browser suite. Targeted visual regression is implemented as a small reviewed Results/detail baseline, and the current branch extends the opt-in real-backend browser acceptance through Results SSE, Event Observation SSE, and Processing Flow.
+The accepted baseline includes Monitoring Profiles, Source Test, profile-driven manual Collection Runs, live Results, Event Explorer, Processing Flow visualization, the resilience/edge-case browser suite, and real-backend diagnostic acceptance through Results/Event SSE and Processing Flow. Targeted visual regression is implemented as a small reviewed Results/detail baseline. The current branch adds focused accessibility hardening with native landmarks/status semantics, entity-specific repeated-action names, and explicit keyboard focus management for configuration forms.
 
 ## Current screens
 
@@ -156,14 +156,18 @@ The deterministic browser suite now covers:
 - Processing Flow run/item visualization and drill-down;
 - representative loading/error/empty states;
 - keyboard-only selection in the main tabular diagnostic screens;
+- a first-focusable skip link into the main content landmark;
+- named representative forms/tables and entity-specific Source/Profile row actions;
+- Source/Profile edit focus entry and cancellation focus restoration;
+- semantic loading/live status and request/validation alert behavior;
 - SSE reconnect/resnapshot behavior without duplicate logical rows;
 - stale deep links against bounded Result/Event snapshots;
 - partial Processing Flow evidence and retained-history limitations;
 - long diagnostic identifiers on a narrow mobile viewport without page-level horizontal overflow.
 
-The opt-in live Playwright workflow owns a temporary RSS source and monitoring profile and now uses two manual Collection Runs. Before the first run, a profile/source-filtered Results page establishes the real SSE stream and must receive both fixture Results without manual refresh. Before the second run, Event Explorer establishes the real Event Observation SSE stream and must receive a newly correlated event without refresh. The workflow then selects a real Analysis event, opens its backend-reconstructed item flow, and expands to the full run flow. Analysis inspection remains a bounded durable-state check. Cleanup still removes the profile before the source so backend referential integrity is respected.
+The opt-in live Playwright workflow owns a temporary RSS source and monitoring profile and uses two manual Collection Runs. Before the first run, a profile/source-filtered Results page establishes the real SSE stream and must receive both fixture Results without manual refresh. Before the second run, Event Explorer establishes the real Event Observation SSE stream and must receive a newly correlated event without refresh. The workflow then selects a real Analysis event, opens its backend-reconstructed item flow, and expands to the full run flow. Analysis inspection remains a bounded durable-state check. Cleanup still removes the profile before the source so backend referential integrity is respected.
 
-Monitoring Profiles / Source Test, live Results / Event Explorer, and Processing Flow were accepted on 2026-09-14. UI resilience and edge-case verification was accepted on 2026-09-15 after the routine checks passed. Targeted visual regression remains verification-pending until its golden comparison is accepted in the developer environment. The current live diagnostic acceptance implementation remains verification-pending until both the routine gate and `npm run e2e:live` pass against the current backend.
+Monitoring Profiles / Source Test, live Results / Event Explorer, and Processing Flow were accepted on 2026-09-14. UI resilience and edge-case verification was accepted on 2026-09-15 after the routine checks passed. Live diagnostic acceptance was accepted on 2026-09-15 after both the routine gate and `npm run e2e:live` passed in the developer environment. Targeted visual regression remains verification-pending until its golden comparison is accepted in the developer environment. The current accessibility-hardening implementation remains verification-pending until the routine gate passes.
 
 ## Current limitations
 

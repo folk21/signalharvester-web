@@ -67,13 +67,15 @@ Umbrella:
 
 Current implementation focus:
 
-- [`active/subspecs/ui-live-diagnostic-acceptance.md`](active/subspecs/ui-live-diagnostic-acceptance.md) — real-backend Results SSE, Event Observation SSE, and Processing Flow browser acceptance; implementation complete, live verification pending.
+- [`active/subspecs/ui-accessibility-hardening.md`](active/subspecs/ui-accessibility-hardening.md) — native semantics, keyboard focus management, accessible repeated-action names, and deterministic accessibility-oriented browser verification; implementation complete, verification pending.
 
 Active supporting track:
 
 - [`active/subspecs/ui-targeted-visual-regression.md`](active/subspecs/ui-targeted-visual-regression.md) — reviewed Playwright golden-image coverage for high-signal layout regressions; implementation complete, verification pending.
 
 Recently completed:
+
+- [`archive/subspecs/ui-live-diagnostic-acceptance.md`](archive/subspecs/ui-live-diagnostic-acceptance.md) — real-backend Results SSE, Event Observation SSE, and Processing Flow browser acceptance, accepted on 2026-09-15.
 
 - [`archive/subspecs/ui-resilience-edge-case-testing.md`](archive/subspecs/ui-resilience-edge-case-testing.md) — keyboard, reconnect, bounded-history, partial-flow, and narrow-viewport resilience verification, accepted on 2026-09-15.
 

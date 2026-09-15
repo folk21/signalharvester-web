@@ -19,7 +19,7 @@ import {
   startedCollectionRunFixture,
 } from './fixtures/api';
 import { fulfillJson, rejectUnexpectedApi } from './support/http';
-import { emitSse, installMockEventSource } from './support/sse';
+import { emitSse, installMockEventSource, waitForSseSource } from './support/sse';
 
 test('application shell navigates across the current admin screens', async ({ page }) => {
   await installMockEventSource(page, true);
@@ -106,7 +106,7 @@ test('Sources creates a source and shows bounded source-test diagnostics', async
 
   const fixtureRow = page.getByRole('row', { name: new RegExp(sourceFixture.name) });
   await expect(fixtureRow).toBeVisible();
-  await fixtureRow.getByRole('button', { name: 'Test' }).click();
+  await fixtureRow.getByRole('button', { name: `Test source ${sourceFixture.name}` }).click();
   await expect(page.getByRole('heading', { level: 2, name: sourceFixture.name })).toBeVisible();
   await expect(page.getByText('Fixture preview item', { exact: true })).toBeVisible();
   await expect(page.getByText('1', { exact: true })).toBeVisible();
@@ -372,21 +372,23 @@ test('Results and Event Explorer merge REST snapshots with live SSE updates', as
 
   await page.goto('/results');
   await expect.poll(() => resultsSnapshotRequested).toBe(false);
-  await emitSse(page, 'ready', { cursor: 76, result: null });
+  await waitForSseSource(page, '/api/v1/results/stream');
+  await emitSse(page, 'ready', { cursor: 76, result: null }, '/api/v1/results/stream');
   await expect.poll(() => resultsSnapshotRequested).toBe(true);
   await expect(page.getByText('No analyzed results match the current filters.')).toBeVisible();
 
-  await emitSse(page, 'result', resultLiveEventFixture);
+  await emitSse(page, 'result', resultLiveEventFixture, '/api/v1/results/stream');
   await expect(page.getByText(resultSummaryFixture.title!, { exact: true })).toBeVisible();
   await expect(page.getByText('Live', { exact: true })).toBeVisible();
 
   await page.getByRole('link', { name: 'Event Explorer' }).click();
   await expect.poll(() => eventsSnapshotRequested).toBe(false);
-  await emitSse(page, 'ready', { cursor: 41, event: null });
+  await waitForSseSource(page, '/api/v1/events/stream');
+  await emitSse(page, 'ready', { cursor: 41, event: null }, '/api/v1/events/stream');
   await expect.poll(() => eventsSnapshotRequested).toBe(true);
   await expect(page.getByText('RawItemDiscovered', { exact: true })).toBeVisible();
 
-  await emitSse(page, 'event', observedEventLiveFixture);
+  await emitSse(page, 'event', observedEventLiveFixture, '/api/v1/events/stream');
   await expect(page.getByText('ItemAnalyzed', { exact: true })).toBeVisible();
   await page.getByRole('row', { name: /ItemAnalyzed/ }).click();
   await expect(page.getByText(observedAnalysisEventFixture.eventId, { exact: true })).toBeVisible();

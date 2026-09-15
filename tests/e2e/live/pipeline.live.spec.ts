@@ -46,7 +46,7 @@ test('live browser flow verifies Results SSE, Event Observation SSE, and Process
         new URL(response.url()).pathname === `/api/v1/sources/${createdSourceId}/test`,
       { timeout: collectionWaitMs },
     );
-    await sourceRow.getByRole('button', { name: 'Test' }).click();
+    await sourceRow.getByRole('button', { name: `Test source ${source.name}` }).click();
     const sourceTest = (await (await sourceTestResponse).json()) as SourceTestResult;
     expect(sourceTest.status).toBe('SUCCEEDED');
     expect(sourceTest.candidateItemCount).toBe(2);

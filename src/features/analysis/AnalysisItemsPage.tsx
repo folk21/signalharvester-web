@@ -56,7 +56,7 @@ export function AnalysisItemsPage() {
       />
 
       <section className="panel filter-panel">
-        <form className="filter-form" onSubmit={applyFilters}>
+        <form aria-label="Analysis item filters" className="filter-form" onSubmit={applyFilters}>
           <label>
             <span>Monitoring profile ID</span>
             <input
@@ -100,7 +100,7 @@ export function AnalysisItemsPage() {
             <EmptyState>No analysis items match the current filters.</EmptyState>
           ) : (
             <div className="table-wrap">
-              <table>
+              <table aria-label="Analysis items">
                 <thead>
                   <tr>
                     <th>Normalized item</th>

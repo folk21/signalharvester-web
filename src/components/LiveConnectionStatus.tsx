@@ -8,5 +8,5 @@ const labels: Record<LiveConnectionStatusValue, string> = {
 };
 
 export function LiveConnectionStatus({ status }: { status: LiveConnectionStatusValue }) {
-  return <span className={`live-status live-status--${status}`}>{labels[status]}</span>;
+  return <span className={`live-status live-status--${status}`} role="status" aria-live="polite" aria-atomic="true">{labels[status]}</span>;
 }

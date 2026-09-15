@@ -3,14 +3,14 @@ type: Specification
 title: Live backend diagnostic acceptance
 description: Extend the opt-in real-backend Playwright workflow through Results SSE, Event Observation SSE, and backend-reconstructed Processing Flow diagnostics.
 document_role: subspec
-spec_status: verification-pending
+spec_status: completed
 parent: ../spec-signal-harvester-web.md
 ---
 # Live backend diagnostic acceptance
 
 ## Status
 
-Implementation complete. Live developer verification pending.
+Completed and accepted on 2026-09-15 after the routine frontend gate and real-backend live diagnostic workflow passed.
 
 ## Goal
 

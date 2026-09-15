@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 
 export async function installMockEventSource(page: Page, autoReady = false) {
   await page.addInitScript(({ autoReady }) => {
-    const sources: EventTarget[] = [];
+    const sources: MockEventSource[] = [];
     class MockEventSource extends EventTarget {
       static readonly CONNECTING = 0;
       static readonly OPEN = 1;
@@ -32,24 +32,55 @@ export async function installMockEventSource(page: Page, autoReady = false) {
 
     Object.assign(window, {
       EventSource: MockEventSource,
-      __signalHarvesterEmitSse(eventName: string, data: unknown) {
-        const source = sources.at(-1);
-        source?.dispatchEvent(new MessageEvent(eventName, { data: JSON.stringify(data) }));
+      __signalHarvesterHasSseSource(urlIncludes: string) {
+        return sources.some((source) =>
+          source.readyState !== MockEventSource.CLOSED && source.url.includes(urlIncludes),
+        );
+      },
+      __signalHarvesterEmitSse(eventName: string, data: unknown, urlIncludes?: string) {
+        const source = [...sources].reverse().find((candidate) =>
+          candidate.readyState !== MockEventSource.CLOSED
+          && (!urlIncludes || candidate.url.includes(urlIncludes)),
+        );
+        if (!source) {
+          return false;
+        }
+        source.dispatchEvent(new MessageEvent(eventName, { data: JSON.stringify(data) }));
+        return true;
       },
     });
   }, { autoReady });
 }
 
-export async function emitSse(page: Page, eventName: string, data: unknown) {
-  await page.evaluate(({ eventName, data }) => {
+export async function waitForSseSource(page: Page, urlIncludes: string) {
+  await page.waitForFunction((expectedUrl) => {
+    const hasSource = (
+      window as typeof window & {
+        __signalHarvesterHasSseSource?: (urlPart: string) => boolean;
+      }
+    ).__signalHarvesterHasSseSource;
+    return hasSource?.(expectedUrl) ?? false;
+  }, urlIncludes);
+}
+
+export async function emitSse(
+  page: Page,
+  eventName: string,
+  data: unknown,
+  urlIncludes?: string,
+) {
+  const emitted = await page.evaluate(({ eventName, data, urlIncludes }) => {
     const emit = (
       window as typeof window & {
-        __signalHarvesterEmitSse?: (name: string, value: unknown) => void;
+        __signalHarvesterEmitSse?: (name: string, value: unknown, urlPart?: string) => boolean;
       }
     ).__signalHarvesterEmitSse;
     if (!emit) {
       throw new Error('Mock EventSource is not installed');
     }
-    emit(eventName, data);
-  }, { eventName, data });
+    return emit(eventName, data, urlIncludes);
+  }, { eventName, data, urlIncludes });
+  if (!emitted) {
+    throw new Error(`No open mock EventSource matched ${urlIncludes ?? 'the current stream'}`);
+  }
 }

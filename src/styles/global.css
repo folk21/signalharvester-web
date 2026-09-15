@@ -59,6 +59,36 @@ a:hover {
   color: #9af0d0;
 }
 
+
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 1000;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid rgba(110, 231, 183, 0.55);
+  border-radius: 0.6rem;
+  background: var(--surface-3);
+  color: var(--text);
+  text-decoration: none;
+  transform: translateY(-180%);
+  transition: transform 100ms ease;
+}
+
+.skip-link:focus {
+  color: var(--text);
+  transform: translateY(0);
+}
+
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.content:focus {
+  outline: none;
+}
+
 h1,
 h2,
 h3,
@@ -1046,10 +1076,22 @@ textarea:focus {
   grid-template-columns: minmax(0, 1.55fr) minmax(390px, 0.85fr);
 }
 
+@media (max-width: 1180px) {
+  .workspace-grid--events {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 1080px) {
   .filter-form--events,
   .filter-form--results {
     grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .filter-form--events {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react';
 
 export function LoadingState({ label = 'Loading…' }: { label?: string }) {
-  return <div className="state-card state-card--loading">{label}</div>;
+  return <div className="state-card state-card--loading" role="status" aria-live="polite">{label}</div>;
 }
 
 export function ErrorState({ error, action }: { error: unknown; action?: ReactNode }) {
   const message = error instanceof Error ? error.message : 'Unexpected request failure.';
   return (
-    <div className="state-card state-card--error">
+    <div className="state-card state-card--error" role="alert">
       <strong>Request failed</strong>
       <span>{message}</span>
       {action}

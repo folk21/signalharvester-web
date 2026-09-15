@@ -4,7 +4,7 @@ title: SignalHarvester Web initial product specification
 description: Active frontend umbrella specification for configuration, operational inspection, Results, live updates, and event-flow diagnostics.
 document_role: umbrella
 spec_status: active
-current_focus: subspecs/ui-live-diagnostic-acceptance.md
+current_focus: subspecs/ui-accessibility-hardening.md
 ---
 # SignalHarvester Web initial product specification
 
@@ -18,9 +18,9 @@ Frontend implementation details belong here rather than in the backend repositor
 
 ## Current implementation focus
 
-The current bounded focus is [`subspecs/ui-live-diagnostic-acceptance.md`](subspecs/ui-live-diagnostic-acceptance.md). It expands the opt-in real-backend Playwright path through Results SSE, Event Observation SSE, and backend-reconstructed Processing Flow diagnostics.
+The current bounded focus is [`subspecs/ui-accessibility-hardening.md`](subspecs/ui-accessibility-hardening.md). It strengthens native semantics, repeated-action naming, keyboard focus behavior, and deterministic accessibility-oriented browser verification without adding a new accessibility dependency.
 
-The accepted baseline already provides Dashboard, Sources CRUD and Source Test, Monitoring Profiles, profile-driven Collection Runs, Analysis inspection, Results list/filter/detail with SSE updates, Event Explorer history/live delivery, deterministic Playwright coverage, and an opt-in live-backend browser flow. Targeted visual regression is implemented and remains verification-pending until its developer gate is accepted.
+The accepted baseline already provides Dashboard, Sources CRUD and Source Test, Monitoring Profiles, profile-driven Collection Runs, Analysis inspection, Results list/filter/detail with SSE updates, Event Explorer history/live delivery, Processing Flow, resilience coverage, and real-backend diagnostic acceptance through Results/Event SSE and Processing Flow. Targeted visual regression is implemented and remains verification-pending until its developer gate is accepted.
 
 ## Goal
 
@@ -66,7 +66,8 @@ The frontend does not own:
 | Processing-flow visualization | Implemented and accepted |
 | UI resilience / edge-case verification | Implemented and accepted |
 | Targeted visual regression | Implemented; verification pending |
-| Live diagnostic acceptance | Implemented in current focus; live verification pending |
+| Live diagnostic acceptance | Implemented and accepted |
+| Accessibility hardening | Implemented in current focus; verification pending |
 | Authentication/authorization | Pending |
 
 ## Requirements

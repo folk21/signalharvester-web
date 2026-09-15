@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import type {
@@ -33,6 +33,9 @@ export function MonitoringProfilesPage() {
   const [editing, setEditing] = useState<MonitoringProfile | null>(null);
   const [form, setForm] = useState<MonitoringProfileFormValues>(emptyForm);
   const [formError, setFormError] = useState<string | null>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const newProfileButtonRef = useRef<HTMLButtonElement>(null);
+  const editReturnFocusRef = useRef<HTMLButtonElement | null>(null);
 
   const saveMutation = useMutation({
     mutationFn: async (payload: MonitoringProfileUpsertRequest) =>
@@ -78,12 +81,23 @@ export function MonitoringProfilesPage() {
   const formSources = orderSourcesForForm(sources, form.sourceIds);
 
   function resetForm() {
+    editReturnFocusRef.current = null;
     setEditing(null);
     setForm(emptyForm);
     setFormError(null);
   }
 
-  function beginEdit(profile: MonitoringProfile) {
+  function focusNameInput() {
+    requestAnimationFrame(() => nameInputRef.current?.focus());
+  }
+
+  function beginCreate() {
+    resetForm();
+    focusNameInput();
+  }
+
+  function beginEdit(profile: MonitoringProfile, returnFocus: HTMLButtonElement) {
+    editReturnFocusRef.current = returnFocus;
     setEditing(profile);
     setForm({
       name: profile.name,
@@ -94,6 +108,14 @@ export function MonitoringProfilesPage() {
       criteriaText: JSON.stringify(profile.criteria, null, 2),
     });
     setFormError(null);
+    focusNameInput();
+  }
+
+  function cancelEdit() {
+    const returnFocus = editReturnFocusRef.current;
+    editReturnFocusRef.current = null;
+    resetForm();
+    requestAnimationFrame(() => (returnFocus ?? newProfileButtonRef.current)?.focus());
   }
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -131,7 +153,7 @@ export function MonitoringProfilesPage() {
         title="Monitoring Profiles"
         description="Group sources into persisted collection profiles with category, interval, criteria, and enabled state."
         actions={
-          <button className="button button--primary" onClick={resetForm} type="button">
+          <button className="button button--primary" onClick={beginCreate} ref={newProfileButtonRef} type="button">
             New profile
           </button>
         }
@@ -149,7 +171,7 @@ export function MonitoringProfilesPage() {
             <EmptyState>Create the first monitoring profile using the form.</EmptyState>
           ) : (
             <div className="table-wrap">
-              <table>
+              <table aria-label="Configured monitoring profiles">
                 <thead>
                   <tr>
                     <th>Name</th>
@@ -181,11 +203,17 @@ export function MonitoringProfilesPage() {
                       </td>
                       <td>
                         <div className="table-actions">
-                          <button className="button button--ghost" onClick={() => beginEdit(profile)} type="button">
+                          <button
+                            aria-label={`Edit monitoring profile ${profile.name}`}
+                            className="button button--ghost"
+                            onClick={(event) => beginEdit(profile, event.currentTarget)}
+                            type="button"
+                          >
                             Edit
                           </button>
                           <button
                             className="button button--ghost"
+                            aria-label={`${profile.enabled ? 'Disable' : 'Enable'} monitoring profile ${profile.name}`}
                             disabled={toggleMutation.isPending}
                             onClick={() =>
                               toggleMutation.mutate({ profile, enabled: !profile.enabled })
@@ -195,6 +223,7 @@ export function MonitoringProfilesPage() {
                             {profile.enabled ? 'Disable' : 'Enable'}
                           </button>
                           <button
+                            aria-label={`Delete monitoring profile ${profile.name}`}
                             className="button button--danger-ghost"
                             onClick={() => remove(profile)}
                             type="button"
@@ -218,10 +247,16 @@ export function MonitoringProfilesPage() {
               <h2>{editing?.name ?? 'New monitoring profile'}</h2>
             </div>
           </div>
-          <form className="form-stack" onSubmit={submit}>
+          <form
+            aria-describedby={formError ? 'profile-form-validation-error' : undefined}
+            aria-label="Monitoring profile configuration"
+            className="form-stack"
+            onSubmit={submit}
+          >
             <label>
               <span>Name</span>
               <input
+                ref={nameInputRef}
                 value={form.name}
                 onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
                 placeholder="Java jobs"
@@ -303,10 +338,10 @@ export function MonitoringProfilesPage() {
               />
             </label>
 
-            {formError ? <div className="inline-error">{formError}</div> : null}
-            {saveMutation.error ? <div className="inline-error">{saveMutation.error.message}</div> : null}
-            {deleteMutation.error ? <div className="inline-error">{deleteMutation.error.message}</div> : null}
-            {toggleMutation.error ? <div className="inline-error">{toggleMutation.error.message}</div> : null}
+            {formError ? <div className="inline-error" id="profile-form-validation-error" role="alert">{formError}</div> : null}
+            {saveMutation.error ? <div className="inline-error" role="alert">{saveMutation.error.message}</div> : null}
+            {deleteMutation.error ? <div className="inline-error" role="alert">{deleteMutation.error.message}</div> : null}
+            {toggleMutation.error ? <div className="inline-error" role="alert">{toggleMutation.error.message}</div> : null}
 
             <div className="form-actions">
               <button
@@ -317,7 +352,7 @@ export function MonitoringProfilesPage() {
                 {saveMutation.isPending ? 'Saving…' : editing ? 'Save changes' : 'Create profile'}
               </button>
               {editing ? (
-                <button className="button button--ghost" onClick={resetForm} type="button">
+                <button className="button button--ghost" onClick={cancelEdit} type="button">
                   Cancel
                 </button>
               ) : null}

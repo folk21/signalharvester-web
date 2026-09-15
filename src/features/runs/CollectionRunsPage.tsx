@@ -84,7 +84,7 @@ export function CollectionRunsPage() {
         {profiles.length === 0 ? (
           <EmptyState>Create a monitoring profile before starting a collection run.</EmptyState>
         ) : (
-          <form className="run-launcher__form run-launcher__form--profile" onSubmit={startRun}>
+          <form aria-label="Start collection run" className="run-launcher__form run-launcher__form--profile" onSubmit={startRun}>
             <label>
               <span>Monitoring profile</span>
               <select
@@ -104,7 +104,7 @@ export function CollectionRunsPage() {
             </button>
           </form>
         )}
-        {startMutation.error ? <div className="inline-error">{startMutation.error.message}</div> : null}
+        {startMutation.error ? <div className="inline-error" role="alert">{startMutation.error.message}</div> : null}
       </section>
 
       <section className="workspace-grid">
@@ -122,7 +122,7 @@ export function CollectionRunsPage() {
             <EmptyState>No completed collection runs have been persisted yet.</EmptyState>
           ) : (
             <div className="table-wrap">
-              <table>
+              <table aria-label="Collection run history">
                 <thead>
                   <tr>
                     <th>Run</th>

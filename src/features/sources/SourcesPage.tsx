@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import type {
@@ -34,6 +34,9 @@ export function SourcesPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [testedSource, setTestedSource] = useState<TestedSource | null>(null);
   const [testingSourceId, setTestingSourceId] = useState<string | null>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const newSourceButtonRef = useRef<HTMLButtonElement>(null);
+  const editReturnFocusRef = useRef<HTMLButtonElement | null>(null);
 
   const saveMutation = useMutation({
     mutationFn: async (payload: SourceUpsertRequest) =>
@@ -86,12 +89,23 @@ export function SourcesPage() {
   );
 
   function resetForm() {
+    editReturnFocusRef.current = null;
     setEditing(null);
     setForm(emptyForm);
     setFormError(null);
   }
 
-  function beginEdit(source: Source) {
+  function focusNameInput() {
+    requestAnimationFrame(() => nameInputRef.current?.focus());
+  }
+
+  function beginCreate() {
+    resetForm();
+    focusNameInput();
+  }
+
+  function beginEdit(source: Source, returnFocus: HTMLButtonElement) {
+    editReturnFocusRef.current = returnFocus;
     setEditing(source);
     setForm({
       name: source.name,
@@ -101,6 +115,14 @@ export function SourcesPage() {
       settingsText: JSON.stringify(source.settings, null, 2),
     });
     setFormError(null);
+    focusNameInput();
+  }
+
+  function cancelEdit() {
+    const returnFocus = editReturnFocusRef.current;
+    editReturnFocusRef.current = null;
+    resetForm();
+    requestAnimationFrame(() => (returnFocus ?? newSourceButtonRef.current)?.focus());
   }
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -134,7 +156,7 @@ export function SourcesPage() {
         title="Sources"
         description="Manage external sources and run bounded fetch/extraction diagnostics without publishing normal pipeline events."
         actions={
-          <button className="button button--primary" onClick={resetForm} type="button">
+          <button className="button button--primary" onClick={beginCreate} ref={newSourceButtonRef} type="button">
             New source
           </button>
         }
@@ -152,7 +174,7 @@ export function SourcesPage() {
             <EmptyState>Create the first source using the form.</EmptyState>
           ) : (
             <div className="table-wrap">
-              <table>
+              <table aria-label="Configured sources">
                 <thead>
                   <tr>
                     <th>Name</th>
@@ -182,24 +204,31 @@ export function SourcesPage() {
                         <div className="table-actions">
                           <button
                             className="button button--ghost"
+                            aria-label={`${testingSourceId === source.id ? 'Testing' : 'Test'} source ${source.name}`}
                             disabled={testMutation.isPending}
                             onClick={() => testMutation.mutate(source.id)}
                             type="button"
                           >
                             {testingSourceId === source.id ? 'Testing…' : 'Test'}
                           </button>
-                          <button className="button button--ghost" onClick={() => beginEdit(source)} type="button">
+                          <button
+                            aria-label={`Edit source ${source.name}`}
+                            className="button button--ghost"
+                            onClick={(event) => beginEdit(source, event.currentTarget)}
+                            type="button"
+                          >
                             Edit
                           </button>
                           <button
                             className="button button--ghost"
+                            aria-label={`${source.enabled ? 'Disable' : 'Enable'} source ${source.name}`}
                             disabled={toggleMutation.isPending}
                             onClick={() => toggleMutation.mutate({ source, enabled: !source.enabled })}
                             type="button"
                           >
                             {source.enabled ? 'Disable' : 'Enable'}
                           </button>
-                          <button className="button button--danger-ghost" onClick={() => remove(source)} type="button">
+                          <button aria-label={`Delete source ${source.name}`} className="button button--danger-ghost" onClick={() => remove(source)} type="button">
                             Delete
                           </button>
                         </div>
@@ -219,10 +248,16 @@ export function SourcesPage() {
               <h2>{editing?.name ?? 'New source'}</h2>
             </div>
           </div>
-          <form className="form-stack" onSubmit={submit}>
+          <form
+            aria-describedby={formError ? 'source-form-validation-error' : undefined}
+            aria-label="Source configuration"
+            className="form-stack"
+            onSubmit={submit}
+          >
             <label>
               <span>Name</span>
               <input
+                ref={nameInputRef}
                 value={form.name}
                 onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
                 placeholder="Java Jobs"
@@ -269,17 +304,17 @@ export function SourcesPage() {
               />
             </label>
 
-            {formError ? <div className="inline-error">{formError}</div> : null}
-            {saveMutation.error ? <div className="inline-error">{saveMutation.error.message}</div> : null}
-            {deleteMutation.error ? <div className="inline-error">{deleteMutation.error.message}</div> : null}
-            {toggleMutation.error ? <div className="inline-error">{toggleMutation.error.message}</div> : null}
+            {formError ? <div className="inline-error" id="source-form-validation-error" role="alert">{formError}</div> : null}
+            {saveMutation.error ? <div className="inline-error" role="alert">{saveMutation.error.message}</div> : null}
+            {deleteMutation.error ? <div className="inline-error" role="alert">{deleteMutation.error.message}</div> : null}
+            {toggleMutation.error ? <div className="inline-error" role="alert">{toggleMutation.error.message}</div> : null}
 
             <div className="form-actions">
               <button className="button button--primary" disabled={saveMutation.isPending} type="submit">
                 {saveMutation.isPending ? 'Saving…' : editing ? 'Save changes' : 'Create source'}
               </button>
               {editing ? (
-                <button className="button button--ghost" onClick={resetForm} type="button">
+                <button className="button button--ghost" onClick={cancelEdit} type="button">
                   Cancel
                 </button>
               ) : null}
@@ -288,7 +323,7 @@ export function SourcesPage() {
         </article>
       </section>
 
-      {testMutation.error ? <div className="inline-error">Source test failed: {testMutation.error.message}</div> : null}
+      {testMutation.error ? <div className="inline-error" role="alert">Source test failed: {testMutation.error.message}</div> : null}
       {testedSource ? <SourceTestPanel tested={testedSource} /> : null}
     </div>
   );

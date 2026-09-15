@@ -236,7 +236,14 @@ test('long diagnostic values stay contained at a narrow mobile viewport', async 
   });
 
   await page.goto('/events');
-  await page.getByRole('button', { name: `Inspect event ${longEvent.eventType} ${longEvent.eventId}` }).click();
+  await expectNoDocumentHorizontalOverflow(page);
+  const eventButton = page.getByRole('button', {
+    name: `Inspect event ${longEvent.eventType} ${longEvent.eventId}`,
+  });
+  await expect(eventButton).toBeVisible();
+  await eventButton.focus();
+  await expect(eventButton).toBeFocused();
+  await page.keyboard.press('Enter');
   await expect(page.getByText(longEvent.eventId, { exact: true })).toBeVisible();
   await expectNoDocumentHorizontalOverflow(page);
 
