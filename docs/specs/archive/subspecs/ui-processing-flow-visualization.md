@@ -3,14 +3,14 @@ type: Specification
 title: Processing-flow visualization UI
 description: Visualize backend-reconstructed collection-run and item processing graphs with explicit evidence and diagnostic navigation.
 document_role: subspec
-spec_status: verification-pending
+spec_status: completed
 parent: ../spec-signal-harvester-web.md
 ---
 # Processing-flow visualization UI
 
 ## Status
 
-Implementation complete. Verification pending.
+Completed and accepted after repository verification.
 
 ## Goal
 

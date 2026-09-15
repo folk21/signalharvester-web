@@ -117,7 +117,7 @@ export function AnalysisItemsPage() {
                       className={selectedItem && keyOf(selectedItem) === keyOf(item) ? 'table-row--selected' : ''}
                       onClick={() => setSelectedKey(keyOf(item))}
                     >
-                      <td className="mono">{shortId(item.normalizedItemId, 14)}</td>
+                      <td className="mono"><button className="table-row-select table-row-select--mono" type="button" onClick={() => setSelectedKey(keyOf(item))} aria-label={`Inspect analysis item ${item.normalizedItemId}`}>{shortId(item.normalizedItemId, 14)}</button></td>
                       <td>{item.monitoringProfileId}</td>
                       <td className="mono">{shortId(item.sourceId, 12)}</td>
                       <td>{item.discoveryCount}</td>

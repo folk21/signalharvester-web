@@ -4,7 +4,7 @@ title: SignalHarvester Web initial product specification
 description: Active frontend umbrella specification for configuration, operational inspection, Results, live updates, and event-flow diagnostics.
 document_role: umbrella
 spec_status: active
-current_focus: subspecs/ui-processing-flow-visualization.md
+current_focus: subspecs/ui-resilience-edge-case-testing.md
 ---
 # SignalHarvester Web initial product specification
 
@@ -18,7 +18,7 @@ Frontend implementation details belong here rather than in the backend repositor
 
 ## Current implementation focus
 
-The current bounded focus is [`subspecs/ui-processing-flow-visualization.md`](subspecs/ui-processing-flow-visualization.md). It visualizes the backend-reconstructed processing graph for collection runs and run-scoped items while preserving explicit evidence and bounded-history limitations.
+The current bounded focus is [`subspecs/ui-resilience-edge-case-testing.md`](subspecs/ui-resilience-edge-case-testing.md). It strengthens deterministic browser verification around keyboard access, reconnect recovery, bounded-history gaps, long diagnostic values, narrow viewports, and stale deep links.
 
 The accepted baseline already provides Dashboard, Sources CRUD and Source Test, Monitoring Profiles, profile-driven Collection Runs, Analysis inspection, Results list/filter/detail with SSE updates, Event Explorer history/live delivery, deterministic Playwright coverage, and an opt-in live-backend browser flow.
 
@@ -63,7 +63,8 @@ The frontend does not own:
 | Source test/preview | Implemented and accepted |
 | Live Results via SSE | Implemented and accepted |
 | Event Explorer | Implemented and accepted |
-| Processing-flow visualization | Implemented in current focus; verification pending |
+| Processing-flow visualization | Implemented and accepted |
+| UI resilience / edge-case verification | Implemented in current focus; verification pending |
 | Authentication/authorization | Pending |
 
 ## Requirements
@@ -109,7 +110,7 @@ The UI should present available diagnostic information such as:
 - a bounded extracted-item preview;
 - parsing/validation errors.
 
-Current status: implemented in the current frontend focus; verification pending.
+Current status: implemented and accepted.
 
 ### UI-R5 — monitoring profile configuration
 
@@ -125,7 +126,7 @@ When the backend monitoring-profile contract exists, the UI must support:
 
 The UI must make profile/source relationships understandable and editable without process restart or redeployment.
 
-Current status: monitoring-profile CRUD, source assignment, interval, category, enabled state, and criteria are implemented in the current frontend focus; verification pending. Dedicated analysis-setting UI remains pending a backend contract.
+Current status: monitoring-profile CRUD, source assignment, interval, category, enabled state, and criteria are implemented and accepted. Dedicated analysis-setting UI remains pending a backend contract.
 
 ### UI-R6 — collection operations and run inspection
 
@@ -215,7 +216,7 @@ The view should represent relevant stages such as:
 
 Where available, it should present timestamps, durations, Kafka metadata, retry state, analysis outcome, persisted identity, and trace/correlation identifiers.
 
-Current status: implemented in the current frontend focus; verification pending.
+Current status: implemented and accepted.
 
 ### UI-R12 — explicit async states
 
@@ -265,6 +266,23 @@ A later security slice must define authentication, authorization, cross-origin p
 Core workflows must remain keyboard-operable and understandable without relying only on color.
 
 Interactive controls must use appropriate semantic HTML and labels. Browser automation should include basic checks for critical navigation and form accessibility where practical.
+
+### UI-R18 — resilience and edge-case browser verification
+
+Deterministic browser verification must cover failure-prone interaction states that are easy to miss during normal visual inspection.
+
+The routine suite should protect, where applicable:
+
+- keyboard-only access to primary inspection/detail actions;
+- SSE disconnect/reconnect recovery without duplicate logical rows;
+- bounded-history and stale-deep-link behavior;
+- partial processing-flow evidence and explicit reconstruction limitations;
+- long identifiers/content without document-level horizontal overflow on narrow viewports;
+- representative loading, empty, and backend failure states.
+
+Tests must remain deterministic and backend-independent. They should assert user-visible behavior and request boundaries rather than duplicate backend business semantics.
+
+Current status: implemented in the current frontend focus; verification pending.
 
 ## Non-goals for the current product slice
 

@@ -7,9 +7,9 @@ description: Compact frontend roadmap, backend dependencies, and current impleme
 
 ## Current focus
 
-The current bounded focus is processing-flow visualization over the backend reconstruction API. Monitoring Profiles, Source Test, profile-driven manual runs, live Results, and Event Explorer are accepted.
+The current bounded focus is UI resilience and edge-case verification. Processing Flow visualization, Monitoring Profiles, Source Test, profile-driven manual runs, live Results, and Event Explorer are accepted.
 
-After this diagnostic visualization slice, the next work should move to delivery/security and UX hardening unless a higher-priority product capability is introduced.
+This testing slice hardens keyboard interaction, reconnect recovery, bounded-history behavior, partial diagnostic data, and narrow-viewport layout before broader UX and delivery/security work.
 
 ## Completed baseline
 
@@ -64,7 +64,7 @@ Implemented and accepted:
 
 ## P1 — processing-flow visualization
 
-Implemented in the current verification-pending slice:
+Implemented and accepted:
 
 - visualize source -> collection -> Kafka -> analysis -> persistence -> result stages;
 - show timestamps, durations, evidence classification, and reconstruction limitations;
@@ -72,6 +72,18 @@ Implemented in the current verification-pending slice:
 - support run-level and run-scoped item-level inspection;
 - link Collection Runs, Results, Events, and flow stages into one diagnostic navigation model;
 - keep the visualization diagnostic rather than pretending to replace distributed tracing.
+
+
+## P1 — UI resilience and edge-case verification
+
+Current focus:
+
+- exercise keyboard-only detail selection across tabular diagnostic screens;
+- verify SSE error/reconnect resynchronization without duplicate logical rows;
+- verify stale Result/Event deep links when bounded snapshots no longer contain the requested record;
+- verify partial Processing Flow reconstruction and explicit missing evidence;
+- verify long diagnostic values at a narrow mobile viewport without document-level horizontal overflow;
+- keep these checks deterministic and part of the normal Playwright suite.
 
 ## P2 — delivery and security hardening
 

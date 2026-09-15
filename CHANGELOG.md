@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+2026-09-15 Strengthened deterministic browser verification with keyboard-only table inspection, SSE reconnect/resnapshot, stale bounded deep links, partial Processing Flow evidence, and narrow-viewport long-data coverage.
+
+2026-09-15 Added keyboard-accessible inspection controls to Runs, Analysis, Results, and Event Explorer tables.
+
 2026-09-14 Added Processing Flow visualization with run/item lanes, evidence-aware stage detail, durations, and cross-screen diagnostic links.
 
 2026-09-14 Accepted live Results and Event Explorer after routine checks and manual live-backend inspection passed.

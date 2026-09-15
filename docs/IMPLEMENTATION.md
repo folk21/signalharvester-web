@@ -9,7 +9,7 @@ description: Current implemented SignalHarvester Web screens, API usage, code or
 
 This document describes what the frontend currently implements. Active specifications describe intended changes and must not be read as evidence that a feature already exists.
 
-The accepted baseline includes Monitoring Profiles, Source Test, profile-driven manual Collection Runs, live Results, and Event Explorer. The current branch adds Processing Flow visualization; its automated acceptance is pending `./run_checks.sh`.
+The accepted baseline includes Monitoring Profiles, Source Test, profile-driven manual Collection Runs, live Results, Event Explorer, and Processing Flow visualization. The current branch strengthens deterministic UI verification around resilience, accessibility, bounded-history, and narrow-viewport edge cases.
 
 ## Current screens
 
@@ -153,11 +153,16 @@ The deterministic browser suite now covers:
 - Results filters/detail and live SSE merge behavior;
 - Event Explorer history/live behavior;
 - Processing Flow run/item visualization and drill-down;
-- representative loading/error/empty states.
+- representative loading/error/empty states;
+- keyboard-only selection in the main tabular diagnostic screens;
+- SSE reconnect/resnapshot behavior without duplicate logical rows;
+- stale deep links against bounded Result/Event snapshots;
+- partial Processing Flow evidence and retained-history limitations;
+- long diagnostic identifiers on a narrow mobile viewport without page-level horizontal overflow.
 
 The opt-in live Playwright workflow now owns a temporary RSS source and monitoring profile. It tests the source, runs the profile manually, waits for matching Analysis and Results data, and removes the profile before removing the source so backend referential integrity is respected.
 
-Monitoring Profiles / Source Test and live Results / Event Explorer were accepted on 2026-09-14 after repository verification; live diagnostics were also inspected against a real backend. The current Processing Flow slice remains verification-pending until the updated routine checks pass.
+Monitoring Profiles / Source Test, live Results / Event Explorer, and Processing Flow were accepted on 2026-09-14 after repository verification; live diagnostics were also inspected against a real backend. The current resilience-testing slice remains verification-pending until the updated routine checks pass.
 
 ## Current limitations
 

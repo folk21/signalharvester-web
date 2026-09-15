@@ -114,7 +114,7 @@ export function ResultsPage() {
           ) : (
             <div className="table-wrap"><table><thead><tr><th>Result</th><th>Category</th><th>Classification</th><th>Score</th><th>Relevant</th><th>Analyzed</th></tr></thead><tbody>{results.map((result) => (
               <tr key={resultKey(result)} className={selectedKey === resultKey(result) ? 'table-row--selected' : ''} onClick={() => setSelectedKey(resultKey(result))}>
-                <td><strong>{result.title?.trim() || shortId(result.normalizedItemId, 18)}</strong><small>{shortId(result.normalizedItemId, 18)}</small></td><td>{result.informationCategory}</td><td><StatusBadge value={result.classification} /></td><td>{result.score}</td><td>{result.relevant ? 'Yes' : 'No'}</td><td>{formatDateTime(result.analyzedAt)}</td>
+                <td><button className="table-row-select" type="button" onClick={() => setSelectedKey(resultKey(result))} aria-label={`Inspect result ${result.title?.trim() || result.normalizedItemId}`}><strong>{result.title?.trim() || shortId(result.normalizedItemId, 18)}</strong><small>{shortId(result.normalizedItemId, 18)}</small></button></td><td>{result.informationCategory}</td><td><StatusBadge value={result.classification} /></td><td>{result.score}</td><td>{result.relevant ? 'Yes' : 'No'}</td><td>{formatDateTime(result.analyzedAt)}</td>
               </tr>
             ))}</tbody></table></div>
           )}

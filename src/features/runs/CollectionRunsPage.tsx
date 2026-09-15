@@ -140,8 +140,10 @@ export function CollectionRunsPage() {
                       onClick={() => setSelectedRunId(run.collectionRunId)}
                     >
                       <td>
-                        <strong className="mono">{shortId(run.collectionRunId, 12)}</strong>
-                        <small>{formatDuration(run.startedAt, run.finishedAt)}</small>
+                        <button className="table-row-select" type="button" onClick={() => setSelectedRunId(run.collectionRunId)} aria-label={`Inspect collection run ${run.collectionRunId}`}>
+                          <strong className="mono">{shortId(run.collectionRunId, 12)}</strong>
+                          <small>{formatDuration(run.startedAt, run.finishedAt)}</small>
+                        </button>
                       </td>
                       <td>
                         <strong>{profileById.get(run.monitoringProfileId)?.name ?? run.monitoringProfileId}</strong>
