@@ -67,6 +67,10 @@ Umbrella:
 
 Current implementation focus:
 
+- [`active/subspecs/ui-live-diagnostic-acceptance.md`](active/subspecs/ui-live-diagnostic-acceptance.md) — real-backend Results SSE, Event Observation SSE, and Processing Flow browser acceptance; implementation complete, live verification pending.
+
+Active supporting track:
+
 - [`active/subspecs/ui-targeted-visual-regression.md`](active/subspecs/ui-targeted-visual-regression.md) — reviewed Playwright golden-image coverage for high-signal layout regressions; implementation complete, verification pending.
 
 Recently completed:

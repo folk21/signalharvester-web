@@ -105,7 +105,7 @@ Run the opt-in live browser workflow against a separately running backend:
 SIGNALHARVESTER_BACKEND_URL=http://127.0.0.1:8080 npm run e2e:live
 ```
 
-The live test starts a temporary two-entry RSS server, creates and diagnostically tests a temporary RSS source, creates a temporary monitoring profile through the UI, starts that profile manually, waits for matching Analysis and Results state, opens Result detail, then deletes the profile before removing the source. The default fixture address assumes the backend runs on the same host. If a containerized backend can reach the host through another hostname, advertise it with `SIGNALHARVESTER_LIVE_FIXTURE_HOST`, for example `host.docker.internal`.
+The live test starts a temporary two-entry RSS server, creates and diagnostically tests a temporary RSS source, and creates a temporary monitoring profile through the UI. It establishes filtered Results SSE before the first manual run and requires both fixture Results to arrive without `Refresh`, keeps the bounded Analysis inspection check, then establishes Event Explorer SSE before a second run and requires a newly correlated observed event to arrive without `Refresh`. Finally it follows a real Analysis event into the backend-reconstructed item and full-run Processing Flow views, then deletes the profile before removing the source. The default fixture address assumes the backend runs on the same host. If a containerized backend can reach the host through another hostname, advertise it with `SIGNALHARVESTER_LIVE_FIXTURE_HOST`, for example `host.docker.internal`.
 
 A complete routine frontend verification is:
 

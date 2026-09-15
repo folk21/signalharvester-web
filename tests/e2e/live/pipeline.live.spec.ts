@@ -6,11 +6,12 @@ const backendUrl = (process.env.SIGNALHARVESTER_BACKEND_URL || 'http://127.0.0.1
 const resultWaitMs = Number(process.env.SIGNALHARVESTER_LIVE_RESULT_WAIT_MS || '30000');
 const collectionWaitMs = Number(process.env.SIGNALHARVESTER_LIVE_COLLECTION_WAIT_MS || '60000');
 
-test('live browser flow configures, tests, collects, analyzes, and exposes Results', async ({
+test('live browser flow verifies Results SSE, Event Observation SSE, and Processing Flow reconstruction', async ({
   page,
+  context,
   request,
 }) => {
-  test.setTimeout(collectionWaitMs + resultWaitMs * 2 + 45_000);
+  test.setTimeout(collectionWaitMs * 2 + resultWaitMs * 4 + 60_000);
 
   const fixtureServer = await startRssFixtureServer();
   const unique = `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
@@ -69,50 +70,113 @@ test('live browser flow configures, tests, collects, analyzes, and exposes Resul
 
     await expect(page.getByRole('row', { name: new RegExp(profileName) })).toBeVisible();
 
-    await page.getByRole('link', { name: 'Collection Runs' }).click();
-    await page.getByLabel('Monitoring profile').selectOption(createdProfileId);
+    const resultsPage = await context.newPage();
+    await resultsPage.goto('/results');
+    await resultsPage.getByLabel('Monitoring profile ID').fill(createdProfileId);
+    await resultsPage.getByLabel('Source ID').fill(createdSourceId);
+    await resultsPage.getByRole('button', { name: 'Apply filters' }).click();
+    await expect(resultsPage.getByText('Live', { exact: true })).toBeVisible({ timeout: resultWaitMs });
+    await expect(resultsPage.getByText('0 loaded', { exact: true })).toBeVisible({ timeout: resultWaitMs });
 
-    const runResponse = page.waitForResponse(
-      (response) =>
-        response.request().method() === 'POST' &&
-        new URL(response.url()).pathname === '/api/v1/admin/collection-runs',
-      { timeout: collectionWaitMs },
-    );
-    await page.getByRole('button', { name: 'Start collection run' }).click();
-    const run = (await (await runResponse).json()) as CollectionRun;
+    const firstRun = await startCollectionRun(page, createdProfileId);
+    assertFixturePublished(firstRun, createdSourceId);
 
-    const fixtureOutcomes = run.sources.filter((outcome) => outcome.sourceId === createdSourceId);
-    expect(fixtureOutcomes).toHaveLength(2);
-    expect(fixtureOutcomes.every((outcome) => outcome.status === 'PUBLISHED')).toBe(true);
+    await expect(resultsPage.getByText('Java browser fixture', { exact: true })).toBeVisible({ timeout: resultWaitMs });
+    await expect(resultsPage.getByText('PostgreSQL browser fixture', { exact: true })).toBeVisible({ timeout: resultWaitMs });
+    await expect(resultsPage.getByText('2 loaded', { exact: true })).toBeVisible({ timeout: resultWaitMs });
 
-    await expect(page.getByText(profileName, { exact: true }).first()).toBeVisible();
-    await expect(page.getByText(`${createdSourceId.slice(0, 14)}…`, { exact: true })).toHaveCount(2);
+    await resultsPage.getByRole('button', { name: 'Inspect result Java browser fixture' }).click();
+    await expect(resultsPage.getByText(createdProfileId, { exact: true })).toBeVisible();
+    await expect(resultsPage.getByText(createdSourceId, { exact: true })).toBeVisible();
+    await expect(resultsPage.getByText(firstRun.collectionRunId, { exact: true })).toBeVisible();
 
-    await page.getByRole('link', { name: 'Analysis Items' }).click();
+    await page.goto('/analysis');
     await page.getByLabel('Monitoring profile ID').fill(createdProfileId);
     await page.getByLabel('Source ID').fill(createdSourceId);
     await page.getByRole('button', { name: 'Apply filters' }).click();
     await waitForLoadedCount(page, '/api/v1/admin/analysis/items', 2, resultWaitMs);
 
-    await page.getByRole('link', { name: 'Results' }).click();
-    await page.getByLabel('Monitoring profile ID').fill(createdProfileId);
-    await page.getByLabel('Source ID').fill(createdSourceId);
-    await page.getByRole('button', { name: 'Apply filters' }).click();
-    await waitForLoadedCount(page, '/api/v1/results', 2, resultWaitMs);
+    const eventPage = await context.newPage();
+    await eventPage.goto('/events');
+    await eventPage.getByLabel('Producer').fill('collection');
+    await eventPage.getByRole('button', { name: 'Apply filters' }).click();
+    await expect(eventPage.getByText('Live', { exact: true })).toBeVisible({ timeout: resultWaitMs });
 
-    await expect(page.getByText('Java browser fixture', { exact: true })).toBeVisible();
-    await expect(page.getByText('PostgreSQL browser fixture', { exact: true })).toBeVisible();
+    const secondRun = await startCollectionRun(page, createdProfileId);
+    assertFixturePublished(secondRun, createdSourceId);
 
-    await page.getByRole('row', { name: /Java browser fixture/ }).click();
-    await expect(page.getByText(createdProfileId, { exact: true })).toBeVisible();
-    await expect(page.getByText(createdSourceId, { exact: true })).toBeVisible();
-    await expect(page.getByText(run.collectionRunId, { exact: true })).toBeVisible();
+    const secondRunShortId = `${secondRun.collectionRunId.slice(0, 18)}…`;
+    await expect(eventPage.getByText(secondRunShortId, { exact: true }).first()).toBeVisible({
+      timeout: resultWaitMs,
+    });
+
+    await eventPage.getByLabel('Collection run ID').fill(secondRun.collectionRunId);
+    await eventPage.getByRole('button', { name: 'Apply filters' }).click();
+    await expect(eventPage.getByText('Live', { exact: true })).toBeVisible({ timeout: resultWaitMs });
+    await expect
+      .poll(() => eventPage.locator('tbody tr').count(), {
+        timeout: resultWaitMs,
+        intervals: [250, 500, 1000],
+      })
+      .toBeGreaterThanOrEqual(2);
+
+    await eventPage.getByLabel('Producer').fill('analysis');
+    await eventPage.getByRole('button', { name: 'Apply filters' }).click();
+    await expect(eventPage.getByText('Live', { exact: true })).toBeVisible({ timeout: resultWaitMs });
+    await expect
+      .poll(() => eventPage.locator('tbody tr').count(), {
+        timeout: resultWaitMs,
+        intervals: [250, 500, 1000],
+      })
+      .toBeGreaterThan(0);
+
+    const analysisEventRow = eventPage.locator('tbody tr').first();
+    await analysisEventRow.getByRole('button', { name: /Inspect event/ }).click();
+    await expect(eventPage.getByText(secondRun.collectionRunId, { exact: true })).toBeVisible();
+    await expect(eventPage.getByText(createdSourceId, { exact: true })).toBeVisible();
+
+    await eventPage.getByRole('link', { name: 'Open processing flow' }).click();
+    await expect(eventPage.getByLabel('Collection run ID')).toHaveValue(secondRun.collectionRunId);
+    await expect(eventPage.getByLabel('Item ID')).not.toHaveValue('');
+    await expect(eventPage.getByLabel('Flow summary')).toBeVisible({ timeout: resultWaitMs });
+    await expect(eventPage.getByLabel('Flow summary').getByText('Item branch', { exact: true })).toBeVisible();
+    await expect(eventPage.getByText('TERMINAL EVENT REACHED', { exact: true })).toBeVisible();
+    await expect(eventPage.getByRole('button', { name: /Raw Kafka stage/ }).first()).toBeVisible();
+    await expect(eventPage.getByRole('button', { name: /Analysis stage/ }).first()).toBeVisible();
+
+    await eventPage.getByRole('link', { name: 'View full run' }).click();
+    await expect(eventPage.getByLabel('Item ID')).toHaveValue('');
+    await expect(eventPage.getByLabel('Flow summary').getByText('Collection run', { exact: true })).toBeVisible({
+      timeout: resultWaitMs,
+    });
+    await expect(eventPage.getByRole('heading', { name: 'Collection-run branches' })).toBeVisible();
+    await expect(eventPage.getByRole('link', { name: 'Open item flow' })).toHaveCount(2);
   } finally {
     await cleanupProfile(request, profileId);
     await cleanupSource(request, sourceId);
     await fixtureServer.close();
   }
 });
+
+async function startCollectionRun(page: Page, monitoringProfileId: string): Promise<CollectionRun> {
+  await page.goto('/runs');
+  await page.getByLabel('Monitoring profile').selectOption(monitoringProfileId);
+
+  const runResponse = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'POST' &&
+      new URL(response.url()).pathname === '/api/v1/admin/collection-runs',
+    { timeout: collectionWaitMs },
+  );
+  await page.getByRole('button', { name: 'Start collection run' }).click();
+  return (await (await runResponse).json()) as CollectionRun;
+}
+
+function assertFixturePublished(run: CollectionRun, sourceId: string): void {
+  const fixtureOutcomes = run.sources.filter((outcome) => outcome.sourceId === sourceId);
+  expect(fixtureOutcomes).toHaveLength(2);
+  expect(fixtureOutcomes.every((outcome) => outcome.status === 'PUBLISHED')).toBe(true);
+}
 
 async function waitForLoadedCount(
   page: Page,

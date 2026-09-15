@@ -215,7 +215,7 @@ To verify the browser against a real backend that is already running on the host
 SIGNALHARVESTER_BACKEND_URL=http://127.0.0.1:8080 npm run e2e:live
 ```
 
-The live workflow creates a temporary RSS source, diagnostically tests it, creates a temporary Monitoring Profile referencing that source, starts that profile manually, waits for matching Analysis and Results, and then deletes the profile before deleting the source.
+The live workflow creates a temporary RSS source, diagnostically tests it, and creates a temporary Monitoring Profile referencing that source. It opens a filtered Results page and establishes real SSE before the first manual run, then verifies both fixture Results arrive without `Refresh`. It keeps the durable Analysis check, opens Event Explorer with real SSE before a second manual run, verifies a newly correlated observed event arrives without `Refresh`, and follows a real Analysis event into the item and full-run Processing Flow views. Cleanup deletes the profile before deleting the source.
 
 By default the backend must be able to reach a loopback fixture on the same host. For a backend in a container, set `SIGNALHARVESTER_LIVE_FIXTURE_HOST` to a hostname that the backend container can use to reach the host fixture, when such routing is configured.
 

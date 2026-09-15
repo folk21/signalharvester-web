@@ -193,9 +193,9 @@ Vitest owns small deterministic TypeScript logic. Its discovery is limited to `s
 The browser layers are:
 
 1. `npm run e2e` — deterministic navigation, rendering, mutation/request construction, filters, detail loading, and representative async states with controlled REST responses;
-2. `npm run e2e:live` — one bounded cross-project path against a separately running real backend and a temporary deterministic RSS fixture.
+2. `npm run e2e:live` — one bounded cross-project path against a separately running real backend and a temporary deterministic RSS fixture, including real Results SSE delivery, Event Observation SSE delivery, and backend-reconstructed item/run Processing Flow navigation.
 
-The live suite remains opt-in because the frontend repository does not own backend process or infrastructure lifecycle. It verifies browser-visible cross-project behavior, not Kafka offsets, database rows, transactions, or backend analysis internals.
+The live suite remains opt-in because the frontend repository does not own backend process or infrastructure lifecycle. It verifies browser-visible REST/SSE and diagnostic reconstruction behavior, not Kafka offsets, database rows, transactions, deduplication decisions, or backend analysis internals.
 
 Playwright retains traces and screenshots on failure under ignored generated directories. Successful runs do not create checked-in test artifacts. `./run_checks.sh` is the canonical routine frontend verification and includes the fast Playwright suite. The live suite stays opt-in because this repository does not own backend lifecycle.
 

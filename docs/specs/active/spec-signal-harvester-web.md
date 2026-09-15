@@ -4,7 +4,7 @@ title: SignalHarvester Web initial product specification
 description: Active frontend umbrella specification for configuration, operational inspection, Results, live updates, and event-flow diagnostics.
 document_role: umbrella
 spec_status: active
-current_focus: subspecs/ui-targeted-visual-regression.md
+current_focus: subspecs/ui-live-diagnostic-acceptance.md
 ---
 # SignalHarvester Web initial product specification
 
@@ -18,9 +18,9 @@ Frontend implementation details belong here rather than in the backend repositor
 
 ## Current implementation focus
 
-The current bounded focus is [`subspecs/ui-targeted-visual-regression.md`](subspecs/ui-targeted-visual-regression.md). It adds a deliberately small reviewed golden-image baseline for material layout regressions that semantic browser assertions do not detect well.
+The current bounded focus is [`subspecs/ui-live-diagnostic-acceptance.md`](subspecs/ui-live-diagnostic-acceptance.md). It expands the opt-in real-backend Playwright path through Results SSE, Event Observation SSE, and backend-reconstructed Processing Flow diagnostics.
 
-The accepted baseline already provides Dashboard, Sources CRUD and Source Test, Monitoring Profiles, profile-driven Collection Runs, Analysis inspection, Results list/filter/detail with SSE updates, Event Explorer history/live delivery, deterministic Playwright coverage, and an opt-in live-backend browser flow.
+The accepted baseline already provides Dashboard, Sources CRUD and Source Test, Monitoring Profiles, profile-driven Collection Runs, Analysis inspection, Results list/filter/detail with SSE updates, Event Explorer history/live delivery, deterministic Playwright coverage, and an opt-in live-backend browser flow. Targeted visual regression is implemented and remains verification-pending until its developer gate is accepted.
 
 ## Goal
 
@@ -65,7 +65,8 @@ The frontend does not own:
 | Event Explorer | Implemented and accepted |
 | Processing-flow visualization | Implemented and accepted |
 | UI resilience / edge-case verification | Implemented and accepted |
-| Targeted visual regression | Implemented in current focus; verification pending |
+| Targeted visual regression | Implemented; verification pending |
+| Live diagnostic acceptance | Implemented in current focus; live verification pending |
 | Authentication/authorization | Pending |
 
 ## Requirements

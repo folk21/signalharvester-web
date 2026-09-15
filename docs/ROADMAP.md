@@ -7,9 +7,9 @@ description: Compact frontend roadmap, backend dependencies, and current impleme
 
 ## Current focus
 
-The current bounded focus is targeted visual regression. Processing Flow visualization, Monitoring Profiles, Source Test, profile-driven manual runs, live Results, Event Explorer, and the UI resilience/edge-case suite are accepted.
+The current bounded focus is live diagnostic acceptance against a separately running backend. Processing Flow visualization, Monitoring Profiles, Source Test, profile-driven manual runs, live Results, Event Explorer, and the UI resilience/edge-case suite are accepted.
 
-This testing slice adds one reviewed high-signal golden image to detect material layout regressions without turning routine browser verification into a large screenshot-maintenance burden.
+Targeted visual regression is implemented with one reviewed Results/detail golden and remains a verification-pending supporting track. The active live slice extends the real browser acceptance path through Results SSE, Event Observation SSE, and Processing Flow.
 
 ## Completed baseline
 
@@ -87,7 +87,7 @@ Implemented and accepted:
 
 ## P1 — targeted visual regression
 
-Current focus:
+Implemented; verification pending:
 
 - keep one reviewed golden for the dense populated Results/detail composition;
 - compare it during the normal deterministic Playwright suite;
@@ -97,14 +97,15 @@ Current focus:
 
 ## P1 — live diagnostic acceptance
 
-After the visual-regression slice is accepted:
+Current focus; implementation complete and live verification pending:
 
-- extend the opt-in real-backend Playwright workflow beyond Analysis/Results into Event Explorer and Processing Flow;
-- verify that Event Observation SSE surfaces newly observed events while the diagnostic page is already open;
-- verify run-scoped Processing Flow reconstruction through the browser against the real backend;
+- establish the filtered Results SSE stream before the first real Collection Run and receive both fixture Results without manual refresh;
+- establish Event Observation SSE before the second real Collection Run and receive a newly correlated observed event without manual refresh;
+- navigate from a real Analysis event into its run-scoped item Processing Flow;
+- verify the corresponding full Collection Run flow contains both deterministic RSS branches;
 - keep the scenario bounded, deterministic, and based on the existing local RSS fixture rather than public internet data.
 
-This stage should strengthen frontend/backend contract acceptance without duplicating backend Kafka, persistence, or reconstruction semantics in browser assertions.
+This stage strengthens frontend/backend contract acceptance without duplicating backend Kafka, persistence, deduplication, or reconstruction semantics in browser assertions.
 
 ## P2 — accessibility hardening
 
