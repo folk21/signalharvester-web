@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import type { ResultDetail, ResultSummary } from '../../src/api/types';
 import { resultDetailFixture, resultSummaryFixture } from './fixtures/api';
 import { fulfillJson, rejectUnexpectedApi } from './support/http';
-import { emitSse, installMockEventSource } from './support/sse';
+import { emitSse, installMockEventSource, waitForSseSource } from './support/sse';
 
 const PROFILE_ID = 'ca80b9ce-a532-42a3-b554-40623852726f';
 const SOURCE_ID = '699d6eb9-1918-4128-8d2b-67b1805fa496';
@@ -79,7 +79,8 @@ test('canonical populated Results workspace keeps its reviewed visual layout', a
   });
 
   await page.goto('/results');
-  await emitSse(page, 'ready', { cursor: 100, result: null });
+  await waitForSseSource(page, '/api/v1/results/stream');
+  await emitSse(page, 'ready', { cursor: 100, result: null }, '/api/v1/results/stream');
 
   await expect(page.getByText('39 loaded', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Inspect result PostgreSQL browser fixture' }).first().click();

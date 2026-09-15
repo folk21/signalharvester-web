@@ -11,7 +11,7 @@ import {
   resultSummaryFixture,
 } from './fixtures/api';
 import { fulfillJson, rejectUnexpectedApi } from './support/http';
-import { emitSse, installMockEventSource } from './support/sse';
+import { emitSse, installMockEventSource, waitForSseSource } from './support/sse';
 
 async function expectNoDocumentHorizontalOverflow(page: import('@playwright/test').Page) {
   await expect.poll(() => page.evaluate(() =>
@@ -115,20 +115,21 @@ test('Results resynchronizes after SSE errors without duplicating one logical re
   });
 
   await page.goto('/results');
-  await emitSse(page, 'ready', { cursor: 10 });
+  await waitForSseSource(page, '/api/v1/results/stream');
+  await emitSse(page, 'ready', { cursor: 10 }, '/api/v1/results/stream');
   await expect(page.getByText(resultSummaryFixture.title!, { exact: true })).toBeVisible();
   await expect(page.getByText('1 loaded', { exact: true })).toBeVisible();
 
   await emitSse(page, 'result', {
     cursor: 11,
     result: { ...resultSummaryFixture, title: 'Live replacement result', score: 0.95 },
-  });
+  }, '/api/v1/results/stream');
   await expect(page.getByText('Live replacement result', { exact: true })).toBeVisible();
   await expect(page.getByText('1 loaded', { exact: true })).toBeVisible();
 
-  await emitSse(page, 'error', {});
+  await emitSse(page, 'error', {}, '/api/v1/results/stream');
   await expect(page.getByText('Reconnecting', { exact: true })).toBeVisible();
-  await emitSse(page, 'ready', { cursor: 12 });
+  await emitSse(page, 'ready', { cursor: 12 }, '/api/v1/results/stream');
 
   await expect.poll(() => snapshotCount).toBe(2);
   await expect(page.getByText('Recovered durable result', { exact: true })).toBeVisible();

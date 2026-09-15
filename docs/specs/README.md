@@ -67,13 +67,12 @@ Umbrella:
 
 Current implementation focus:
 
-- [`active/subspecs/ui-responsive-large-data-hardening.md`](active/subspecs/ui-responsive-large-data-hardening.md) — bounded configuration collections, narrow/tablet containment, long Result values, and many-branch Processing Flow layouts; implementation complete, verification pending.
-
-Active supporting track:
-
-- [`active/subspecs/ui-targeted-visual-regression.md`](active/subspecs/ui-targeted-visual-regression.md) — reviewed Playwright golden-image coverage for high-signal layout regressions; implementation complete, verification pending.
+- [`active/subspecs/ui-performance-runtime-resilience.md`](active/subspecs/ui-performance-runtime-resilience.md) — route-level code splitting, lazy-route failure containment, and reproducible production asset reporting; implementation complete, verification pending.
 
 Recently completed:
+
+- [`archive/subspecs/ui-responsive-large-data-hardening.md`](archive/subspecs/ui-responsive-large-data-hardening.md) — bounded configuration collections, narrow/tablet containment, long Result values, and many-branch Processing Flow layouts, accepted on 2026-09-15.
+- [`archive/subspecs/ui-targeted-visual-regression.md`](archive/subspecs/ui-targeted-visual-regression.md) — reviewed Playwright golden-image coverage and explicit baseline update workflow, accepted on 2026-09-15.
 
 - [`archive/subspecs/ui-accessibility-hardening.md`](archive/subspecs/ui-accessibility-hardening.md) — skip navigation, native status/alert semantics, entity-specific action names, and configuration focus management, accepted on 2026-09-15.
 

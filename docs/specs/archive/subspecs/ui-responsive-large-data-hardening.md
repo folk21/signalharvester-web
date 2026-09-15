@@ -3,14 +3,14 @@ type: Specification
 title: Responsive and large-data UI hardening
 description: Keep configuration, Result detail, and Processing Flow usable across narrow/tablet layouts and larger bounded datasets without inventing unsupported pagination semantics.
 document_role: subspec
-spec_status: verification-pending
+spec_status: completed
 parent: ../spec-signal-harvester-web.md
 ---
 # Responsive and large-data UI hardening
 
 ## Status
 
-Implementation complete. Developer verification pending.
+Completed and accepted after developer verification.
 
 ## Goal
 

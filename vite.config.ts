@@ -7,6 +7,9 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    build: {
+      manifest: true,
+    },
     server: {
       port: 5173,
       proxy: {

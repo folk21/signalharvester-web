@@ -13,5 +13,6 @@ run_step "Typecheck application and browser tests" npm run typecheck
 run_step "Run Vitest" npm test
 run_step "Run deterministic Playwright browser tests" npm run e2e
 run_step "Build production frontend" npm run build
+run_step "Verify route chunks and report production assets" npm run build:assets
 
 printf '\nAll routine SignalHarvester Web checks passed.\n'

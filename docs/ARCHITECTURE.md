@@ -71,7 +71,7 @@ Feature folders own screen-specific presentation and interaction logic. Shared a
 - `BrowserRouter`;
 - application-wide CSS.
 
-`src/App.tsx` owns the route table. `AppShell` owns common navigation and page layout.
+`src/App.tsx` owns the route table and loads primary feature screens through React lazy route imports. `AppShell` owns common navigation and page layout, keeps the shell visible behind a `Suspense` route-loading state, and contains route render/chunk failures inside the main content region through a route-resetting error boundary.
 
 The current route set is:
 
@@ -84,7 +84,7 @@ The current route set is:
 - `/events` — bounded technical event history/live updates;
 - `/flows` — reconstructed collection-run/item processing graphs.
 
-Future screens should extend this route structure rather than introducing a second routing layer.
+Future screens should extend this route structure rather than introducing a second routing layer. New primary screens should preserve route-level chunking unless eager inclusion is justified by measured delivery behavior.
 
 ## REST contract ownership
 
@@ -199,12 +199,12 @@ The browser layers are:
 
 The live suite remains opt-in because the frontend repository does not own backend process or infrastructure lifecycle. It verifies browser-visible REST/SSE and diagnostic reconstruction behavior, not Kafka offsets, database rows, transactions, deduplication decisions, or backend analysis internals.
 
-Playwright retains traces and screenshots on failure under ignored generated directories. Successful runs do not create checked-in test artifacts. `./run_checks.sh` is the canonical routine frontend verification and includes the fast Playwright suite. The live suite stays opt-in because this repository does not own backend lifecycle.
+Playwright retains traces and screenshots on failure under ignored generated directories. Successful runs do not create checked-in test artifacts. The deterministic suite also exercises delayed and failed lazy-route module delivery so shell/loading/error behavior remains observable without a backend. `./run_checks.sh` is the canonical routine frontend verification and includes the fast Playwright suite. The live suite stays opt-in because this repository does not own backend lifecycle.
 
 Frontend tests should not reimplement backend business behavior. Backend integration tests remain responsible for persistence, Kafka, deduplication, analysis semantics, and other backend-owned guarantees.
 
 ## Delivery model
 
-Development uses Vite and normally proxies `/api` to a local backend. Production-style builds are static frontend assets configured with a backend origin through `VITE_API_BASE_URL` at build time.
+Development uses Vite and normally proxies `/api` to a local backend. Production-style builds are static frontend assets configured with a backend origin through `VITE_API_BASE_URL` at build time. Vite emits a production manifest; repository verification checks that the primary screen modules remain dynamic build entries and reports generated JavaScript/CSS raw and gzip sizes as an informational baseline. Numeric size gates require a reviewed measured baseline rather than an arbitrary threshold.
 
 Backend and frontend remain independently buildable deliverables. The frontend must integrate through explicit REST/SSE contracts rather than source-level coupling.

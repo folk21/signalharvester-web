@@ -219,6 +219,17 @@ The live workflow creates a temporary RSS source, diagnostically tests it, and c
 
 By default the backend must be able to reach a loopback fixture on the same host. For a backend in a container, set `SIGNALHARVESTER_LIVE_FIXTURE_HOST` to a hostname that the backend container can use to reach the host fixture, when such routing is configured.
 
+## Production route and asset verification
+
+Primary screens are loaded as route-level chunks. After building the frontend, verify the expected route entries and print the measured raw/gzip asset baseline with:
+
+```bash
+npm run build
+npm run build:assets
+```
+
+The command reads the Vite production manifest and fails if a primary feature page is no longer a dynamic build entry. Reported asset sizes are informational until a reviewed baseline justifies an explicit budget.
+
 ## Browser troubleshooting
 
 When a screen looks inconsistent, use browser developer tools and check the Network panel first.

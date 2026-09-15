@@ -113,7 +113,16 @@ A complete routine frontend verification is:
 ./run_checks.sh
 ```
 
-The script regenerates OpenAPI types, typechecks application and browser-test code, runs Vitest, runs the deterministic Playwright suite, and builds the production frontend. `npm run e2e:live` remains separate because it requires a real backend and its infrastructure.
+The script regenerates OpenAPI types, typechecks application and browser-test code, runs Vitest, runs the deterministic Playwright suite, builds the production frontend, verifies that primary screens remain route-level dynamic build entries, and prints the production JS/CSS raw and gzip asset baseline. `npm run e2e:live` remains separate because it requires a real backend and its infrastructure.
+
+Inspect the production route-chunk structure and asset baseline after a build with:
+
+```bash
+npm run build
+npm run build:assets
+```
+
+The asset report is informational for now. A numeric size budget should be added only after the measured baseline and acceptable growth policy are reviewed.
 
 ## OpenAPI workflow
 

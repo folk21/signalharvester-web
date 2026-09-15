@@ -39,7 +39,9 @@ export function CollectionRunsPage() {
   useEffect(() => {
     if (!monitoringProfileId && profiles.length > 0) {
       const preferred = profiles.find((profile) => profile.enabled) ?? profiles[0];
-      setMonitoringProfileId(preferred.id);
+      if (preferred) {
+        setMonitoringProfileId(preferred.id);
+      }
     }
   }, [monitoringProfileId, profiles]);
 
@@ -182,7 +184,7 @@ export function CollectionRunsPage() {
   );
 }
 
-function RunDetail({ run, profile }: { run: CollectionRun; profile?: MonitoringProfile }) {
+function RunDetail({ run, profile }: { run: CollectionRun; profile: MonitoringProfile | undefined }) {
   return (
     <div className="detail-stack">
       <div className="detail-actions">

@@ -1,4 +1,7 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { Suspense } from 'react';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { LoadingState } from './AsyncState';
+import { RouteErrorBoundary } from './RouteErrorBoundary';
 
 const navigation = [
   { to: '/', label: 'Dashboard', end: true },
@@ -12,6 +15,8 @@ const navigation = [
 ];
 
 export function AppShell() {
+  const location = useLocation();
+
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main-content">Skip to main content</a>
@@ -43,7 +48,11 @@ export function AppShell() {
         </div>
       </aside>
       <main className="content" id="main-content" tabIndex={-1}>
-        <Outlet />
+        <RouteErrorBoundary key={location.pathname}>
+          <Suspense fallback={<LoadingState label="Loading screen…" />}>
+            <Outlet />
+          </Suspense>
+        </RouteErrorBoundary>
       </main>
     </div>
   );

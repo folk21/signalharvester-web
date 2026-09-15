@@ -143,7 +143,7 @@ The application uses one repository-owned global stylesheet and small reusable p
 
 ## Current verification
 
-The repository's canonical routine verification is `./run_checks.sh`. It regenerates the checked-in API types, typechecks application and browser-test code, runs Vitest, runs deterministic Playwright browser tests, and builds the production frontend. `npm run e2e:visual` is the focused non-updating comparison for the reviewed Results/detail golden, while `npm run e2e:visual:update` is reserved for intentional baseline changes.
+The repository's canonical routine verification is `./run_checks.sh`. It regenerates the checked-in API types, typechecks application and browser-test code, runs Vitest, runs deterministic Playwright browser tests, builds the production frontend, verifies route-level dynamic build entries from the Vite manifest, and prints the generated JavaScript/CSS raw and gzip asset baseline. `npm run e2e:visual` is the focused non-updating comparison for the reviewed Results/detail golden, while `npm run e2e:visual:update` is reserved for intentional baseline changes.
 
 The deterministic browser suite now covers:
 
@@ -168,11 +168,13 @@ The deterministic browser suite now covers:
 - long diagnostic identifiers on a narrow mobile viewport without page-level horizontal overflow.
 - 320 px configuration layouts with dozens of long-named Sources/Profiles and bounded local table/membership scrolling;
 - long Result detail values on tablet layouts without document overflow;
-- many-branch Processing Flow layouts with local vertical branch and horizontal stage-track scrolling.
+- many-branch Processing Flow layouts with local vertical branch and horizontal stage-track scrolling;
+- delayed lazy-route delivery while the shell remains usable and an accessible route-loading state is shown;
+- failed lazy-route delivery with a contained reload fallback and recovery by navigating to another route.
 
 The opt-in live Playwright workflow owns a temporary RSS source and monitoring profile and uses two manual Collection Runs. Before the first run, a profile/source-filtered Results page establishes the real SSE stream and must receive both fixture Results without manual refresh. Before the second run, Event Explorer establishes the real Event Observation SSE stream and must receive a newly correlated event without refresh. The workflow then selects a real Analysis event, opens its backend-reconstructed item flow, and expands to the full run flow. Analysis inspection remains a bounded durable-state check. Cleanup still removes the profile before the source so backend referential integrity is respected.
 
-Monitoring Profiles / Source Test, live Results / Event Explorer, and Processing Flow were accepted on 2026-09-14. UI resilience and edge-case verification, live diagnostic acceptance, and accessibility hardening were accepted on 2026-09-15 after their required developer checks passed. Targeted visual regression remains verification-pending until its golden comparison is accepted in the developer environment. The current responsive/large-data implementation remains verification-pending until the routine gate and manual narrow-layout spot-check pass.
+Monitoring Profiles / Source Test, live Results / Event Explorer, and Processing Flow were accepted on 2026-09-14. UI resilience and edge-case verification, targeted visual regression, live diagnostic acceptance, accessibility hardening, and responsive/large-data hardening were accepted on 2026-09-15 after their required developer checks passed. Route-level performance/runtime resilience is implemented and remains verification-pending until its focused browser scenarios, production manifest check, visual comparison, and routine gate pass.
 
 ## Current limitations
 

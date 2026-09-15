@@ -7,9 +7,9 @@ description: Compact frontend roadmap, backend dependencies, and current impleme
 
 ## Current focus
 
-The current bounded focus is responsive and large-data UX hardening. Processing Flow visualization, Monitoring Profiles, Source Test, profile-driven manual runs, live Results, Event Explorer, UI resilience/edge-case verification, real-backend diagnostic acceptance, and accessibility hardening are accepted.
+The current bounded focus is frontend performance and runtime resilience. Responsive/large-data hardening and the targeted visual-regression baseline are accepted after their developer verification passed.
 
-Targeted visual regression is implemented with one reviewed Results/detail golden and remains a verification-pending supporting track. The active responsive slice contains larger configuration collections, long detail values, and many Processing Flow branches across phone/tablet layouts without introducing unsupported client-side pagination.
+The active performance slice keeps the application shell small and usable while feature routes load, contains route-chunk failures inside the shell, and establishes a reproducible production asset baseline without introducing arbitrary size thresholds.
 
 ## Completed baseline
 
@@ -87,7 +87,7 @@ Implemented and accepted:
 
 ## P1 — targeted visual regression
 
-Implemented; verification pending:
+Implemented and accepted:
 
 - keep one reviewed golden for the dense populated Results/detail composition;
 - compare it during the normal deterministic Playwright suite;
@@ -120,13 +120,24 @@ Implemented and accepted:
 
 ## P2 — responsive and large-data UX hardening
 
-Current focus; implementation complete and verification pending:
+Implemented and accepted:
 
 - exercise 320–390 px and tablet layouts beyond the existing diagnostic overflow regression;
 - harden long Source/Profile names, tags, diagnostic payloads, and many-branch Processing Flow layouts;
 - exercise larger Source/Profile collections without inventing client-side pagination semantics;
 - improve large-table navigation only when backend pagination contracts justify it;
 - add reusable form primitives only where repetition demonstrates a real maintenance benefit.
+
+
+## P2 — frontend performance and runtime resilience
+
+Current focus; implementation complete and verification pending:
+
+- lazy-load primary feature screens at route boundaries;
+- keep shell navigation visible with an accessible route-loading state;
+- contain lazy-route failures with recoverable UI instead of a blank application;
+- verify route pages remain dynamic production-build entries;
+- report raw/gzip production asset sizes as a measured baseline before introducing numeric budgets.
 
 ## P2 — delivery and security hardening
 

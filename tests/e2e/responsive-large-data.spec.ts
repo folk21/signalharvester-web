@@ -29,6 +29,10 @@ test('large configuration collections stay bounded and usable at a 320px viewpor
   await page.setViewportSize({ width: 320, height: 900 });
 
   const sources = buildSources(48);
+  const firstSource = sources[0];
+  if (!firstSource) {
+    throw new Error('Expected the large-data fixture to contain at least one source');
+  }
   const profiles = buildProfiles(36, sources);
 
   await page.route('**/api/v1/**', async (route) => {
@@ -55,7 +59,7 @@ test('large configuration collections stay bounded and usable at a 320px viewpor
   const membership = page.locator('.source-membership__list');
   await expect(membership).toBeVisible();
   await expect.poll(() => membership.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(true);
-  await expect(page.getByRole('checkbox', { name: `Use source ${sources[0].name}` })).toBeVisible();
+  await expect(page.getByRole('checkbox', { name: `Use source ${firstSource.name}` })).toBeVisible();
   await expectNoDocumentHorizontalOverflow(page);
 });
 

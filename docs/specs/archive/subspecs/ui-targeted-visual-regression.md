@@ -3,14 +3,14 @@ type: Specification
 title: Targeted UI visual regression
 description: Add a small reviewed Playwright golden-image baseline for high-signal layout regressions without turning every screen into a screenshot test.
 document_role: subspec
-spec_status: verification-pending
+spec_status: completed
 parent: ../spec-signal-harvester-web.md
 ---
 # Targeted UI visual regression
 
 ## Status
 
-Implementation complete. Verification pending.
+Completed and accepted after developer verification.
 
 ## Goal
 

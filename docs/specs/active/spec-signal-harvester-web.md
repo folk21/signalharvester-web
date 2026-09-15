@@ -4,7 +4,7 @@ title: SignalHarvester Web initial product specification
 description: Active frontend umbrella specification for configuration, operational inspection, Results, live updates, and event-flow diagnostics.
 document_role: umbrella
 spec_status: active
-current_focus: subspecs/ui-responsive-large-data-hardening.md
+current_focus: subspecs/ui-performance-runtime-resilience.md
 ---
 # SignalHarvester Web initial product specification
 
@@ -18,9 +18,9 @@ Frontend implementation details belong here rather than in the backend repositor
 
 ## Current implementation focus
 
-The current bounded focus is [`subspecs/ui-responsive-large-data-hardening.md`](subspecs/ui-responsive-large-data-hardening.md). It keeps configuration collections, long Result detail values, and many-branch Processing Flow layouts contained across phone and tablet widths without inventing client-side pagination semantics.
+The current bounded focus is [`subspecs/ui-performance-runtime-resilience.md`](subspecs/ui-performance-runtime-resilience.md). It adds route-level code splitting, explicit lazy-route loading/failure states, and a reproducible production asset baseline without inventing numeric bundle budgets.
 
-The accepted baseline already provides Dashboard, Sources CRUD and Source Test, Monitoring Profiles, profile-driven Collection Runs, Analysis inspection, Results list/filter/detail with SSE updates, Event Explorer history/live delivery, Processing Flow, resilience coverage, real-backend diagnostic acceptance, and focused accessibility hardening. Targeted visual regression is implemented and remains verification-pending until its developer gate is accepted.
+The accepted baseline already provides Dashboard, Sources CRUD and Source Test, Monitoring Profiles, profile-driven Collection Runs, Analysis inspection, Results list/filter/detail with SSE updates, Event Explorer history/live delivery, Processing Flow, resilience coverage, targeted visual regression, real-backend diagnostic acceptance, accessibility hardening, and responsive/large-data hardening.
 
 ## Goal
 
@@ -65,10 +65,11 @@ The frontend does not own:
 | Event Explorer | Implemented and accepted |
 | Processing-flow visualization | Implemented and accepted |
 | UI resilience / edge-case verification | Implemented and accepted |
-| Targeted visual regression | Implemented; verification pending |
+| Targeted visual regression | Implemented and accepted |
 | Live diagnostic acceptance | Implemented and accepted |
 | Accessibility hardening | Implemented and accepted |
-| Responsive / large-data UX hardening | Implemented in current focus; verification pending |
+| Responsive / large-data UX hardening | Implemented and accepted |
+| Frontend performance / runtime resilience | Implemented in current focus; verification pending |
 | Authentication/authorization | Pending |
 
 ## Requirements
@@ -295,6 +296,14 @@ Current status: implemented and accepted.
 Operational screens must remain usable on phone and tablet layouts and with larger bounded backend responses. Long identifiers and content must stay contained inside their owning surfaces.
 
 Where tabular or graph structure cannot collapse without losing meaning, local scroll regions are preferred over document-level horizontal overflow. The frontend must not invent pagination or truncation semantics that are not present in the backend contract.
+
+Current status: implemented and accepted.
+
+### UI-R20 — efficient route delivery and runtime containment
+
+Primary feature screens should be delivered as route-level chunks so the application shell does not eagerly include every operational screen. Route transitions must expose an explicit accessible loading state, and lazy-route failures must remain contained within the shell with a recoverable fallback.
+
+Production verification should preserve the intended dynamic route structure and report generated asset sizes from a measured build. Numeric bundle budgets should be introduced only after the baseline is reviewed.
 
 Current status: implemented in the current focus; verification pending.
 

@@ -1,13 +1,39 @@
+import { lazy } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/AppShell';
-import { DashboardPage } from './features/dashboard/DashboardPage';
-import { SourcesPage } from './features/sources/SourcesPage';
-import { MonitoringProfilesPage } from './features/profiles/MonitoringProfilesPage';
-import { CollectionRunsPage } from './features/runs/CollectionRunsPage';
-import { AnalysisItemsPage } from './features/analysis/AnalysisItemsPage';
-import { ResultsPage } from './features/results/ResultsPage';
-import { EventExplorerPage } from './features/events/EventExplorerPage';
-import { ProcessingFlowPage } from './features/flows/ProcessingFlowPage';
+
+const DashboardPage = lazy(async () => {
+  const module = await import('./features/dashboard/DashboardPage');
+  return { default: module.DashboardPage };
+});
+const SourcesPage = lazy(async () => {
+  const module = await import('./features/sources/SourcesPage');
+  return { default: module.SourcesPage };
+});
+const MonitoringProfilesPage = lazy(async () => {
+  const module = await import('./features/profiles/MonitoringProfilesPage');
+  return { default: module.MonitoringProfilesPage };
+});
+const CollectionRunsPage = lazy(async () => {
+  const module = await import('./features/runs/CollectionRunsPage');
+  return { default: module.CollectionRunsPage };
+});
+const AnalysisItemsPage = lazy(async () => {
+  const module = await import('./features/analysis/AnalysisItemsPage');
+  return { default: module.AnalysisItemsPage };
+});
+const ResultsPage = lazy(async () => {
+  const module = await import('./features/results/ResultsPage');
+  return { default: module.ResultsPage };
+});
+const EventExplorerPage = lazy(async () => {
+  const module = await import('./features/events/EventExplorerPage');
+  return { default: module.EventExplorerPage };
+});
+const ProcessingFlowPage = lazy(async () => {
+  const module = await import('./features/flows/ProcessingFlowPage');
+  return { default: module.ProcessingFlowPage };
+});
 
 export function App() {
   return (
