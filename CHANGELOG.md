@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+2026-09-15 Added targeted Playwright visual regression with a reviewed populated Results/detail golden image and an explicit baseline-update workflow.
+
+2026-09-15 Accepted the UI resilience and edge-case verification slice after the routine frontend checks passed.
+
 2026-09-15 Strengthened deterministic browser verification with keyboard-only table inspection, SSE reconnect/resnapshot, stale bounded deep links, partial Processing Flow evidence, and narrow-viewport long-data coverage.
 
 2026-09-15 Added keyboard-accessible inspection controls to Runs, Analysis, Results, and Event Explorer tables.

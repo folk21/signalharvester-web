@@ -4,7 +4,7 @@ title: SignalHarvester Web initial product specification
 description: Active frontend umbrella specification for configuration, operational inspection, Results, live updates, and event-flow diagnostics.
 document_role: umbrella
 spec_status: active
-current_focus: subspecs/ui-resilience-edge-case-testing.md
+current_focus: subspecs/ui-targeted-visual-regression.md
 ---
 # SignalHarvester Web initial product specification
 
@@ -18,7 +18,7 @@ Frontend implementation details belong here rather than in the backend repositor
 
 ## Current implementation focus
 
-The current bounded focus is [`subspecs/ui-resilience-edge-case-testing.md`](subspecs/ui-resilience-edge-case-testing.md). It strengthens deterministic browser verification around keyboard access, reconnect recovery, bounded-history gaps, long diagnostic values, narrow viewports, and stale deep links.
+The current bounded focus is [`subspecs/ui-targeted-visual-regression.md`](subspecs/ui-targeted-visual-regression.md). It adds a deliberately small reviewed golden-image baseline for material layout regressions that semantic browser assertions do not detect well.
 
 The accepted baseline already provides Dashboard, Sources CRUD and Source Test, Monitoring Profiles, profile-driven Collection Runs, Analysis inspection, Results list/filter/detail with SSE updates, Event Explorer history/live delivery, deterministic Playwright coverage, and an opt-in live-backend browser flow.
 
@@ -64,7 +64,8 @@ The frontend does not own:
 | Live Results via SSE | Implemented and accepted |
 | Event Explorer | Implemented and accepted |
 | Processing-flow visualization | Implemented and accepted |
-| UI resilience / edge-case verification | Implemented in current focus; verification pending |
+| UI resilience / edge-case verification | Implemented and accepted |
+| Targeted visual regression | Implemented in current focus; verification pending |
 | Authentication/authorization | Pending |
 
 ## Requirements

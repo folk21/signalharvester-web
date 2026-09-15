@@ -19,7 +19,15 @@ export default defineConfig({
   timeout: 15_000,
   expect: {
     timeout: 5_000,
+    toHaveScreenshot: {
+      animations: 'disabled',
+      caret: 'hide',
+      threshold: 0.3,
+      maxDiffPixelRatio: 0.04,
+      scale: 'device',
+    },
   },
+  snapshotPathTemplate: '{testDir}/__screenshots__/{arg}{ext}',
   outputDir: 'test-results/playwright',
   use: {
     baseURL,

@@ -9,7 +9,7 @@ description: Current implemented SignalHarvester Web screens, API usage, code or
 
 This document describes what the frontend currently implements. Active specifications describe intended changes and must not be read as evidence that a feature already exists.
 
-The accepted baseline includes Monitoring Profiles, Source Test, profile-driven manual Collection Runs, live Results, Event Explorer, and Processing Flow visualization. The current branch strengthens deterministic UI verification around resilience, accessibility, bounded-history, and narrow-viewport edge cases.
+The accepted baseline includes Monitoring Profiles, Source Test, profile-driven manual Collection Runs, live Results, Event Explorer, Processing Flow visualization, and the resilience/edge-case browser suite. The current branch adds a deliberately small reviewed visual-regression baseline for material layout changes that semantic assertions do not detect well.
 
 ## Current screens
 
@@ -146,6 +146,7 @@ The repository's canonical routine verification is `./run_checks.sh`. It regener
 The deterministic browser suite now covers:
 
 - application-shell navigation including Monitoring Profiles, Event Explorer, and Processing Flow;
+- a reviewed golden screenshot for the populated Results/detail composition at a fixed high-DPI viewport;
 - Sources create behavior and Source Test diagnostics;
 - Monitoring Profile create request construction and source membership;
 - profile-driven manual Collection Run request/detail behavior;
@@ -162,7 +163,7 @@ The deterministic browser suite now covers:
 
 The opt-in live Playwright workflow now owns a temporary RSS source and monitoring profile. It tests the source, runs the profile manually, waits for matching Analysis and Results data, and removes the profile before removing the source so backend referential integrity is respected.
 
-Monitoring Profiles / Source Test, live Results / Event Explorer, and Processing Flow were accepted on 2026-09-14 after repository verification; live diagnostics were also inspected against a real backend. The current resilience-testing slice remains verification-pending until the updated routine checks pass.
+Monitoring Profiles / Source Test, live Results / Event Explorer, and Processing Flow were accepted on 2026-09-14. UI resilience and edge-case verification was accepted on 2026-09-15 after the routine checks passed. The current targeted visual-regression slice remains verification-pending until the golden comparison passes in the developer environment.
 
 ## Current limitations
 

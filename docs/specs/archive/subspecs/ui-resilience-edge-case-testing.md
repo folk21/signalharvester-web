@@ -3,14 +3,14 @@ type: Specification
 title: UI resilience and edge-case verification
 description: Strengthen deterministic browser verification around keyboard access, live reconnect recovery, bounded history, partial diagnostic data, and narrow layouts.
 document_role: subspec
-spec_status: verification-pending
+spec_status: completed
 parent: ../spec-signal-harvester-web.md
 ---
 # UI resilience and edge-case verification
 
 ## Status
 
-Implementation complete. Verification pending.
+Completed and accepted on 2026-09-15 after the routine frontend verification passed.
 
 ## Goal
 

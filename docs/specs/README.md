@@ -67,9 +67,11 @@ Umbrella:
 
 Current implementation focus:
 
-- [`active/subspecs/ui-resilience-edge-case-testing.md`](active/subspecs/ui-resilience-edge-case-testing.md) — deterministic keyboard, reconnect, bounded-history, partial-data, and narrow-viewport resilience verification; implementation complete, verification pending.
+- [`active/subspecs/ui-targeted-visual-regression.md`](active/subspecs/ui-targeted-visual-regression.md) — reviewed Playwright golden-image coverage for high-signal layout regressions; implementation complete, verification pending.
 
 Recently completed:
+
+- [`archive/subspecs/ui-resilience-edge-case-testing.md`](archive/subspecs/ui-resilience-edge-case-testing.md) — keyboard, reconnect, bounded-history, partial-flow, and narrow-viewport resilience verification, accepted on 2026-09-15.
 
 - [`archive/subspecs/ui-processing-flow-visualization.md`](archive/subspecs/ui-processing-flow-visualization.md) — run/item processing-flow visualization over the backend reconstruction API, accepted on 2026-09-14.
 

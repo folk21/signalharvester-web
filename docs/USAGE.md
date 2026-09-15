@@ -199,7 +199,15 @@ After installing Playwright Chromium with `npm run e2e:install`, run the determi
 npm run e2e
 ```
 
-The suite uses controlled REST responses and can run while the backend is stopped. It is the preferred fast check for navigation, configuration forms, Source Test presentation, request construction, filters, detail rendering, and async states.
+The suite uses controlled REST responses and can run while the backend is stopped. It is the preferred fast check for navigation, configuration forms, Source Test presentation, request construction, filters, detail rendering, async states, resilience edge cases, and the reviewed Results visual baseline.
+
+The visual baseline is intentionally small. If an intentional UI change alters it, update the golden explicitly:
+
+```bash
+npm run e2e:visual:update
+```
+
+Inspect the changed PNG and then run `npm run e2e` again. Do not update visual baselines merely to silence an unexplained failure.
 
 To verify the browser against a real backend that is already running on the host:
 

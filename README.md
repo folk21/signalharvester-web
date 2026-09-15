@@ -83,7 +83,15 @@ Run deterministic browser tests with controlled REST responses:
 npm run e2e
 ```
 
-These tests start their own Vite server. They do not require the SignalHarvester backend, PostgreSQL, Kafka/Redpanda, or public internet sources. Failed tests retain Playwright traces and screenshots under ignored `test-results/` directories.
+These tests start their own Vite server. They do not require the SignalHarvester backend, PostgreSQL, Kafka/Redpanda, or public internet sources. The deterministic suite includes a small reviewed visual-regression baseline for the populated Results/detail workspace. Failed tests retain Playwright traces, screenshots, and visual diffs under ignored `test-results/` directories.
+
+When an intentional UI change requires updating a reviewed golden image, run:
+
+```bash
+npm run e2e:visual:update
+```
+
+Inspect the changed PNG before committing it. Routine verification never updates visual baselines automatically.
 
 Run the opt-in live browser workflow against a separately running backend:
 

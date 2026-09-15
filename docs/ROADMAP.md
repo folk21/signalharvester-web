@@ -7,9 +7,9 @@ description: Compact frontend roadmap, backend dependencies, and current impleme
 
 ## Current focus
 
-The current bounded focus is UI resilience and edge-case verification. Processing Flow visualization, Monitoring Profiles, Source Test, profile-driven manual runs, live Results, and Event Explorer are accepted.
+The current bounded focus is targeted visual regression. Processing Flow visualization, Monitoring Profiles, Source Test, profile-driven manual runs, live Results, Event Explorer, and the UI resilience/edge-case suite are accepted.
 
-This testing slice hardens keyboard interaction, reconnect recovery, bounded-history behavior, partial diagnostic data, and narrow-viewport layout before broader UX and delivery/security work.
+This testing slice adds one reviewed high-signal golden image to detect material layout regressions without turning routine browser verification into a large screenshot-maintenance burden.
 
 ## Completed baseline
 
@@ -76,7 +76,7 @@ Implemented and accepted:
 
 ## P1 — UI resilience and edge-case verification
 
-Current focus:
+Implemented and accepted:
 
 - exercise keyboard-only detail selection across tabular diagnostic screens;
 - verify SSE error/reconnect resynchronization without duplicate logical rows;
@@ -84,6 +84,16 @@ Current focus:
 - verify partial Processing Flow reconstruction and explicit missing evidence;
 - verify long diagnostic values at a narrow mobile viewport without document-level horizontal overflow;
 - keep these checks deterministic and part of the normal Playwright suite.
+
+## P1 — targeted visual regression
+
+Current focus:
+
+- keep one reviewed golden for the dense populated Results/detail composition;
+- compare it during the normal deterministic Playwright suite;
+- require an explicit update command for intentional layout changes;
+- review actual/diff artifacts instead of increasing tolerance blindly;
+- add future baselines only when they protect a distinct stable layout risk.
 
 ## P2 — delivery and security hardening
 

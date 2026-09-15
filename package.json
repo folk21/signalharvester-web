@@ -15,6 +15,7 @@
     "test": "vitest run",
     "api:generate": "openapi-typescript ./openapi/signalharvester-v1.yaml -o ./src/api/generated.ts",
     "e2e": "playwright test --config=playwright.config.ts",
+    "e2e:visual:update": "playwright test --config=playwright.config.ts tests/e2e/visual-regression.spec.ts --update-snapshots",
     "e2e:live": "playwright test --config=playwright.live.config.ts",
     "e2e:install": "playwright install chromium"
   },
