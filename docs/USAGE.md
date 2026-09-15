@@ -1,7 +1,7 @@
 ---
 type: Usage Guide
 title: SignalHarvester Web usage
-description: Current UI workflows for source/profile configuration, collection operations, analysis inspection, Results browsing, and manual contract verification.
+description: Current UI workflows for configuration, collection operations, Results, live event diagnostics, and processing-flow inspection.
 ---
 # SignalHarvester Web usage
 
@@ -24,7 +24,8 @@ A useful current workflow is:
 7. inspect normalization/deduplication state when diagnosing processing;
 8. browse analyzed Results and keep the page open for live matching updates;
 9. open one Result to inspect content, analysis metadata, and provenance;
-10. open Event Explorer for bounded technical history and live processing events.
+10. open Event Explorer for bounded technical history and live processing events;
+11. open Processing Flow from a run, result, or event to inspect the reconstructed stage path and evidence.
 
 The backend repository's `tools/live-backend/` workflow remains useful when you need to distinguish a frontend problem from a backend pipeline problem.
 
@@ -112,7 +113,7 @@ The current filters are:
 
 Selecting a list row loads the detailed representation separately. Detail includes normalized content, attributes, tags, analysis metadata, and event/correlation provenance.
 
-The Results page opens the backend SSE stream before loading its durable REST snapshot. Matching live updates then appear without manual refresh. A visible connection indicator shows live or reconnecting state. Result detail can open Event Explorer pre-filtered by collection run and item identity.
+The Results page opens the backend SSE stream before loading its durable REST snapshot. Matching live updates then appear without manual refresh. A visible connection indicator shows live or reconnecting state. Result detail can open Event Explorer or the exact run/item Processing Flow.
 
 ## Event Explorer
 
@@ -120,7 +121,27 @@ Open `/events`.
 
 The Event Explorer loads bounded retained history and then follows new observed events through backend SSE. Filters include event type, producer, Kafka topic, correlation ID, Collection Run ID, item ID, and trace ID. Selecting an event shows Kafka position/key, trace/correlation context, producer/schema metadata, and the decoded diagnostic payload.
 
-This is a bounded backend projection, not direct Kafka history. Backend retention determines how much older data remains available.
+This is a bounded backend projection, not direct Kafka history. Backend retention determines how much older data remains available. Event detail can open the related run/item Processing Flow when item identity is available.
+
+
+## Processing Flow
+
+Open `/flows`, or use **Open processing flow** from Collection Runs, Results, or Event Explorer.
+
+Enter a Collection Run ID to inspect all retained branches for that run. Add a raw or normalized Item ID to inspect only that run-scoped branch. Equal item identities from different runs are intentionally kept separate by the backend contract.
+
+Each branch renders the backend processing stages in order. Stage cards show status, evidence classification, and timestamp when available. Connectors show backend edge kind and measured duration when available.
+
+Select a stage to inspect:
+
+- event type, producer, and event identity;
+- raw/normalized item identity;
+- source and monitoring profile;
+- outcome and score;
+- trace context;
+- Kafka topic, partition, offset, and key.
+
+`NOT OBSERVED`, partial-history state, and reconstruction limitations are intentional diagnostic information. The browser does not fill these gaps by inference. This view does not replace distributed tracing.
 
 ## Cross-check UI data against REST
 
@@ -148,6 +169,18 @@ curl -s 'http://localhost:8080/api/v1/admin/analysis/items?limit=20' | jq
 
 ```bash
 curl -s 'http://localhost:8080/api/v1/results?limit=20' | jq
+```
+
+For a reconstructed Collection Run flow:
+
+```bash
+curl -s 'http://localhost:8080/api/v1/flows/collection-runs/<COLLECTION_RUN_ID>' | jq
+```
+
+For one run-scoped item branch:
+
+```bash
+curl -s 'http://localhost:8080/api/v1/flows/collection-runs/<COLLECTION_RUN_ID>/items/<ITEM_ID>' | jq
 ```
 
 For one Result detail, take `monitoringProfileId` and `normalizedItemId` from the Results list, then call:

@@ -17,7 +17,7 @@ The browser boundary is intentionally narrow:
 
 - request/response application APIs use REST/JSON;
 - REST request and response shapes come from the checked-in backend OpenAPI contract;
-- future live browser updates use backend SSE/JSON;
+- live browser updates use backend SSE/JSON;
 - the browser never connects directly to PostgreSQL or Kafka.
 
 The frontend is currently an administrative and operational application. It is also the foundation for the broader SignalHarvester product UI. A second frontend application should not be created merely to separate current admin screens from future product screens.
@@ -28,7 +28,7 @@ The frontend is currently an administrative and operational application. It is a
 flowchart LR
     UI[React pages and components] --> API[Frontend API adapter]
     API --> TYPES[OpenAPI-derived TypeScript types]
-    API --> HTTP[Backend REST / future SSE]
+    API --> HTTP[Backend REST / SSE]
     HTTP --> BE[SignalHarvester backend]
     BE --> DB[(PostgreSQL)]
     BE --> K[Kafka / Redpanda]
@@ -80,7 +80,9 @@ The current route set is:
 - `/profiles` — monitoring-profile configuration;
 - `/runs` — profile-driven collection runs;
 - `/analysis` — normalized/deduplication inspection;
-- `/results` — analyzed result browsing and detail.
+- `/results` — analyzed result browsing, detail, and live updates;
+- `/events` — bounded technical event history/live updates;
+- `/flows` — reconstructed collection-run/item processing graphs.
 
 Future screens should extend this route structure rather than introducing a second routing layer.
 
@@ -153,13 +155,16 @@ HTTP failures should preserve useful backend error text when available. Browser-
 
 The browser uses REST for durable snapshots and backend SSE for live Results and technical Event Observation. Native `EventSource` owns reconnect and `Last-Event-ID` behavior. The frontend waits for SSE `ready` before loading the REST snapshot, buffers later live messages during that request, and then merges both into the TanStack Query cache.
 
-When browser SSE is implemented:
+SSE payloads use explicit backend application contracts. Reconnection remains bounded and understandable. Live delivery supplements durable REST reads rather than replacing them, and the browser still does not connect directly to Kafka.
 
-- the browser will consume backend SSE endpoints;
-- SSE payloads must have explicit versionable application contracts;
-- reconnection must be bounded and understandable;
-- live delivery supplements durable REST reads rather than replacing them;
-- the browser still must not connect directly to Kafka.
+
+## Diagnostic flow projection
+
+Processing Flow is a read-only presentation of the backend `ProcessingFlow` reconstruction contract. TanStack Query owns the fetched graph. The browser may order returned nodes for presentation, but it does not infer missing stages, synthesize evidence, or join raw Event Explorer rows into its own graph.
+
+The visualization preserves backend evidence classes and limitations. A horizontal lane per `branchId` keeps repeated logical items from different collection runs separate. Deep links between Runs, Results, Events, and Flow carry only public run/item/event identifiers.
+
+The UI uses semantic buttons, text labels, and CSS layout rather than a graph library. This keeps the dependency surface small while the current graph is an ordered processing path rather than an arbitrary network.
 
 ## Presentation layer
 

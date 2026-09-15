@@ -5,6 +5,7 @@ import type {
   MonitoringProfile,
   MonitoringProfileUpsertRequest,
   ObservedEvent,
+  ProcessingFlow,
   ResultDetail,
   ResultSummary,
   Source,
@@ -207,6 +208,16 @@ export const api = {
 
   eventStreamUrl: (query: EventFilters) =>
     buildUrl('/api/v1/events/stream', eventSearch(query, false)),
+
+  getCollectionRunProcessingFlow: (collectionRunId: string) =>
+    request<ProcessingFlow>(
+      `/api/v1/flows/collection-runs/${encodeURIComponent(collectionRunId)}`,
+    ),
+
+  getItemProcessingFlow: (collectionRunId: string, itemId: string) =>
+    request<ProcessingFlow>(
+      `/api/v1/flows/collection-runs/${encodeURIComponent(collectionRunId)}/items/${encodeURIComponent(itemId)}`,
+    ),
 
   getResult: (monitoringProfileId: string, normalizedItemId: string) => {
     const search = new URLSearchParams({ monitoringProfileId });

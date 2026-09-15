@@ -3,14 +3,14 @@ type: Specification
 title: Live Results and Event Explorer UI
 description: Add race-free Results SSE updates and bounded technical Event Explorer history/live delivery.
 document_role: subspec
-spec_status: verification-pending
+spec_status: completed
 parent: ../spec-signal-harvester-web.md
 ---
 # Live Results and Event Explorer UI
 
 ## Status
 
-Implementation complete. Verification pending.
+Completed and accepted after repository verification and manual live-backend inspection on 2026-09-14.
 
 ## Goal
 

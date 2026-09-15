@@ -6,6 +6,8 @@ import {
   createdMonitoringProfileFixture,
   createdSourceFixture,
   monitoringProfileFixture,
+  itemProcessingFlowFixture,
+  processingFlowFixture,
   observedAnalysisEventFixture,
   observedEventLiveFixture,
   observedRawEventFixture,
@@ -60,6 +62,7 @@ test('application shell navigates across the current admin screens', async ({ pa
     ['Analysis Items', 'Analysis Items'],
     ['Results', 'Analyzed Results'],
     ['Event Explorer', 'Event Explorer'],
+    ['Processing Flow', 'Processing Flow'],
   ] as const;
 
   for (const [linkName, heading] of destinations) {
@@ -208,6 +211,10 @@ test('Collection Runs uses persisted monitoring profile identity for manual exec
 
   await expect(page.getByText(createdMonitoringProfileFixture.name, { exact: true }).first()).toBeVisible();
   await expect(page.getByText('raw-browser-1', { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Open processing flow' })).toHaveAttribute(
+    'href',
+    `/flows?collectionRunId=${startedCollectionRunFixture.collectionRunId}`,
+  );
 });
 
 test('Analysis applies profile and source filters through the REST query', async ({ page }) => {
@@ -291,8 +298,56 @@ test('Results applies filters and loads bounded detail on selection', async ({ p
   await expect(page.getByText('language', { exact: true })).toBeVisible();
   await expect(page.getByText('en', { exact: true })).toBeVisible();
   await expect(page.getByText(resultDetailFixture.correlationId, { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Open processing flow' })).toHaveAttribute(
+    'href',
+    `/flows?collectionRunId=${resultDetailFixture.correlationId}&itemId=${resultDetailFixture.normalizedItemId}`,
+  );
 });
 
+
+
+test('Processing Flow visualizes run stages and drills into a run-scoped item branch', async ({ page }) => {
+  await page.route('**/api/v1/**', async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    const runPath = `/api/v1/flows/collection-runs/${startedCollectionRunFixture.collectionRunId}`;
+    const itemPath = `${runPath}/items/${resultDetailFixture.normalizedItemId}`;
+
+    if (request.method() === 'GET' && url.pathname === runPath) {
+      return fulfillJson(route, processingFlowFixture);
+    }
+    if (request.method() === 'GET' && url.pathname === itemPath) {
+      return fulfillJson(route, itemProcessingFlowFixture);
+    }
+    return rejectUnexpectedApi(route);
+  });
+
+  await page.goto(`/flows?collectionRunId=${startedCollectionRunFixture.collectionRunId}`);
+
+  await expect(page.getByRole('heading', { level: 1, name: 'Processing Flow' })).toBeVisible();
+  await expect(page.getByText('TERMINAL EVENT REACHED', { exact: true })).toBeVisible();
+  await expect(page.getByText('Results persistence not observed', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Analysis stage, Completed' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Results persistence stage, Unknown' })).toBeVisible();
+  await expect(page.getByText('Async processing', { exact: true })).toBeVisible();
+  await expect(page.getByText('2.0 s', { exact: true })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Analysis stage, Completed' }).click();
+  await expect(page.getByText(observedAnalysisEventFixture.eventId, { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Open observed event' })).toHaveAttribute(
+    'href',
+    new RegExp(`collectionRunId=${startedCollectionRunFixture.collectionRunId}.*eventId=${observedAnalysisEventFixture.eventId}`),
+  );
+  await expect(page.getByRole('link', { name: 'Open related Result' })).toBeVisible();
+
+  const itemRequest = page.waitForRequest((request) => request.method() === 'GET' && new URL(request.url()).pathname.endsWith(`/items/${resultDetailFixture.normalizedItemId}`));
+  await page.getByRole('link', { name: 'Inspect item branch' }).click();
+  await itemRequest;
+
+  await expect(page.getByRole('heading', { level: 2, name: 'Item processing path' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'View full run' })).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`itemId=${resultDetailFixture.normalizedItemId}`));
+});
 
 test('Results and Event Explorer merge REST snapshots with live SSE updates', async ({ page }) => {
   await installMockEventSource(page);
@@ -336,5 +391,9 @@ test('Results and Event Explorer merge REST snapshots with live SSE updates', as
   await page.getByRole('row', { name: /ItemAnalyzed/ }).click();
   await expect(page.getByText(observedAnalysisEventFixture.eventId, { exact: true })).toBeVisible();
   await expect(page.getByText('analyzed-items', { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Open processing flow' })).toHaveAttribute(
+    'href',
+    `/flows?collectionRunId=${observedAnalysisEventFixture.correlationId}&itemId=${observedAnalysisEventFixture.payload.normalizedItemId}`,
+  );
 });
 

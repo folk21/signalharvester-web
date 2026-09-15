@@ -7,6 +7,7 @@ import { CollectionRunsPage } from './features/runs/CollectionRunsPage';
 import { AnalysisItemsPage } from './features/analysis/AnalysisItemsPage';
 import { ResultsPage } from './features/results/ResultsPage';
 import { EventExplorerPage } from './features/events/EventExplorerPage';
+import { ProcessingFlowPage } from './features/flows/ProcessingFlowPage';
 
 export function App() {
   return (
@@ -19,6 +20,7 @@ export function App() {
         <Route path="analysis" element={<AnalysisItemsPage />} />
         <Route path="results" element={<ResultsPage />} />
         <Route path="events" element={<EventExplorerPage />} />
+        <Route path="flows" element={<ProcessingFlowPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

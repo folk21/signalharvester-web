@@ -8,6 +8,7 @@ const navigation = [
   { to: '/analysis', label: 'Analysis Items', end: false },
   { to: '/results', label: 'Results', end: false },
   { to: '/events', label: 'Event Explorer', end: false },
+  { to: '/flows', label: 'Processing Flow', end: false },
 ];
 
 export function AppShell() {

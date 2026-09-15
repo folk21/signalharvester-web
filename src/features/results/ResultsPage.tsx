@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api, type ResultFilters } from '../../api/client';
@@ -44,6 +44,20 @@ export function ResultsPage() {
   }), [filters]);
   const liveResults = useLiveList(liveOptions);
   const results = liveResults.data;
+  const deepLinkedNormalizedItemId = searchParams.get('normalizedItemId');
+  const deepLinkedProfileId = searchParams.get('monitoringProfileId');
+
+  useEffect(() => {
+    if (!deepLinkedNormalizedItemId) {
+      return;
+    }
+    const target = results.find((result) =>
+      result.normalizedItemId === deepLinkedNormalizedItemId
+      && (!deepLinkedProfileId || result.monitoringProfileId === deepLinkedProfileId));
+    if (target) {
+      setSelectedKey(resultKey(target));
+    }
+  }, [deepLinkedNormalizedItemId, deepLinkedProfileId, results]);
 
   const selectedSummary = useMemo(
     () => results.find((result) => resultKey(result) === selectedKey) ?? null,
@@ -121,8 +135,12 @@ function TextFilter({ label, value, onChange }: { label: string; value: string; 
 
 function ResultDetailView({ result }: { result: ResultDetail }) {
   const eventLink = `/events?collectionRunId=${encodeURIComponent(result.correlationId)}&itemId=${encodeURIComponent(result.normalizedItemId)}`;
+  const flowLink = `/flows?collectionRunId=${encodeURIComponent(result.correlationId)}&itemId=${encodeURIComponent(result.normalizedItemId)}`;
   return <div className="detail-stack">
-    <div className="detail-actions"><Link className="button button--ghost" to={eventLink}>Explore related events</Link></div>
+    <div className="detail-actions">
+      <Link className="button button--ghost" to={flowLink}>Open processing flow</Link>
+      <Link className="button button--ghost" to={eventLink}>Explore related events</Link>
+    </div>
     <dl className="detail-list">
       <div><dt>Profile</dt><dd>{result.monitoringProfileId}</dd></div><div><dt>Normalized item</dt><dd className="mono break-all">{result.normalizedItemId}</dd></div><div><dt>Source</dt><dd className="mono break-all">{result.sourceId}</dd></div><div><dt>Category</dt><dd>{result.informationCategory}</dd></div><div><dt>Classification</dt><dd><StatusBadge value={result.classification} /></dd></div><div><dt>Relevant</dt><dd>{result.relevant ? 'Yes' : 'No'}</dd></div><div><dt>Score</dt><dd>{result.score}</dd></div><div><dt>Analyzer</dt><dd>{result.analyzer}</dd></div><div><dt>External ID</dt><dd>{result.externalId ?? '—'}</dd></div><div><dt>URL</dt><dd><a href={result.url} target="_blank" rel="noreferrer">{result.url}</a></dd></div><div><dt>Published</dt><dd>{result.publishedAt ? formatDateTime(result.publishedAt) : '—'}</dd></div><div><dt>Analyzed</dt><dd>{formatDateTime(result.analyzedAt)}</dd></div><div><dt>Content type</dt><dd>{result.contentType}</dd></div><div><dt>Tags</dt><dd>{result.tags.length > 0 ? result.tags.join(', ') : '—'}</dd></div><div><dt>Analysis event</dt><dd className="mono break-all">{result.analysisEventId}</dd></div><div><dt>Source event</dt><dd className="mono break-all">{result.sourceEventId}</dd></div><div><dt>Raw item</dt><dd className="mono break-all">{result.rawItemId}</dd></div><div><dt>Correlation ID</dt><dd className="mono break-all">{result.correlationId}</dd></div><div><dt>Traceparent</dt><dd className="mono break-all">{result.traceparent ?? '—'}</dd></div>
     </dl>

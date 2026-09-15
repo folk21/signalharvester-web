@@ -7,6 +7,8 @@ import type {
   ObservedEvent,
   ResultLiveEvent,
   ObservedEventLiveEvent,
+  ProcessingFlow,
+  ProcessingFlowNode,
   Source,
   SourceTestResult,
 } from '../../../src/api/types';
@@ -235,3 +237,109 @@ export const observedAnalysisEventFixture: ObservedEvent = {
 
 export const resultLiveEventFixture: ResultLiveEvent = { cursor: 77, result: resultSummaryFixture };
 export const observedEventLiveFixture: ObservedEventLiveEvent = { cursor: 42, event: observedAnalysisEventFixture };
+
+
+const processingBranchId = resultDetailFixture.sourceEventId;
+
+function flowNode(
+  stage: ProcessingFlowNode['stage'],
+  status: ProcessingFlowNode['status'],
+  evidence: ProcessingFlowNode['evidence'],
+  options: Partial<ProcessingFlowNode> = {},
+): ProcessingFlowNode {
+  return {
+    id: `${processingBranchId}:${stage.toLowerCase()}`,
+    branchId: processingBranchId,
+    stage,
+    status,
+    evidence,
+    occurredAt: null,
+    eventId: null,
+    eventType: null,
+    producer: null,
+    traceparent: resultDetailFixture.traceparent,
+    sourceEventId: resultDetailFixture.sourceEventId,
+    rawItemId: resultDetailFixture.rawItemId,
+    normalizedItemId: resultDetailFixture.normalizedItemId,
+    sourceId: resultDetailFixture.sourceId,
+    monitoringProfileId: resultDetailFixture.monitoringProfileId,
+    outcome: null,
+    score: null,
+    kafka: null,
+    ...options,
+  };
+}
+
+const sourceFlowNode = flowNode('EXTERNAL_SOURCE', 'REACHED', 'DERIVED_FROM_EVENT', {
+  occurredAt: '2026-09-14T08:05:00.900Z',
+});
+const collectionFlowNode = flowNode('COLLECTION', 'COMPLETED', 'DERIVED_FROM_EVENT', {
+  occurredAt: observedRawEventFixture.occurredAt,
+});
+const rawKafkaFlowNode = flowNode('RAW_KAFKA', 'PUBLISHED', 'OBSERVED_KAFKA_METADATA', {
+  occurredAt: observedRawEventFixture.occurredAt,
+  eventId: observedRawEventFixture.eventId,
+  eventType: observedRawEventFixture.eventType,
+  producer: observedRawEventFixture.producer,
+  kafka: observedRawEventFixture.kafka,
+});
+const normalizationFlowNode = flowNode('NORMALIZATION', 'COMPLETED', 'DERIVED_FROM_EVENT', {
+  occurredAt: resultDetailFixture.analyzedAt,
+});
+const deduplicationFlowNode = flowNode('DEDUPLICATION', 'PASSED', 'DERIVED_FROM_EVENT', {
+  occurredAt: resultDetailFixture.analyzedAt,
+  outcome: 'UNIQUE',
+});
+const analysisFlowNode = flowNode('ANALYSIS', 'COMPLETED', 'DERIVED_FROM_EVENT', {
+  occurredAt: resultDetailFixture.analyzedAt,
+  eventId: observedAnalysisEventFixture.eventId,
+  eventType: observedAnalysisEventFixture.eventType,
+  producer: observedAnalysisEventFixture.producer,
+  outcome: resultDetailFixture.classification,
+  score: 91,
+});
+const terminalKafkaFlowNode = flowNode('TERMINAL_KAFKA', 'PUBLISHED', 'OBSERVED_KAFKA_METADATA', {
+  occurredAt: observedAnalysisEventFixture.occurredAt,
+  eventId: observedAnalysisEventFixture.eventId,
+  eventType: observedAnalysisEventFixture.eventType,
+  producer: observedAnalysisEventFixture.producer,
+  outcome: resultDetailFixture.classification,
+  score: 91,
+  kafka: observedAnalysisEventFixture.kafka,
+});
+const resultsPersistenceFlowNode = flowNode('RESULTS_PERSISTENCE', 'UNKNOWN', 'NOT_OBSERVED');
+
+export const processingFlowFixture: ProcessingFlow = {
+  scope: 'COLLECTION_RUN',
+  collectionRunId: startedCollectionRunFixture.collectionRunId,
+  itemId: null,
+  state: 'TERMINAL_EVENT_REACHED',
+  observedEventCount: 2,
+  traceIds: ['11111111111111111111111111111111'],
+  nodes: [
+    sourceFlowNode,
+    collectionFlowNode,
+    rawKafkaFlowNode,
+    normalizationFlowNode,
+    deduplicationFlowNode,
+    analysisFlowNode,
+    terminalKafkaFlowNode,
+    resultsPersistenceFlowNode,
+  ],
+  edges: [
+    { from: sourceFlowNode.id, to: collectionFlowNode.id, kind: 'PROCESSING', durationMs: 100 },
+    { from: collectionFlowNode.id, to: rawKafkaFlowNode.id, kind: 'PUBLICATION', durationMs: 0 },
+    { from: rawKafkaFlowNode.id, to: normalizationFlowNode.id, kind: 'ASYNC_PROCESSING', durationMs: 2000 },
+    { from: normalizationFlowNode.id, to: deduplicationFlowNode.id, kind: 'PROCESSING', durationMs: 0 },
+    { from: deduplicationFlowNode.id, to: analysisFlowNode.id, kind: 'PROCESSING', durationMs: 0 },
+    { from: analysisFlowNode.id, to: terminalKafkaFlowNode.id, kind: 'PUBLICATION', durationMs: 0 },
+    { from: terminalKafkaFlowNode.id, to: resultsPersistenceFlowNode.id, kind: 'EXPECTED_PERSISTENCE', durationMs: null },
+  ],
+  limitations: ['RESULTS_PERSISTENCE_NOT_OBSERVED'],
+};
+
+export const itemProcessingFlowFixture: ProcessingFlow = {
+  ...processingFlowFixture,
+  scope: 'ITEM',
+  itemId: resultDetailFixture.normalizedItemId,
+};

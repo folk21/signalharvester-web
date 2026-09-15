@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import type { CollectionRun, MonitoringProfile } from '../../api/types';
@@ -182,6 +183,10 @@ export function CollectionRunsPage() {
 function RunDetail({ run, profile }: { run: CollectionRun; profile?: MonitoringProfile }) {
   return (
     <div className="detail-stack">
+      <div className="detail-actions">
+        <Link className="button button--ghost" to={`/flows?collectionRunId=${encodeURIComponent(run.collectionRunId)}`}>Open processing flow</Link>
+        <Link className="button button--ghost" to={`/events?collectionRunId=${encodeURIComponent(run.collectionRunId)}`}>Explore run events</Link>
+      </div>
       <dl className="detail-list">
         <div><dt>Status</dt><dd><StatusBadge value={run.status} /></dd></div>
         <div><dt>Profile</dt><dd>{profile?.name ?? run.monitoringProfileId}</dd></div>
@@ -207,6 +212,11 @@ function RunDetail({ run, profile }: { run: CollectionRun; profile?: MonitoringP
               </div>
               {source.rawItemId ? <div><span>Raw item</span><code>{source.rawItemId}</code></div> : null}
               {source.eventId ? <div><span>Event</span><code>{source.eventId}</code></div> : null}
+              {source.rawItemId ? (
+                <div className="outcome-card__actions">
+                  <Link className="button button--ghost" to={`/flows?collectionRunId=${encodeURIComponent(run.collectionRunId)}&itemId=${encodeURIComponent(source.rawItemId)}`}>Open item flow</Link>
+                </div>
+              ) : null}
               {source.failureMessage ? <p className="inline-error">{source.failureMessage}</p> : null}
             </div>
           ))}

@@ -7,9 +7,9 @@ description: Compact frontend roadmap, backend dependencies, and current impleme
 
 ## Current focus
 
-The current bounded focus is live Results and Event Explorer integration over the backend SSE contracts. Monitoring Profiles, Source Test, and profile-driven manual runs are accepted.
+The current bounded focus is processing-flow visualization over the backend reconstruction API. Monitoring Profiles, Source Test, profile-driven manual runs, live Results, and Event Explorer are accepted.
 
-The next bounded slice after this work is processing-flow visualization over the already available reconstruction API.
+After this diagnostic visualization slice, the next work should move to delivery/security and UX hardening unless a higher-priority product capability is introduced.
 
 ## Completed baseline
 
@@ -43,7 +43,7 @@ Dedicated analysis-setting controls remain deferred until the backend publishes 
 
 ## P1 — live Results
 
-Implemented in the current verification-pending slice:
+Implemented and accepted:
 
 - subscribe to new Results without manual refresh;
 - reconnect safely after transient network failure;
@@ -51,11 +51,11 @@ Implemented in the current verification-pending slice:
 - preserve filters and selected detail while new data arrives;
 - make connection state visible when useful.
 
-Polling should not become the long-term replacement for the planned SSE boundary.
+Durable REST snapshots remain the recovery boundary; polling is not used as a replacement for SSE.
 
 ## P1 — event diagnostics
 
-Implemented in the current verification-pending slice:
+Implemented and accepted:
 
 - add a bounded live Event Explorer;
 - filter by event type, producer/service, topic, correlation ID, run, and item where supported;
@@ -64,12 +64,13 @@ Implemented in the current verification-pending slice:
 
 ## P1 — processing-flow visualization
 
-The backend can now reconstruct bounded correlated flows. The diagnostic frontend slice should:
+Implemented in the current verification-pending slice:
 
 - visualize source -> collection -> Kafka -> analysis -> persistence -> result stages;
-- show timestamps and durations where available;
+- show timestamps, durations, evidence classification, and reconstruction limitations;
 - expose identifiers and Kafka metadata useful for diagnosis;
-- link flow stages to Results and event details;
+- support run-level and run-scoped item-level inspection;
+- link Collection Runs, Results, Events, and flow stages into one diagnostic navigation model;
 - keep the visualization diagnostic rather than pretending to replace distributed tracing.
 
 ## P2 — delivery and security hardening
@@ -93,7 +94,7 @@ After core behavior stabilizes:
 
 ## Backend dependencies
 
-The frontend roadmap intentionally does not invent contracts for missing backend capabilities. The backend contracts required for the current configuration and planned live-diagnostic frontend work are available: monitoring profiles, Source Test, Results SSE, Event Observation, and processing-flow reconstruction.
+The frontend roadmap intentionally does not invent contracts for missing backend capabilities. The backend contracts required for current configuration and diagnostics are available: monitoring profiles, Source Test, Results SSE, Event Observation, and processing-flow reconstruction.
 
 Remaining major backend/product dependencies include:
 

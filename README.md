@@ -1,6 +1,6 @@
 # SignalHarvester Web
 
-Web frontend for SignalHarvester. The current implemented slice is an administrative and operational UI over the backend REST APIs.
+Web frontend for SignalHarvester. The current application is an administrative, operational, and diagnostic UI over backend REST and SSE contracts.
 
 The application intentionally starts without authentication and is intended for local or otherwise trusted environments only. It uses the backend REST/OpenAPI contract and does not access Kafka or PostgreSQL directly.
 
@@ -24,6 +24,7 @@ The application intentionally starts without authentication and is intended for 
 - Analysis Items — inspect persisted normalized/deduplication state with profile/source filters.
 - Results — browse analyzed result projections, receive matching live SSE updates, and inspect content, attributes, and provenance.
 - Event Explorer — inspect bounded technical event history and follow live observed pipeline events.
+- Processing Flow — visualize backend-reconstructed run/item stages, evidence, durations, and diagnostic metadata.
 
 ## Technology
 

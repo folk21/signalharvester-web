@@ -9,7 +9,7 @@ description: Current implemented SignalHarvester Web screens, API usage, code or
 
 This document describes what the frontend currently implements. Active specifications describe intended changes and must not be read as evidence that a feature already exists.
 
-The accepted baseline includes Monitoring Profiles, Source Test, and profile-driven manual Collection Runs. The current branch adds live Results and the Event Explorer; its automated acceptance is pending `./run_checks.sh`.
+The accepted baseline includes Monitoring Profiles, Source Test, profile-driven manual Collection Runs, live Results, and Event Explorer. The current branch adds Processing Flow visualization; its automated acceptance is pending `./run_checks.sh`.
 
 ## Current screens
 
@@ -22,8 +22,9 @@ The accepted baseline includes Monitoring Profiles, Source Test, and profile-dri
 | Analysis Items | `/analysis` | Inspects normalized/deduplication state with profile/source filters | `/api/v1/admin/analysis/items` |
 | Results | `/results` | Lists analyzed Results, loads detail on selection, and merges live SSE updates with durable REST snapshots | `/api/v1/results`, `/api/v1/results/stream` |
 | Event Explorer | `/events` | Shows bounded technical event history and live observed events with diagnostic filters/detail | `/api/v1/events`, `/api/v1/events/stream` |
+| Processing Flow | `/flows` | Visualizes reconstructed run/item branches, stage evidence, durations, limitations, and stage metadata | `/api/v1/flows/collection-runs/{collectionRunId}`, `/api/v1/flows/collection-runs/{collectionRunId}/items/{itemId}` |
 
-The application shell remains one coherent operational/product frontend. Processing-flow visualization is the next diagnostic frontend slice.
+The application shell remains one coherent operational/product frontend.
 
 ## Sources
 
@@ -95,6 +96,23 @@ The list intentionally uses the summary representation and does not request full
 
 Results SSE supplements the durable REST snapshot. The browser establishes SSE first, waits for `ready`, loads the REST snapshot while buffering live updates, then merges both into the TanStack Query cache. Connection/reconnect state is visible.
 
+
+## Processing Flow
+
+The Processing Flow screen consumes the backend reconstruction API. The browser does not rebuild pipeline semantics from Event Explorer rows.
+
+The screen supports:
+
+- one Collection Run ID and an optional raw/normalized Item ID;
+- one horizontal lane per backend `branchId`;
+- stage status, evidence classification, and observed timestamps;
+- transition kind and duration from backend edges;
+- explicit backend limitations such as partial retained history or unobserved Results persistence;
+- selected-stage detail with event, item, profile/source, trace, outcome, score, and Kafka metadata;
+- drill-down from run flow to run-scoped item flow.
+
+Collection Runs, Results, and Event Explorer deep-link into this view when they have the required identifiers. Flow stages link back to bounded Event Explorer and Results views. Frontend-only `eventId` and `normalizedItemId` query parameters select a matching row after its normal bounded snapshot is loaded; they are not sent as unsupported backend filters.
+
 ## Dashboard
 
 The Dashboard combines small recent reads from Sources, Monitoring Profiles, Collection Runs, Analysis, and Results.
@@ -107,13 +125,13 @@ The frontend REST boundary is `src/api/client.ts`.
 
 The current application uses the browser `fetch` API and converts non-success responses into a shared `ApiError`. REST schema types come from the checked-in OpenAPI document through `openapi-typescript`.
 
-The checked-in OpenAPI snapshot now includes the backend Monitoring Profiles, Source Test, Results SSE, Event Observation, and processing-flow contracts. The frontend now consumes the configuration/run REST APIs plus Results and Event Observation REST/SSE contracts. Processing-flow contracts remain available for the next slice.
+The checked-in OpenAPI snapshot includes Monitoring Profiles, Source Test, Results SSE, Event Observation, and processing-flow contracts. The frontend consumes the configuration/run REST APIs, Results and Event Observation REST/SSE contracts, and the processing-flow REST read model.
 
 No frontend code reads PostgreSQL or Kafka directly.
 
 ## Client state
 
-TanStack Query owns remote/server state, including sources, monitoring profiles, runs, analysis items, and Results.
+TanStack Query owns remote/server state, including sources, monitoring profiles, runs, analysis items, Results, observed events, and reconstructed processing flows.
 
 Page-local React state owns forms, filters, source-test presentation, and current selections. The application does not use a second global client-state library.
 
@@ -127,24 +145,25 @@ The repository's canonical routine verification is `./run_checks.sh`. It regener
 
 The deterministic browser suite now covers:
 
-- application-shell navigation including Monitoring Profiles;
+- application-shell navigation including Monitoring Profiles, Event Explorer, and Processing Flow;
 - Sources create behavior and Source Test diagnostics;
 - Monitoring Profile create request construction and source membership;
 - profile-driven manual Collection Run request/detail behavior;
 - Analysis filters;
-- Results filters/detail;
+- Results filters/detail and live SSE merge behavior;
+- Event Explorer history/live behavior;
+- Processing Flow run/item visualization and drill-down;
 - representative loading/error/empty states.
 
 The opt-in live Playwright workflow now owns a temporary RSS source and monitoring profile. It tests the source, runs the profile manually, waits for matching Analysis and Results data, and removes the profile before removing the source so backend referential integrity is respected.
 
-The Monitoring Profiles / Source Test slice was accepted on 2026-09-14 after repository verification passed. The current live Results / Event Explorer slice remains verification-pending until the updated routine checks pass.
+Monitoring Profiles / Source Test and live Results / Event Explorer were accepted on 2026-09-14 after repository verification; live diagnostics were also inspected against a real backend. The current Processing Flow slice remains verification-pending until the updated routine checks pass.
 
 ## Current limitations
 
 The following product capabilities are not implemented in the frontend:
 
 - dedicated analysis-setting configuration beyond the current profile criteria map;
-- visual processing-flow inspection;
 - authentication and authorization.
 
-Backend contracts are already available for Results SSE, Event Observation, and processing-flow reconstruction. These are frontend work rather than backend blockers.
+Backend contracts used by the current configuration, live diagnostics, and flow visualization are available. Remaining limitations are product/security work rather than blockers in these diagnostic contracts.

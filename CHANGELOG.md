@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+2026-09-14 Added Processing Flow visualization with run/item lanes, evidence-aware stage detail, durations, and cross-screen diagnostic links.
+
+2026-09-14 Accepted live Results and Event Explorer after routine checks and manual live-backend inspection passed.
+
 2026-09-14 Added race-free Results SSE integration, bounded Event Explorer history/live updates, and deterministic browser coverage for the SSE `ready` bootstrap.
 
 2026-09-14 Added persisted Monitoring Profiles, bounded Source Test diagnostics, profile-driven manual Collection Runs, and synchronized the frontend OpenAPI snapshot with the current backend contract.

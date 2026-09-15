@@ -67,9 +67,10 @@ Umbrella:
 
 Current implementation focus:
 
-- [`active/subspecs/ui-live-results-event-explorer.md`](active/subspecs/ui-live-results-event-explorer.md) — Results SSE and bounded Event Explorer history/live delivery; implementation complete, verification pending.
+- [`active/subspecs/ui-processing-flow-visualization.md`](active/subspecs/ui-processing-flow-visualization.md) — run/item processing-flow visualization over the backend reconstruction API; implementation complete, verification pending.
 
 Recently completed:
 
+- [`archive/subspecs/ui-live-results-event-explorer.md`](archive/subspecs/ui-live-results-event-explorer.md) — live Results SSE and bounded Event Explorer history/live delivery, accepted on 2026-09-14.
 - [`archive/subspecs/ui-monitoring-profiles-source-test.md`](archive/subspecs/ui-monitoring-profiles-source-test.md) — Monitoring Profiles, Source Test, and profile-driven manual Collection Runs, accepted on 2026-09-14.
 - [`archive/subspecs/ui-browser-verification.md`](archive/subspecs/ui-browser-verification.md) — deterministic browser automation and one bounded live-backend E2E workflow, accepted on 2026-09-14.

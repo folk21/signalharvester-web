@@ -21,3 +21,7 @@ export type ResultDetail = components['schemas']['ResultDetail'];
 export type ResultLiveEvent = components['schemas']['ResultLiveEvent'];
 export type ObservedEvent = components['schemas']['ObservedEvent'];
 export type ObservedEventLiveEvent = components['schemas']['ObservedEventLiveEvent'];
+
+export type ProcessingFlow = components['schemas']['ProcessingFlow'];
+export type ProcessingFlowNode = components['schemas']['ProcessingFlowNode'];
+export type ProcessingFlowEdge = components['schemas']['ProcessingFlowEdge'];

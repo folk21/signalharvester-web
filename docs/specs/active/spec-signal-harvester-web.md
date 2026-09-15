@@ -4,7 +4,7 @@ title: SignalHarvester Web initial product specification
 description: Active frontend umbrella specification for configuration, operational inspection, Results, live updates, and event-flow diagnostics.
 document_role: umbrella
 spec_status: active
-current_focus: subspecs/ui-live-results-event-explorer.md
+current_focus: subspecs/ui-processing-flow-visualization.md
 ---
 # SignalHarvester Web initial product specification
 
@@ -18,9 +18,9 @@ Frontend implementation details belong here rather than in the backend repositor
 
 ## Current implementation focus
 
-The current bounded focus is [`subspecs/ui-live-results-event-explorer.md`](subspecs/ui-live-results-event-explorer.md). It connects Results SSE and bounded Event Observation REST/SSE to the browser while keeping durable snapshots in TanStack Query.
+The current bounded focus is [`subspecs/ui-processing-flow-visualization.md`](subspecs/ui-processing-flow-visualization.md). It visualizes the backend-reconstructed processing graph for collection runs and run-scoped items while preserving explicit evidence and bounded-history limitations.
 
-The accepted baseline already provides Dashboard, Sources CRUD and Source Test, Monitoring Profiles, profile-driven Collection Runs, Analysis inspection, Results list/filter/detail, deterministic Playwright coverage, and an opt-in live-backend browser flow. Processing-flow visualization remains the next frontend slice after this live diagnostics work is accepted.
+The accepted baseline already provides Dashboard, Sources CRUD and Source Test, Monitoring Profiles, profile-driven Collection Runs, Analysis inspection, Results list/filter/detail with SSE updates, Event Explorer history/live delivery, deterministic Playwright coverage, and an opt-in live-backend browser flow.
 
 ## Goal
 
@@ -61,9 +61,9 @@ The frontend does not own:
 | Browser automation | Implemented and accepted |
 | Monitoring profiles and schedules | Implemented and accepted |
 | Source test/preview | Implemented and accepted |
-| Live Results via SSE | Implemented in current focus; verification pending |
-| Event Explorer | Implemented in current focus; verification pending |
-| Processing-flow visualization | Backend available; frontend pending |
+| Live Results via SSE | Implemented and accepted |
+| Event Explorer | Implemented and accepted |
+| Processing-flow visualization | Implemented in current focus; verification pending |
 | Authentication/authorization | Pending |
 
 ## Requirements
@@ -179,7 +179,7 @@ The UI must:
 - avoid direct Kafka access;
 - make connection failure visible when it affects freshness.
 
-Current status: backend SSE is available; frontend integration is pending.
+Current status: implemented and accepted through backend SSE plus durable REST snapshots.
 
 ### UI-R10 — live technical Event Explorer
 
@@ -196,7 +196,7 @@ Filters should include backend-supported dimensions such as:
 
 The browser must not expose or emulate unlimited Kafka history.
 
-Current status: backend Event Observation REST/SSE is available; frontend integration is pending.
+Current status: implemented and accepted with bounded REST history plus backend SSE.
 
 ### UI-R11 — visual processing-flow inspection
 
@@ -215,7 +215,7 @@ The view should represent relevant stages such as:
 
 Where available, it should present timestamps, durations, Kafka metadata, retry state, analysis outcome, persisted identity, and trace/correlation identifiers.
 
-Current status: backend processing-flow reconstruction is available; frontend visualization is pending.
+Current status: implemented in the current frontend focus; verification pending.
 
 ### UI-R12 — explicit async states
 
