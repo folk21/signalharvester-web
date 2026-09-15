@@ -7,9 +7,9 @@ description: Compact frontend roadmap, backend dependencies, and current impleme
 
 ## Current focus
 
-The current bounded focus is accessibility hardening. Processing Flow visualization, Monitoring Profiles, Source Test, profile-driven manual runs, live Results, Event Explorer, UI resilience/edge-case verification, and the real-backend diagnostic acceptance path are accepted.
+The current bounded focus is responsive and large-data UX hardening. Processing Flow visualization, Monitoring Profiles, Source Test, profile-driven manual runs, live Results, Event Explorer, UI resilience/edge-case verification, real-backend diagnostic acceptance, and accessibility hardening are accepted.
 
-Targeted visual regression is implemented with one reviewed Results/detail golden and remains a verification-pending supporting track. The active accessibility slice strengthens native landmarks/status semantics, repeated-action naming, and keyboard focus behavior without introducing another UI or accessibility framework.
+Targeted visual regression is implemented with one reviewed Results/detail golden and remains a verification-pending supporting track. The active responsive slice contains larger configuration collections, long detail values, and many Processing Flow branches across phone/tablet layouts without introducing unsupported client-side pagination.
 
 ## Completed baseline
 
@@ -109,7 +109,7 @@ This stage strengthens frontend/backend contract acceptance without duplicating 
 
 ## P2 — accessibility hardening
 
-Current focus; implementation complete and verification pending:
+Implemented and accepted:
 
 - provide a first-focusable skip link into the main content landmark;
 - name core forms/tables and repeated Source/Profile actions for assistive technology;
@@ -120,7 +120,7 @@ Current focus; implementation complete and verification pending:
 
 ## P2 — responsive and large-data UX hardening
 
-After the accessibility slice is accepted:
+Current focus; implementation complete and verification pending:
 
 - exercise 320–390 px and tablet layouts beyond the existing diagnostic overflow regression;
 - harden long Source/Profile names, tags, diagnostic payloads, and many-branch Processing Flow layouts;

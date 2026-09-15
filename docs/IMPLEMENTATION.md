@@ -9,7 +9,7 @@ description: Current implemented SignalHarvester Web screens, API usage, code or
 
 This document describes what the frontend currently implements. Active specifications describe intended changes and must not be read as evidence that a feature already exists.
 
-The accepted baseline includes Monitoring Profiles, Source Test, profile-driven manual Collection Runs, live Results, Event Explorer, Processing Flow visualization, the resilience/edge-case browser suite, and real-backend diagnostic acceptance through Results/Event SSE and Processing Flow. Targeted visual regression is implemented as a small reviewed Results/detail baseline. The current branch adds focused accessibility hardening with native landmarks/status semantics, entity-specific repeated-action names, and explicit keyboard focus management for configuration forms.
+The accepted baseline includes Monitoring Profiles, Source Test, profile-driven manual Collection Runs, live Results, Event Explorer, Processing Flow visualization, the resilience/edge-case browser suite, real-backend diagnostic acceptance through Results/Event SSE and Processing Flow, and focused accessibility hardening. Targeted visual regression is implemented as a small reviewed Results/detail baseline. The current branch hardens phone/tablet containment and larger bounded datasets with locally scrollable configuration collections, bounded source membership, wrapping Result detail values, and many-branch Processing Flow scrolling.
 
 ## Current screens
 
@@ -65,6 +65,8 @@ Existing profile source order is preserved when the user edits other profile fie
 
 The UI presents source enabled/disabled state for context, but the backend remains authoritative for scheduling and collection semantics.
 
+Large Source/Profile collections remain fully rendered from the current backend response. Configuration tables use bounded local scrolling with sticky headers, and the source-membership editor uses a bounded native checkbox list instead of introducing frontend pagination or truncation.
+
 ## Collection Runs
 
 The Collection Runs screen starts manual collection by selecting a persisted Monitoring Profile.
@@ -94,7 +96,7 @@ The list supports current backend filters for:
 
 The list intentionally uses the summary representation and does not request full normalized content for every row. Selecting one result loads its detail separately and shows content, attributes, tags, analysis metadata, and provenance.
 
-Results SSE supplements the durable REST snapshot. The browser establishes SSE first, waits for `ready`, loads the REST snapshot while buffering live updates, then merges both into the TanStack Query cache. Connection/reconnect state is visible.
+Results SSE supplements the durable REST snapshot. The browser establishes SSE first, waits for `ready`, loads the REST snapshot while buffering live updates, then merges both into the TanStack Query cache. Connection/reconnect state is visible. Long detail values, including tags, attributes, identifiers, and normalized content, remain contained by wrapping or local content scrolling on narrower layouts.
 
 
 ## Processing Flow
@@ -111,7 +113,7 @@ The screen supports:
 - selected-stage detail with event, item, profile/source, trace, outcome, score, and Kafka metadata;
 - drill-down from run flow to run-scoped item flow.
 
-Collection Runs, Results, and Event Explorer deep-link into this view when they have the required identifiers. Flow stages link back to bounded Event Explorer and Results views. Frontend-only `eventId` and `normalizedItemId` query parameters select a matching row after its normal bounded snapshot is loaded; they are not sent as unsupported backend filters.
+Collection Runs, Results, and Event Explorer deep-link into this view when they have the required identifiers. Flow stages link back to bounded Event Explorer and Results views. Frontend-only `eventId` and `normalizedItemId` query parameters select a matching row after its normal bounded snapshot is loaded; they are not sent as unsupported backend filters. Many run-level branches remain in the backend-provided order inside a bounded vertical graph region, while each branch keeps its own horizontal stage-track scroll. Phone-sized layouts return branch scrolling to the normal page to avoid nested vertical scroll traps.
 
 ## Dashboard
 
@@ -164,10 +166,13 @@ The deterministic browser suite now covers:
 - stale deep links against bounded Result/Event snapshots;
 - partial Processing Flow evidence and retained-history limitations;
 - long diagnostic identifiers on a narrow mobile viewport without page-level horizontal overflow.
+- 320 px configuration layouts with dozens of long-named Sources/Profiles and bounded local table/membership scrolling;
+- long Result detail values on tablet layouts without document overflow;
+- many-branch Processing Flow layouts with local vertical branch and horizontal stage-track scrolling.
 
 The opt-in live Playwright workflow owns a temporary RSS source and monitoring profile and uses two manual Collection Runs. Before the first run, a profile/source-filtered Results page establishes the real SSE stream and must receive both fixture Results without manual refresh. Before the second run, Event Explorer establishes the real Event Observation SSE stream and must receive a newly correlated event without refresh. The workflow then selects a real Analysis event, opens its backend-reconstructed item flow, and expands to the full run flow. Analysis inspection remains a bounded durable-state check. Cleanup still removes the profile before the source so backend referential integrity is respected.
 
-Monitoring Profiles / Source Test, live Results / Event Explorer, and Processing Flow were accepted on 2026-09-14. UI resilience and edge-case verification was accepted on 2026-09-15 after the routine checks passed. Live diagnostic acceptance was accepted on 2026-09-15 after both the routine gate and `npm run e2e:live` passed in the developer environment. Targeted visual regression remains verification-pending until its golden comparison is accepted in the developer environment. The current accessibility-hardening implementation remains verification-pending until the routine gate passes.
+Monitoring Profiles / Source Test, live Results / Event Explorer, and Processing Flow were accepted on 2026-09-14. UI resilience and edge-case verification, live diagnostic acceptance, and accessibility hardening were accepted on 2026-09-15 after their required developer checks passed. Targeted visual regression remains verification-pending until its golden comparison is accepted in the developer environment. The current responsive/large-data implementation remains verification-pending until the routine gate and manual narrow-layout spot-check pass.
 
 ## Current limitations
 

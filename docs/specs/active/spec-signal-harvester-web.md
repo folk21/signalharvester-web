@@ -4,7 +4,7 @@ title: SignalHarvester Web initial product specification
 description: Active frontend umbrella specification for configuration, operational inspection, Results, live updates, and event-flow diagnostics.
 document_role: umbrella
 spec_status: active
-current_focus: subspecs/ui-accessibility-hardening.md
+current_focus: subspecs/ui-responsive-large-data-hardening.md
 ---
 # SignalHarvester Web initial product specification
 
@@ -18,9 +18,9 @@ Frontend implementation details belong here rather than in the backend repositor
 
 ## Current implementation focus
 
-The current bounded focus is [`subspecs/ui-accessibility-hardening.md`](subspecs/ui-accessibility-hardening.md). It strengthens native semantics, repeated-action naming, keyboard focus behavior, and deterministic accessibility-oriented browser verification without adding a new accessibility dependency.
+The current bounded focus is [`subspecs/ui-responsive-large-data-hardening.md`](subspecs/ui-responsive-large-data-hardening.md). It keeps configuration collections, long Result detail values, and many-branch Processing Flow layouts contained across phone and tablet widths without inventing client-side pagination semantics.
 
-The accepted baseline already provides Dashboard, Sources CRUD and Source Test, Monitoring Profiles, profile-driven Collection Runs, Analysis inspection, Results list/filter/detail with SSE updates, Event Explorer history/live delivery, Processing Flow, resilience coverage, and real-backend diagnostic acceptance through Results/Event SSE and Processing Flow. Targeted visual regression is implemented and remains verification-pending until its developer gate is accepted.
+The accepted baseline already provides Dashboard, Sources CRUD and Source Test, Monitoring Profiles, profile-driven Collection Runs, Analysis inspection, Results list/filter/detail with SSE updates, Event Explorer history/live delivery, Processing Flow, resilience coverage, real-backend diagnostic acceptance, and focused accessibility hardening. Targeted visual regression is implemented and remains verification-pending until its developer gate is accepted.
 
 ## Goal
 
@@ -67,7 +67,8 @@ The frontend does not own:
 | UI resilience / edge-case verification | Implemented and accepted |
 | Targeted visual regression | Implemented; verification pending |
 | Live diagnostic acceptance | Implemented and accepted |
-| Accessibility hardening | Implemented in current focus; verification pending |
+| Accessibility hardening | Implemented and accepted |
+| Responsive / large-data UX hardening | Implemented in current focus; verification pending |
 | Authentication/authorization | Pending |
 
 ## Requirements
@@ -270,6 +271,8 @@ Core workflows must remain keyboard-operable and understandable without relying 
 
 Interactive controls must use appropriate semantic HTML and labels. Browser automation should include basic checks for critical navigation and form accessibility where practical.
 
+Current status: implemented and accepted, including skip navigation, entity-specific repeated-action names, configuration form focus entry/restoration, and semantic status/alert behavior.
+
 ### UI-R18 — resilience and edge-case browser verification
 
 Deterministic browser verification must cover failure-prone interaction states that are easy to miss during normal visual inspection.
@@ -286,6 +289,14 @@ The routine suite should protect, where applicable:
 Tests must remain deterministic and backend-independent. They should assert user-visible behavior and request boundaries rather than duplicate backend business semantics.
 
 Current status: implemented and accepted.
+
+### UI-R19 — responsive and larger bounded datasets
+
+Operational screens must remain usable on phone and tablet layouts and with larger bounded backend responses. Long identifiers and content must stay contained inside their owning surfaces.
+
+Where tabular or graph structure cannot collapse without losing meaning, local scroll regions are preferred over document-level horizontal overflow. The frontend must not invent pagination or truncation semantics that are not present in the backend contract.
+
+Current status: implemented in the current focus; verification pending.
 
 ## Non-goals for the current product slice
 

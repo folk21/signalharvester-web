@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+2026-09-15 Added responsive and large-data UI hardening for bounded configuration tables, large source-membership lists, long Result detail values, and many-branch Processing Flow layouts.
+
+2026-09-15 Accepted focused accessibility hardening after the deterministic browser and routine frontend checks passed.
+
 2026-09-15 Added focused accessibility hardening with a keyboard skip link, named repeated configuration actions, explicit form focus restoration, semantic async/error states, and deterministic Playwright coverage.
 
 2026-09-15 Accepted the real-backend diagnostic browser path after routine checks and live Results SSE, Event Observation SSE, and Processing Flow verification passed.

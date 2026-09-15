@@ -170,8 +170,8 @@ export function MonitoringProfilesPage() {
           {sortedProfiles.length === 0 ? (
             <EmptyState>Create the first monitoring profile using the form.</EmptyState>
           ) : (
-            <div className="table-wrap">
-              <table aria-label="Configured monitoring profiles">
+            <div className="table-wrap table-wrap--bounded">
+              <table aria-label="Configured monitoring profiles" className="configuration-table">
                 <thead>
                   <tr>
                     <th>Name</th>
@@ -189,14 +189,14 @@ export function MonitoringProfilesPage() {
                       className={editing?.id === profile.id ? 'table-row--selected' : ''}
                     >
                       <td>
-                        <strong>{profile.name}</strong>
-                        <small className="mono">{profile.id}</small>
+                        <strong className="entity-name">{profile.name}</strong>
+                        <small className="mono break-all">{profile.id}</small>
                       </td>
                       <td>{profile.informationCategory}</td>
                       <td>Every {profile.collectionIntervalMinutes} min</td>
                       <td>
                         <strong>{profile.sourceIds.length}</strong>
-                        <small>{sourceNames(profile.sourceIds, sourceById)}</small>
+                        <small className="entity-summary">{sourceNames(profile.sourceIds, sourceById)}</small>
                       </td>
                       <td>
                         <StatusBadge value={profile.enabled ? 'ENABLED' : 'DISABLED'} />
@@ -303,26 +303,28 @@ export function MonitoringProfilesPage() {
               {formSources.length === 0 ? (
                 <p className="field-note">Create at least one source before creating a profile.</p>
               ) : (
-                formSources.map((source) => {
-                  const order = form.sourceIds.indexOf(source.id);
-                  return (
-                    <label className="source-membership__row" key={source.id}>
-                      <input
-                        checked={order >= 0}
-                        onChange={(event) => toggleSource(source.id, event.target.checked)}
-                        type="checkbox"
-                        aria-label={`Use source ${source.name}`}
-                      />
-                      <span>
-                        <strong>{source.name}</strong>
-                        <small>
-                          {order >= 0 ? `#${order + 1} · ` : ''}
-                          {source.type} · {source.enabled ? 'enabled' : 'disabled'}
-                        </small>
-                      </span>
-                    </label>
-                  );
-                })
+                <div className="source-membership__list">
+                  {formSources.map((source) => {
+                    const order = form.sourceIds.indexOf(source.id);
+                    return (
+                      <label className="source-membership__row" key={source.id}>
+                        <input
+                          checked={order >= 0}
+                          onChange={(event) => toggleSource(source.id, event.target.checked)}
+                          type="checkbox"
+                          aria-label={`Use source ${source.name}`}
+                        />
+                        <span>
+                          <strong>{source.name}</strong>
+                          <small>
+                            {order >= 0 ? `#${order + 1} · ` : ''}
+                            {source.type} · {source.enabled ? 'enabled' : 'disabled'}
+                          </small>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
               )}
             </fieldset>
 

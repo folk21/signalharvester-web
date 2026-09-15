@@ -3,14 +3,14 @@ type: Specification
 title: UI accessibility hardening
 description: Strengthen native browser semantics, keyboard focus behavior, accessible control naming, and deterministic accessibility-oriented Playwright coverage.
 document_role: subspec
-spec_status: verification-pending
+spec_status: completed
 parent: ../spec-signal-harvester-web.md
 ---
 # UI accessibility hardening
 
 ## Status
 
-Implementation complete. Developer verification pending.
+Completed and accepted on 2026-09-15 after the deterministic Playwright suite and canonical frontend checks passed in the developer environment.
 
 ## Goal
 

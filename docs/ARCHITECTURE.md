@@ -170,6 +170,8 @@ The UI uses semantic buttons, text labels, and CSS layout rather than a graph li
 
 The current UI uses React components and repository-owned CSS without a component framework. This keeps the dependency surface small while the product model is still evolving. The application shell and shared async/live indicators prefer native landmarks, semantic status/alert roles, explicit accessible names, and normal keyboard focus behavior rather than accessibility behavior hidden inside a component framework.
 
+Large bounded datasets remain backend-owned responses. The browser may contain them with local table/list/graph scrolling and wrapping, but it must not invent pagination, truncation, or ordering semantics that the backend contract does not publish.
+
 A UI component library should be added only when repeated interaction or accessibility patterns justify it. Visual consistency must not depend on duplicating backend domain rules in presentation components.
 
 ## Security boundary

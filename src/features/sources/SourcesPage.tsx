@@ -173,8 +173,8 @@ export function SourcesPage() {
           {sortedSources.length === 0 ? (
             <EmptyState>Create the first source using the form.</EmptyState>
           ) : (
-            <div className="table-wrap">
-              <table aria-label="Configured sources">
+            <div className="table-wrap table-wrap--bounded">
+              <table aria-label="Configured sources" className="configuration-table">
                 <thead>
                   <tr>
                     <th>Name</th>
@@ -188,8 +188,8 @@ export function SourcesPage() {
                   {sortedSources.map((source) => (
                     <tr key={source.id} className={editing?.id === source.id ? 'table-row--selected' : ''}>
                       <td>
-                        <strong>{source.name}</strong>
-                        <small className="mono">{source.id}</small>
+                        <strong className="entity-name">{source.name}</strong>
+                        <small className="mono break-all">{source.id}</small>
                       </td>
                       <td>{source.type}</td>
                       <td>
