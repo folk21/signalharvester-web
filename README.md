@@ -4,6 +4,12 @@ Web frontend for SignalHarvester. The current application is an administrative, 
 
 The application intentionally starts without authentication and is intended for local or otherwise trusted environments only. It uses the backend REST/OpenAPI contract and does not access Kafka or PostgreSQL directly.
 
+## Interface
+
+![SignalHarvester analyzed results screen](docs/images/signalharvester-screen.png)
+
+The web UI provides one place to configure sources and monitoring profiles, start and inspect collection runs, review analyzed results, and investigate pipeline behavior. The Results screen shown above combines filtering, live SSE updates, result details, and direct navigation to related processing flows and technical events.
+
 ## Start here
 
 | Goal | Read |
