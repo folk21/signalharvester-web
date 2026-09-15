@@ -283,7 +283,7 @@ The routine suite should protect, where applicable:
 
 Tests must remain deterministic and backend-independent. They should assert user-visible behavior and request boundaries rather than duplicate backend business semantics.
 
-Current status: implemented in the current frontend focus; verification pending.
+Current status: implemented and accepted.
 
 ## Non-goals for the current product slice
 

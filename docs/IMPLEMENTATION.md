@@ -141,7 +141,7 @@ The application uses one repository-owned global stylesheet and small reusable p
 
 ## Current verification
 
-The repository's canonical routine verification is `./run_checks.sh`. It regenerates the checked-in API types, typechecks application and browser-test code, runs Vitest, runs deterministic Playwright browser tests, and builds the production frontend.
+The repository's canonical routine verification is `./run_checks.sh`. It regenerates the checked-in API types, typechecks application and browser-test code, runs Vitest, runs deterministic Playwright browser tests, and builds the production frontend. `npm run e2e:visual` is the focused non-updating comparison for the reviewed Results/detail golden, while `npm run e2e:visual:update` is reserved for intentional baseline changes.
 
 The deterministic browser suite now covers:
 

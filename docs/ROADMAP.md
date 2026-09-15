@@ -95,6 +95,21 @@ Current focus:
 - review actual/diff artifacts instead of increasing tolerance blindly;
 - add future baselines only when they protect a distinct stable layout risk.
 
+## P1 — live diagnostic acceptance
+
+After the visual-regression slice is accepted:
+
+- extend the opt-in real-backend Playwright workflow beyond Analysis/Results into Event Explorer and Processing Flow;
+- verify that Event Observation SSE surfaces newly observed events while the diagnostic page is already open;
+- verify run-scoped Processing Flow reconstruction through the browser against the real backend;
+- keep the scenario bounded, deterministic, and based on the existing local RSS fixture rather than public internet data.
+
+This stage should strengthen frontend/backend contract acceptance without duplicating backend Kafka, persistence, or reconstruction semantics in browser assertions.
+
+## P2 — accessibility hardening
+
+Build on the existing keyboard-selection coverage with focused checks for landmarks, accessible names, labels, focus order, focus restoration, and semantic error presentation. Prefer native semantic HTML and deterministic Playwright assertions. Add a dedicated accessibility dependency only when its maintenance cost and additional coverage are explicitly justified.
+
 ## P2 — delivery and security hardening
 
 Before public/shared deployment:

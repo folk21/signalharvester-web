@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+2026-09-15 Added a focused non-updating Playwright command for reviewing the targeted visual baseline and documented the post-visual live diagnostic/accessibility hardening plan.
+
 2026-09-15 Added targeted Playwright visual regression with a reviewed populated Results/detail golden image and an explicit baseline-update workflow.
 
 2026-09-15 Accepted the UI resilience and edge-case verification slice after the routine frontend checks passed.

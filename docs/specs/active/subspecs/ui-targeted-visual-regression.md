@@ -57,8 +57,9 @@ When a visual change is intentional:
 
 1. run the dedicated visual update command;
 2. inspect the changed PNG rather than accepting it blindly;
-3. run the normal browser suite again;
-4. commit the reviewed baseline together with the intended UI change.
+3. run the focused visual comparison without updating snapshots;
+4. run the normal repository verification gate;
+5. commit the reviewed baseline together with the intended UI change.
 
 ## Expansion rule
 
