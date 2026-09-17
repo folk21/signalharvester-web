@@ -22,6 +22,19 @@ The current bounded focus is [`subspecs/ui-performance-runtime-resilience.md`](s
 
 The accepted baseline already provides Dashboard, Sources CRUD and Source Test, Monitoring Profiles, profile-driven Collection Runs, Analysis inspection, Results list/filter/detail with SSE updates, Event Explorer history/live delivery, Processing Flow, resilience coverage, targeted visual regression, real-backend diagnostic acceptance, accessibility hardening, and responsive/large-data hardening.
 
+## Feature scope
+
+This umbrella owns the browser capabilities cataloged in [`../../FEATURES.md`](../../FEATURES.md). The main feature groups are:
+
+- application/contract boundary: `WEB.APP_SHELL`, `WEB.CONTRACT_INTEGRATION`, `WEB.SERVER_STATE`, `WEB.ASYNC_FEEDBACK`;
+- configuration/operations: `WEB.DASHBOARD`, `WEB.SOURCE_CONFIGURATION`, `WEB.SOURCE_TEST`, `WEB.MONITORING_PROFILES`, `WEB.COLLECTION_RUNS`;
+- Results/diagnostics: `WEB.ANALYSIS_INSPECTION`, `WEB.RESULTS_BROWSING`, `WEB.RESULTS_LIVE`, `WEB.EVENT_EXPLORER`, `WEB.PROCESSING_FLOW`;
+- UX/delivery: `WEB.ACCESSIBILITY`, `WEB.RESPONSIVE_LAYOUT`, `WEB.ROUTE_DELIVERY`;
+- security/role-specific presentation: `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`, `WEB.IDENTITY_ADMIN`, `WEB.VIEWER_RESULTS`;
+- verification: `WEB.BROWSER_VERIFICATION`, `WEB.VISUAL_REGRESSION`, `WEB.LIVE_BACKEND_ACCEPTANCE`.
+
+Backend feature IDs listed below are cross-repository references to the capabilities consumed or presented by the browser. Backend behavior and enforcement remain backend-owned.
+
 ## Goal
 
 Deliver one coherent SignalHarvester browser application that lets a user configure collection, operate and inspect the processing pipeline, browse durable analyzed Results, receive live updates, and diagnose event flow without direct access to Kafka or PostgreSQL.
@@ -48,7 +61,7 @@ The frontend does not own:
 - backend authorization decisions;
 - REST/SSE wire contracts.
 
-## Current-state coverage
+## Current state
 
 | Capability | State |
 |---|---|
@@ -72,15 +85,44 @@ The frontend does not own:
 | Frontend performance / runtime resilience | Implemented in current focus; verification pending |
 | Authentication/authorization | Pending |
 
+## Requirement map
+
+| Requirement | Frontend feature IDs | Related backend feature IDs |
+|---|---|---|
+| UI-R1 | `WEB.APP_SHELL` | `DELIVERY.FRONTEND_BACKEND_BOUNDARY` |
+| UI-R2 | `WEB.CONTRACT_INTEGRATION` | `CONTRACTS.HTTP`, `DELIVERY.FRONTEND_BACKEND_BOUNDARY` |
+| UI-R3 | `WEB.SOURCE_CONFIGURATION` | `CONFIGURATION.SOURCES`, `SECURITY.EXTERNAL_SOURCE_ACCESS` |
+| UI-R4 | `WEB.SOURCE_TEST` | `COLLECTION.SOURCE_TEST`, `SECURITY.EXTERNAL_SOURCE_ACCESS` |
+| UI-R5 | `WEB.MONITORING_PROFILES` | `CONFIGURATION.MONITORING_PROFILES`, `COLLECTION.SCHEDULING`, `ANALYSIS.CLASSIFICATION` |
+| UI-R6 | `WEB.COLLECTION_RUNS` | `COLLECTION.RUNS`, `DATA.PROVENANCE` |
+| UI-R7 | `WEB.ANALYSIS_INSPECTION` | `DIAGNOSTICS.ANALYSIS_INSPECTION`, `ANALYSIS.NORMALIZATION`, `ANALYSIS.DEDUPLICATION` |
+| UI-R8 | `WEB.RESULTS_BROWSING` | `RESULTS.BROWSING`, `RESULTS.MATERIALIZATION`, `DATA.PROVENANCE` |
+| UI-R9 | `WEB.RESULTS_LIVE` | `RESULTS.LIVE`, `CONTRACTS.HTTP` |
+| UI-R10 | `WEB.EVENT_EXPLORER` | `DIAGNOSTICS.EVENT_OBSERVATION`, `EVENTING.CORRELATION` |
+| UI-R11 | `WEB.PROCESSING_FLOW` | `DIAGNOSTICS.PROCESSING_FLOW`, `EVENTING.CORRELATION`, `DATA.PROVENANCE` |
+| UI-R12 | `WEB.ASYNC_FEEDBACK` | `CONTRACTS.HTTP` |
+| UI-R13 | `WEB.SERVER_STATE` | `RESULTS.LIVE`, `DIAGNOSTICS.EVENT_OBSERVATION` |
+| UI-R14 | `WEB.BROWSER_VERIFICATION`, `WEB.LIVE_BACKEND_ACCEPTANCE` | `TESTING.DETERMINISTIC_LOCAL`, `CONTRACTS.HTTP` |
+| UI-R15 | `WEB.CONTRACT_INTEGRATION`, `WEB.ROUTE_DELIVERY` | `DELIVERY.FRONTEND_BACKEND_BOUNDARY`, `CONTRACTS.HTTP` |
+| UI-R16 | `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX` | `SECURITY.IDENTITY_ROLES`, `SECURITY.AUTHENTICATION`, `SECURITY.AUTHORIZATION` |
+| UI-R17 | `WEB.ACCESSIBILITY` | `DELIVERY.FRONTEND_BACKEND_BOUNDARY` |
+| UI-R18 | `WEB.BROWSER_VERIFICATION` | `TESTING.DETERMINISTIC_LOCAL` |
+| UI-R19 | `WEB.RESPONSIVE_LAYOUT` | `DELIVERY.FRONTEND_BACKEND_BOUNDARY` |
+| UI-R20 | `WEB.ROUTE_DELIVERY` | `DELIVERY.FRONTEND_BACKEND_BOUNDARY` |
+
 ## Requirements
 
 ### UI-R1 — one coherent application shell
+
+Feature: `WEB.APP_SHELL`. Related backend: `DELIVERY.FRONTEND_BACKEND_BOUNDARY`.
 
 The product must provide one consistent application shell and navigation model for configuration, operations, Results, and diagnostic screens.
 
 Adding future product-oriented screens must not require a separate frontend repository or duplicate application shell without a concrete lifecycle reason.
 
 ### UI-R2 — backend contract fidelity
+
+Feature: `WEB.CONTRACT_INTEGRATION`. Related backend: `CONTRACTS.HTTP`, `DELIVERY.FRONTEND_BACKEND_BOUNDARY`.
 
 REST request and response types must come from the backend OpenAPI contract.
 
@@ -89,6 +131,8 @@ The frontend must not maintain hand-written duplicate DTO definitions for existi
 Future SSE payloads must also have explicit backend-owned contracts before the frontend depends on them.
 
 ### UI-R3 — source configuration
+
+Feature: `WEB.SOURCE_CONFIGURATION`. Related backend: `CONFIGURATION.SOURCES`, `SECURITY.EXTERNAL_SOURCE_ACCESS`.
 
 The UI must allow the user to:
 
@@ -104,6 +148,8 @@ Current status: implemented for the existing source REST contract.
 
 ### UI-R4 — source validation and preview
 
+Feature: `WEB.SOURCE_TEST`. Related backend: `COLLECTION.SOURCE_TEST`, `SECURITY.EXTERNAL_SOURCE_ACCESS`.
+
 When the backend source-test capability exists, the UI must allow a source configuration to be tested without silently inserting test data into the normal Results feed.
 
 The UI should present available diagnostic information such as:
@@ -118,6 +164,8 @@ The UI should present available diagnostic information such as:
 Current status: implemented and accepted.
 
 ### UI-R5 — monitoring profile configuration
+
+Feature: `WEB.MONITORING_PROFILES`. Related backend: `CONFIGURATION.MONITORING_PROFILES`, `COLLECTION.SCHEDULING`, `ANALYSIS.CLASSIFICATION`.
 
 When the backend monitoring-profile contract exists, the UI must support:
 
@@ -135,6 +183,8 @@ Current status: monitoring-profile CRUD, source assignment, interval, category, 
 
 ### UI-R6 — collection operations and run inspection
 
+Feature: `WEB.COLLECTION_RUNS`. Related backend: `COLLECTION.RUNS`, `DATA.PROVENANCE`.
+
 The UI must allow manually starting a Collection Run and inspecting recent durable runs.
 
 Run inspection must expose enough backend-provided information to understand:
@@ -150,6 +200,8 @@ Current status: implemented for the manual operational API.
 
 ### UI-R7 — analysis inspection
 
+Feature: `WEB.ANALYSIS_INSPECTION`. Related backend: `DIAGNOSTICS.ANALYSIS_INSPECTION`, `ANALYSIS.NORMALIZATION`, `ANALYSIS.DEDUPLICATION`.
+
 The UI must provide a bounded technical view of backend-exposed normalized/deduplication state for diagnosis.
 
 This view must not pretend to be the user-facing terminal result model.
@@ -157,6 +209,8 @@ This view must not pretend to be the user-facing terminal result model.
 Current status: implemented.
 
 ### UI-R8 — Results browsing and detail
+
+Feature: `WEB.RESULTS_BROWSING`. Related backend: `RESULTS.BROWSING`, `RESULTS.MATERIALIZATION`, `DATA.PROVENANCE`.
 
 The UI must let users browse durable analyzed Results and inspect one Result in detail.
 
@@ -176,6 +230,8 @@ Current status: implemented against the current Results REST API. Category-speci
 
 ### UI-R9 — live Results
 
+Feature: `WEB.RESULTS_LIVE`. Related backend: `RESULTS.LIVE`, `CONTRACTS.HTTP`.
+
 When backend SSE is available, an already-open Results view must receive newly available Results without manual refresh.
 
 The UI must:
@@ -188,6 +244,8 @@ The UI must:
 Current status: implemented and accepted through backend SSE plus durable REST snapshots.
 
 ### UI-R10 — live technical Event Explorer
+
+Feature: `WEB.EVENT_EXPLORER`. Related backend: `DIAGNOSTICS.EVENT_OBSERVATION`, `EVENTING.CORRELATION`.
 
 When the event-observation backend exists, the UI must provide a bounded live diagnostic view of processing events.
 
@@ -205,6 +263,8 @@ The browser must not expose or emulate unlimited Kafka history.
 Current status: implemented and accepted with bounded REST history plus backend SSE.
 
 ### UI-R11 — visual processing-flow inspection
+
+Feature: `WEB.PROCESSING_FLOW`. Related backend: `DIAGNOSTICS.PROCESSING_FLOW`, `EVENTING.CORRELATION`, `DATA.PROVENANCE`.
 
 The user must be able to select a Collection Run or collected item and inspect a visual processing path when the backend provides the required correlated read model.
 
@@ -225,6 +285,8 @@ Current status: implemented and accepted.
 
 ### UI-R12 — explicit async states
 
+Feature: `WEB.ASYNC_FEEDBACK`. Related backend: `CONTRACTS.HTTP`.
+
 Every data-driven screen must handle:
 
 - loading;
@@ -236,11 +298,15 @@ Mutations must provide enough feedback to distinguish successful persistence fro
 
 ### UI-R13 — server-state ownership
 
+Feature: `WEB.SERVER_STATE`. Related backend: `RESULTS.LIVE`, `DIAGNOSTICS.EVENT_OBSERVATION`.
+
 Remote state must remain owned by a server-state mechanism such as TanStack Query. Local component state should be used for transient browser interaction.
 
 Do not introduce a second global cache/store for backend data without a concrete requirement.
 
 ### UI-R14 — deterministic browser verification
+
+Features: `WEB.BROWSER_VERIFICATION`, `WEB.LIVE_BACKEND_ACCEPTANCE`. Related backend: `TESTING.DETERMINISTIC_LOCAL`, `CONTRACTS.HTTP`.
 
 Core browser workflows must have automated coverage that validates frontend behavior without reproducing backend business tests.
 
@@ -254,11 +320,15 @@ This requirement is implemented and accepted. Historical implementation details 
 
 ### UI-R15 — independent delivery boundary
 
+Features: `WEB.CONTRACT_INTEGRATION`, `WEB.ROUTE_DELIVERY`. Related backend: `DELIVERY.FRONTEND_BACKEND_BOUNDARY`, `CONTRACTS.HTTP`.
+
 The frontend must remain independently buildable and deployable from the backend.
 
 Development may use a Vite reverse proxy. Separately hosted builds must use an explicit backend origin and a compatible backend CORS/security policy.
 
 ### UI-R16 — trusted-environment security until hardened
+
+Features: `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`. Related backend: `SECURITY.IDENTITY_ROLES`, `SECURITY.AUTHENTICATION`, `SECURITY.AUTHORIZATION`.
 
 Until authentication and authorization are implemented, the application must clearly remain a trusted-environment tool.
 
@@ -268,6 +338,8 @@ A later security slice must define authentication, authorization, cross-origin p
 
 ### UI-R17 — accessibility and usability baseline
 
+Feature: `WEB.ACCESSIBILITY`. Related backend: `DELIVERY.FRONTEND_BACKEND_BOUNDARY`.
+
 Core workflows must remain keyboard-operable and understandable without relying only on color.
 
 Interactive controls must use appropriate semantic HTML and labels. Browser automation should include basic checks for critical navigation and form accessibility where practical.
@@ -275,6 +347,8 @@ Interactive controls must use appropriate semantic HTML and labels. Browser auto
 Current status: implemented and accepted, including skip navigation, entity-specific repeated-action names, configuration form focus entry/restoration, and semantic status/alert behavior.
 
 ### UI-R18 — resilience and edge-case browser verification
+
+Feature: `WEB.BROWSER_VERIFICATION`. Related backend: `TESTING.DETERMINISTIC_LOCAL`.
 
 Deterministic browser verification must cover failure-prone interaction states that are easy to miss during normal visual inspection.
 
@@ -293,6 +367,8 @@ Current status: implemented and accepted.
 
 ### UI-R19 — responsive and larger bounded datasets
 
+Feature: `WEB.RESPONSIVE_LAYOUT`. Related backend: `DELIVERY.FRONTEND_BACKEND_BOUNDARY`.
+
 Operational screens must remain usable on phone and tablet layouts and with larger bounded backend responses. Long identifiers and content must stay contained inside their owning surfaces.
 
 Where tabular or graph structure cannot collapse without losing meaning, local scroll regions are preferred over document-level horizontal overflow. The frontend must not invent pagination or truncation semantics that are not present in the backend contract.
@@ -300,6 +376,8 @@ Where tabular or graph structure cannot collapse without losing meaning, local s
 Current status: implemented and accepted.
 
 ### UI-R20 — efficient route delivery and runtime containment
+
+Feature: `WEB.ROUTE_DELIVERY`. Related backend: `DELIVERY.FRONTEND_BACKEND_BOUNDARY`.
 
 Primary feature screens should be delivered as route-level chunks so the application shell does not eagerly include every operational screen. Route transitions must expose an explicit accessible loading state, and lazy-route failures must remain contained within the shell with a recoverable fallback.
 

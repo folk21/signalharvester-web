@@ -1,189 +1,181 @@
 ---
 type: Usage Guide
 title: SignalHarvester Web usage
-description: Current UI workflows for configuration, collection operations, Results, live event diagnostics, and processing-flow inspection.
+description: Current browser workflows for configuration, collection operations, Results, diagnostics, and repository verification.
 ---
 # SignalHarvester Web usage
 
 ## Scope
 
-This document describes how to use the current frontend after it is running. Installation, prerequisites, and local startup remain in the root [`README.md`](../README.md).
+This document describes how to use the current frontend after it is running. Installation prerequisites and local startup are owned by the root [`README.md`](../README.md).
 
-The current build has no authentication. Use it only with a trusted local/private backend.
+The current frontend has no login/session or role-aware workflows. Use it only with a trusted local/private backend until the security slice is implemented.
 
 ## Typical workflow
 
-A useful current workflow is:
+A representative current workflow is:
 
 1. create or edit one or more Sources;
 2. use **Test** on a persisted Source to verify fetch/extraction and inspect bounded preview items;
-3. create a Monitoring Profile with category, interval, criteria, and ordered source membership;
+3. create a Monitoring Profile with category, interval, criteria, and ordered Source membership;
 4. enable scheduled collection when desired;
-5. start the Monitoring Profile manually from Collection Runs when immediate execution is useful;
-6. inspect per-source run outcomes;
-7. inspect normalization/deduplication state when diagnosing processing;
-8. browse analyzed Results and keep the page open for live matching updates;
-9. open one Result to inspect content, analysis metadata, and provenance;
-10. open Event Explorer for bounded technical history and live processing events;
-11. open Processing Flow from a run, result, or event to inspect the reconstructed stage path and evidence.
+5. start the profile manually from Collection Runs when immediate execution is useful;
+6. inspect per-source/item run outcomes;
+7. inspect Analysis Items when diagnosing normalization/deduplication state;
+8. browse Results and keep the page open for live matching updates;
+9. open one Result for content, analysis metadata, and provenance;
+10. use Event Explorer for bounded technical history/live events;
+11. open Processing Flow from a run, Result, or event to inspect backend-reconstructed stage evidence.
 
-The backend repository's `tools/live-backend/` workflow remains useful when you need to distinguish a frontend problem from a backend pipeline problem.
+Use the backend repository's `tools/live-backend/` workflow when you need to distinguish a browser problem from a backend pipeline problem.
 
 ## Dashboard
 
-Open `/`.
+Open `/` for a bounded operational overview across Sources, Monitoring Profiles, Collection Runs, Analysis, and Results.
 
-The Dashboard shows bounded recent information from Sources, Monitoring Profiles, Collection Runs, Analysis, and Results.
-
-Use the dedicated screens for complete actions and details.
+Use the dedicated feature screens for complete actions and detailed inspection.
 
 ## Sources
 
 Open `/sources`.
 
-The screen supports:
+The screen supports listing, creating, editing, enabling/disabling, deleting, and diagnostically testing persisted Sources.
 
-- listing configured sources;
-- creating a source;
-- editing source fields;
-- enabling/disabling collection for a source;
-- deleting a source;
-- diagnostically testing a persisted source.
-
-Source settings are entered as a JSON string map because that is the backend contract shape.
+Source-specific settings are entered as a JSON string map because that is the current backend contract shape.
 
 ### Source Test
 
-Choose **Test** on a persisted source. The backend uses the normal fetch/extraction boundary without publishing normal pipeline events or creating collection-run history.
+Choose **Test** on a persisted Source.
 
-The UI shows available diagnostic fields including HTTP status, response size/content type, fetch/extraction durations, candidate count, failure text, and bounded extracted-item previews.
+The backend uses the normal fetch/extraction boundary without publishing normal pipeline events or creating Collection Run history. The UI shows available diagnostic fields such as:
 
-Testing is allowed for disabled sources. A successful preview does not mean that the items were inserted into Results.
+- HTTP status;
+- response size/content type;
+- fetch/extraction durations;
+- candidate count;
+- failure text;
+- bounded extracted-item previews.
 
-A configured source can authorize outbound backend HTTP access to its destination. Do not expose source management to untrusted users while the application has no authentication/authorization and before backend outbound-destination policy is hardened.
+Disabled Sources may be tested. A successful preview does not mean that the items were inserted into Results.
+
+Source management authorizes backend outbound access to configured destinations. Do not expose this workflow to untrusted users while frontend authentication/authorization is not implemented.
 
 ## Monitoring Profiles
 
 Open `/profiles`.
 
-A Monitoring Profile currently contains:
+A current Monitoring Profile contains:
 
-- a display name;
+- display name;
 - information category;
-- enabled/disabled scheduled state;
+- scheduled enabled/disabled state;
 - collection interval in minutes;
 - one or more ordered Source references;
-- a criteria string map entered as JSON.
+- criteria as a string map entered as JSON.
 
-The source list shows each source's type and enabled state. Selection order is preserved as profile source order; newly selected sources are appended.
+The Source list shows each Source's type and enabled state. Existing membership order is preserved when unrelated profile fields are edited; newly selected Sources are appended.
 
-A disabled profile may still be selected for a manual Collection Run. The enabled flag controls scheduled collection rather than whether the persisted profile exists.
+A disabled profile may still be selected for a manual Collection Run. The enabled flag controls scheduled collection, not whether the persisted profile may be run manually.
+
+Dedicated typed Analysis settings are not yet exposed by the current frontend contract.
 
 ## Collection Runs
 
 Open `/runs`.
 
-Select a persisted Monitoring Profile and choose **Start collection run**. The browser sends only the selected profile identity. Information category and source membership come from the backend profile configuration.
+Select a persisted Monitoring Profile and choose **Start collection run**.
+
+The browser sends only the selected profile identity. Information category and Source membership come from backend profile configuration.
 
 Run detail exposes durable per-source/item outcomes returned by the backend.
 
-RSS/Atom sources may produce multiple published semantic items from one fetched feed. Published counts and source outcomes therefore describe extracted items rather than merely successful HTTP responses.
+RSS/Atom Sources may produce multiple semantic items from one fetched feed. Published counts and Source outcomes therefore describe extracted items rather than only successful HTTP responses.
 
 ## Analysis Items
 
 Open `/analysis`.
 
-This screen is a technical inspection view for normalized/deduplication state. It supports the backend filters for monitoring profile and source.
+This is a technical inspection view for normalized/deduplication state. It supports backend filters for Monitoring Profile and Source.
 
-Use this screen when diagnosing why raw discoveries were accepted, deduplicated, or associated with a particular processing context. User-facing terminal analysis belongs to Results.
+Use it when diagnosing why discoveries were accepted, deduplicated, or associated with a processing context. User-facing terminal analysis belongs to Results.
 
 ## Results
 
 Open `/results`.
 
-The current filters are:
+Current filters are:
 
-- monitoring profile ID;
-- source ID;
+- Monitoring Profile ID;
+- Source ID;
 - information category;
 - relevance;
 - classification;
 - analyzed-from time;
 - analyzed-to time.
 
-Selecting a list row loads the detailed representation separately. Detail includes normalized content, attributes, tags, analysis metadata, and event/correlation provenance.
+Selecting a row loads detail separately. Result detail includes normalized content, attributes, tags, analysis metadata, and event/correlation provenance.
 
-The Results page opens the backend SSE stream before loading its durable REST snapshot. Matching live updates then appear without manual refresh. A visible connection indicator shows live or reconnecting state. Result detail can open Event Explorer or the exact run/item Processing Flow.
+The page opens backend SSE before loading its durable REST snapshot. Matching live updates then appear without manual refresh. A visible indicator shows live or reconnecting state.
+
+Result detail can navigate to Event Explorer or the exact run/item Processing Flow when the required identifiers are available.
 
 ## Event Explorer
 
 Open `/events`.
 
-The Event Explorer loads bounded retained history and then follows new observed events through backend SSE. Filters include event type, producer, Kafka topic, correlation ID, Collection Run ID, item ID, and trace ID. Selecting an event shows Kafka position/key, trace/correlation context, producer/schema metadata, and the decoded diagnostic payload.
+Event Explorer loads bounded retained technical history and follows new observed events through backend SSE.
 
-This is a bounded backend projection, not direct Kafka history. Backend retention determines how much older data remains available. Event detail can open the related run/item Processing Flow when item identity is available.
+Filters include backend-supported dimensions such as event type, producer, Kafka topic, correlation ID, Collection Run ID, item ID, and trace ID.
 
+Selecting an event shows available Kafka position/key, trace/correlation context, producer/schema metadata, and decoded diagnostic payload.
+
+This is a bounded backend projection, not direct Kafka history. Backend retention determines how much older data remains available.
 
 ## Processing Flow
 
 Open `/flows`, or use **Open processing flow** from Collection Runs, Results, or Event Explorer.
 
-Enter a Collection Run ID to inspect all retained branches for that run. Add a raw or normalized Item ID to inspect only that run-scoped branch. Equal item identities from different runs are intentionally kept separate by the backend contract.
+Enter a Collection Run ID to inspect retained branches for that run. Add a raw or normalized Item ID to inspect one run-scoped branch. Equal item identities from different runs remain separate because the backend scopes reconstruction by Collection Run.
 
-Each branch renders the backend processing stages in order. Stage cards show status, evidence classification, and timestamp when available. Connectors show backend edge kind and measured duration when available.
+Each branch renders backend-provided stages in order. Stage cards show status, evidence classification, and timestamp when available. Connectors show edge kind and measured duration when available.
 
-Select a stage to inspect:
+Select a stage to inspect available metadata such as:
 
 - event type, producer, and event identity;
-- raw/normalized item identity;
-- source and monitoring profile;
+- raw/normalized Item identity;
+- Source and Monitoring Profile;
 - outcome and score;
 - trace context;
 - Kafka topic, partition, offset, and key.
 
-`NOT OBSERVED`, partial-history state, and reconstruction limitations are intentional diagnostic information. The browser does not fill these gaps by inference. This view does not replace distributed tracing.
+`NOT OBSERVED`, partial-history state, and reconstruction limitations are intentional diagnostic information. The browser does not fill those gaps by inference. Processing Flow does not replace distributed tracing.
 
-## Cross-check UI data against REST
+## Cross-check browser data against REST
 
-Assuming the backend is running on `http://localhost:8080`, the following calls use the same public boundaries as the browser:
+Assuming the backend is running on `http://localhost:8080`, these calls use the same public boundaries as the browser:
 
 ```bash
 curl -s http://localhost:8080/api/v1/sources | jq
-```
-
-```bash
 curl -s http://localhost:8080/api/v1/monitoring-profiles | jq
-```
-
-```bash
 curl -s -X POST http://localhost:8080/api/v1/sources/<SOURCE_ID>/test | jq
-```
-
-```bash
 curl -s 'http://localhost:8080/api/v1/admin/collection-runs?limit=20' | jq
-```
-
-```bash
 curl -s 'http://localhost:8080/api/v1/admin/analysis/items?limit=20' | jq
-```
-
-```bash
 curl -s 'http://localhost:8080/api/v1/results?limit=20' | jq
 ```
 
-For a reconstructed Collection Run flow:
+For a Collection Run Processing Flow:
 
 ```bash
 curl -s 'http://localhost:8080/api/v1/flows/collection-runs/<COLLECTION_RUN_ID>' | jq
 ```
 
-For one run-scoped item branch:
+For one run-scoped Item branch:
 
 ```bash
 curl -s 'http://localhost:8080/api/v1/flows/collection-runs/<COLLECTION_RUN_ID>/items/<ITEM_ID>' | jq
 ```
 
-For one Result detail, take `monitoringProfileId` and `normalizedItemId` from the Results list, then call:
+For one Result detail, take `monitoringProfileId` and `normalizedItemId` from the Results list:
 
 ```bash
 curl -s \
@@ -191,50 +183,72 @@ curl -s \
   | jq
 ```
 
-## Automated browser verification
+## Deterministic browser verification
 
-After installing Playwright Chromium with `npm run e2e:install`, run the deterministic browser suite with:
+After installing Playwright Chromium with `npm run e2e:install`, run:
 
 ```bash
 npm run e2e
 ```
 
-The suite uses controlled REST responses and can run while the backend is stopped. It is the preferred fast check for navigation, configuration forms, Source Test presentation, request construction, filters, detail rendering, async states, resilience edge cases, and the reviewed Results visual baseline.
+The suite controls REST/SSE browser boundaries and can run while the backend is stopped. It covers navigation, configuration forms, Source Test, request construction, filters, details, async states, SSE browser behavior, accessibility, responsive/large-data edge cases, route loading/failure, and the reviewed visual baseline.
 
-The visual baseline is intentionally small. If an intentional UI change alters it, update the golden explicitly:
+Run only the reviewed non-updating visual comparison with:
+
+```bash
+npm run e2e:visual
+```
+
+If an intentional UI change requires a new golden image:
 
 ```bash
 npm run e2e:visual:update
 ```
 
-Inspect the changed PNG and then run `npm run e2e` again. Do not update visual baselines merely to silence an unexplained failure.
+Inspect the changed image and rerun `npm run e2e:visual`. Do not update visual baselines merely to silence an unexplained failure.
 
-To verify the browser against a real backend that is already running on the host:
+## Live-backend browser verification
+
+With a real backend already running:
 
 ```bash
 SIGNALHARVESTER_BACKEND_URL=http://127.0.0.1:8080 npm run e2e:live
 ```
 
-The live workflow creates a temporary RSS source, diagnostically tests it, and creates a temporary Monitoring Profile referencing that source. It opens a filtered Results page and establishes real SSE before the first manual run, then verifies both fixture Results arrive without `Refresh`. It keeps the durable Analysis check, opens Event Explorer with real SSE before a second manual run, verifies a newly correlated observed event arrives without `Refresh`, and follows a real Analysis event into the item and full-run Processing Flow views. Cleanup deletes the profile before deleting the source.
+The live workflow creates a temporary deterministic RSS Source and Monitoring Profile. It verifies Source Test, establishes Results SSE before a manual run, receives both fixture Results without refresh, keeps a durable Analysis check, establishes Event Observation SSE before a second run, receives a new correlated event without refresh, and follows a real Analysis event into item/full-run Processing Flow.
 
-By default the backend must be able to reach a loopback fixture on the same host. For a backend in a container, set `SIGNALHARVESTER_LIVE_FIXTURE_HOST` to a hostname that the backend container can use to reach the host fixture, when such routing is configured.
+Cleanup removes the Monitoring Profile before the Source so backend referential integrity is respected.
+
+For a containerized backend, set `SIGNALHARVESTER_LIVE_FIXTURE_HOST` when the backend needs a non-loopback hostname to reach the host fixture.
 
 ## Production route and asset verification
 
-Primary screens are loaded as route-level chunks. After building the frontend, verify the expected route entries and print the measured raw/gzip asset baseline with:
+Primary screens are route-level chunks. After building, verify the production manifest and measured assets with:
 
 ```bash
 npm run build
 npm run build:assets
 ```
 
-The command reads the Vite production manifest and fails if a primary feature page is no longer a dynamic build entry. Reported asset sizes are informational until a reviewed baseline justifies an explicit budget.
+The asset command fails if an expected primary feature page is no longer a dynamic build entry. Raw/gzip sizes are informational until a reviewed numeric budget exists.
+
+## Canonical repository gate
+
+Run routine repository verification with:
+
+```bash
+./run_checks.sh
+```
+
+This regenerates OpenAPI types, typechecks application/browser-test code, runs Vitest and deterministic Playwright, builds the production frontend, verifies dynamic route entries, and reports production assets.
+
+Live-backend E2E remains separate because this repository does not own backend infrastructure lifecycle.
 
 ## Browser troubleshooting
 
-When a screen looks inconsistent, use browser developer tools and check the Network panel first.
+When a screen looks inconsistent, inspect the browser Network panel first.
 
-Useful questions are:
+Check:
 
 - which `/api/...` request was sent;
 - which query parameters or request body fields were included;
@@ -244,6 +258,8 @@ Useful questions are:
 
 In normal local development, Vite proxies `/api` to the backend configured by `VITE_DEV_PROXY_TARGET`.
 
-## Current safety limitation
+## Current security limitation
 
-There is no login, session, token, or role model. The footer deliberately exposes that state. Do not deploy the current build as a public administration surface.
+The frontend has no login/session or role-aware implementation yet. Do not deploy the current build as a public administration surface.
+
+Backend authorization remains authoritative when the future frontend security workflow is added.

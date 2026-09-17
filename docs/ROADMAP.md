@@ -1,168 +1,127 @@
 ---
 type: Roadmap
 title: SignalHarvester Web roadmap
-description: Compact frontend roadmap, backend dependencies, and current implementation direction.
+description: Current frontend focus, accepted baseline, next product stages, backend dependencies, and deferred work.
 ---
 # SignalHarvester Web roadmap
 
-## Current focus
+## Current position
 
-The current bounded focus is frontend performance and runtime resilience. Responsive/large-data hardening and the targeted visual-regression baseline are accepted after their developer verification passed.
+The current bounded focus is `WEB.ROUTE_DELIVERY` in [`docs/specs/active/subspecs/ui-performance-runtime-resilience.md`](specs/active/subspecs/ui-performance-runtime-resilience.md).
 
-The active performance slice keeps the application shell small and usable while feature routes load, contains route-chunk failures inside the shell, and establishes a reproducible production asset baseline without introducing arbitrary size thresholds.
+Implementation is complete and verification is pending. Acceptance requires the focused route-loading/failure scenarios, deterministic browser suite, production build/manifest checks, asset report, reviewed visual comparison, and canonical repository gate.
 
-## Completed baseline
+The accepted baseline already includes configuration/operations, live Results, Event Explorer, Processing Flow, deterministic/live browser verification, targeted visual regression, accessibility hardening, and responsive/large-data containment.
 
-The current baseline includes:
+## Accepted product baseline
 
-- React/TypeScript/Vite application composition;
-- checked-in backend OpenAPI snapshot and generated TypeScript schema types;
-- Dashboard;
-- Sources CRUD;
-- manual Collection Run execution and inspection;
-- Analysis inspection;
-- Results list/filter/detail;
-- local Vite proxy for the standard backend development workflow;
-- deterministic Playwright browser coverage plus an opt-in live-backend E2E workflow;
-- canonical routine frontend verification through `run_checks.sh`.
+### Configuration and operations
 
-Browser verification was accepted on 2026-09-14 after both `./run_checks.sh` and `npm run e2e:live` passed in the developer environment.
+- `WEB.SOURCE_CONFIGURATION` — Source CRUD and enabled state.
+- `WEB.SOURCE_TEST` — bounded persisted-source diagnostic Test and preview.
+- `WEB.MONITORING_PROFILES` — profile CRUD, category, interval, criteria, ordered Source membership, and scheduled enabled state.
+- `WEB.COLLECTION_RUNS` — profile-driven manual Collection Runs and durable outcome inspection.
+- `WEB.DASHBOARD` — bounded operational overview.
 
-## P1 — complete configuration experience
+### Results and diagnostics
 
-Implemented and accepted:
+- `WEB.ANALYSIS_INSPECTION` — bounded normalization/deduplication inspection.
+- `WEB.RESULTS_BROWSING` — filtered Result list/detail and provenance navigation.
+- `WEB.RESULTS_LIVE` — race-free live Result delivery over SSE plus durable REST recovery.
+- `WEB.EVENT_EXPLORER` — bounded technical history and live observed events.
+- `WEB.PROCESSING_FLOW` — backend-reconstructed run/item processing-flow visualization.
 
-- monitoring-profile CRUD;
-- ordered source assignment to profiles;
-- interval and scheduled enabled-state configuration;
-- information category and criteria configuration;
-- source validation/test action with bounded extracted-item preview;
-- profile selection for manual Collection Runs.
+### UX and verification
 
-Dedicated analysis-setting controls remain deferred until the backend publishes a corresponding contract. The browser validates known input constraints while backend validation remains authoritative.
+- `WEB.BROWSER_VERIFICATION` — deterministic backend-independent Playwright coverage.
+- `WEB.LIVE_BACKEND_ACCEPTANCE` — bounded real-backend browser path over deterministic local fixtures.
+- `WEB.VISUAL_REGRESSION` — one reviewed dense Results/detail golden.
+- `WEB.ACCESSIBILITY` — skip navigation, semantic states, accessible naming, keyboard operation, and focus management.
+- `WEB.RESPONSIVE_LAYOUT` — phone/tablet and larger bounded-response containment.
 
-## P1 — live Results
+## Next frontend stages
 
-Implemented and accepted:
+### 1. Close route-delivery verification
 
-- subscribe to new Results without manual refresh;
-- reconnect safely after transient network failure;
-- merge live notifications with durable REST state;
-- preserve filters and selected detail while new data arrives;
-- make connection state visible when useful.
+Complete acceptance for `WEB.ROUTE_DELIVERY`, archive the active sub-spec, and update current-state documentation/lifecycle indexes in one closure change.
 
-Durable REST snapshots remain the recovery boundary; polling is not used as a replacement for SSE.
+Do not introduce numeric bundle budgets during closure unless a measured baseline and growth policy have been explicitly reviewed.
 
-## P1 — event diagnostics
+### 2. Synchronize backend contracts for security
 
-Implemented and accepted:
+Backend security capabilities now exist under `SECURITY.IDENTITY_ROLES`, `SECURITY.AUTHENTICATION`, and `SECURITY.AUTHORIZATION`.
 
-- add a bounded live Event Explorer;
-- filter by event type, producer/service, topic, correlation ID, run, and item where supported;
-- allow navigation from a run or result into correlated technical events;
-- avoid exposing raw Kafka as a browser protocol.
+Before frontend security implementation:
 
-## P1 — processing-flow visualization
+- update the checked-in OpenAPI snapshot from the authoritative backend contract;
+- regenerate TypeScript types;
+- review cookie, CSRF, CORS, `401`/`403`, and identity/role shapes as published by the backend;
+- define a bounded frontend security sub-spec.
 
-Implemented and accepted:
+Target frontend features: `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`.
 
-- visualize source -> collection -> Kafka -> analysis -> persistence -> result stages;
-- show timestamps, durations, evidence classification, and reconstruction limitations;
-- expose identifiers and Kafka metadata useful for diagnosis;
-- support run-level and run-scoped item-level inspection;
-- link Collection Runs, Results, Events, and flow stages into one diagnostic navigation model;
-- keep the visualization diagnostic rather than pretending to replace distributed tracing.
+### 3. Implement authentication/session and role-aware shell
 
+Implement browser authentication/session behavior over the synchronized backend contract.
 
-## P1 — UI resilience and edge-case verification
+The UI should provide login/session lifecycle, credentialed API behavior, explicit authentication/authorization failure handling, and role-aware navigation while keeping backend authorization authoritative.
 
-Implemented and accepted:
+Target frontend features: `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`.
 
-- exercise keyboard-only detail selection across tabular diagnostic screens;
-- verify SSE error/reconnect resynchronization without duplicate logical rows;
-- verify stale Result/Event deep links when bounded snapshots no longer contain the requested record;
-- verify partial Processing Flow reconstruction and explicit missing evidence;
-- verify long diagnostic values at a narrow mobile viewport without document-level horizontal overflow;
-- keep these checks deterministic and part of the normal Playwright suite.
+### 4. Add ADMIN identity management
 
-## P1 — targeted visual regression
+Expose backend-supported identity administration for users with the required ADMIN capability. Preserve backend invariants and do not infer role inheritance in the browser.
 
-Implemented and accepted:
+Target feature: `WEB.IDENTITY_ADMIN`.
 
-- keep one reviewed golden for the dense populated Results/detail composition;
-- compare it during the normal deterministic Playwright suite;
-- require an explicit update command for intentional layout changes;
-- review actual/diff artifacts instead of increasing tolerance blindly;
-- add future baselines only when they protect a distinct stable layout risk.
+### 5. Add typed Analysis settings to Monitoring Profiles
 
-## P1 — live diagnostic acceptance
+Dedicated Analysis controls remain blocked on the backend publishing the profile-owned Analysis settings contract.
 
-Implemented and accepted:
+After that contract exists:
 
-- establish the filtered Results SSE stream before the first real Collection Run and receive both fixture Results without manual refresh;
-- establish Event Observation SSE before the second real Collection Run and receive a newly correlated observed event without manual refresh;
-- navigate from a real Analysis event into its run-scoped item Processing Flow;
-- verify the corresponding full Collection Run flow contains both deterministic RSS branches;
-- keep the scenario bounded, deterministic, and based on the existing local RSS fixture rather than public internet data.
+- synchronize OpenAPI;
+- regenerate frontend types;
+- replace generic-only presentation where typed settings are available;
+- keep backend validation authoritative;
+- add deterministic browser coverage for create/edit/default/error behavior.
 
-This stage strengthens frontend/backend contract acceptance without duplicating backend Kafka, persistence, deduplication, or reconstruction semantics in browser assertions.
+Target feature: `WEB.MONITORING_PROFILES`.
 
-## P2 — accessibility hardening
+### 6. Build viewer-oriented Results presentation
 
-Implemented and accepted:
+Add `WEB.VIEWER_RESULTS` after the backend role/authorization model and Results contract are ready for the intended viewer workflow.
 
-- provide a first-focusable skip link into the main content landmark;
-- name core forms/tables and repeated Source/Profile actions for assistive technology;
-- move focus into configuration edit/create workflows and restore it after cancellation;
-- expose loading/live states as polite statuses and request/validation failures as alerts;
-- protect these behaviors with backend-independent Playwright assertions;
-- keep axe-core or another scanner deferred until a dedicated audit justifies the dependency and maintenance cost.
+Viewer presentation should focus on user-facing analyzed Results and hide operational/internal details that belong to admin/diagnostic screens.
 
-## P2 — responsive and large-data UX hardening
+Related backend feature: `PRESENTATION.VIEWER_RESULTS`.
 
-Implemented and accepted:
+### 7. Complete production delivery integration
 
-- exercise 320–390 px and tablet layouts beyond the existing diagnostic overflow regression;
-- harden long Source/Profile names, tags, diagnostic payloads, and many-branch Processing Flow layouts;
-- exercise larger Source/Profile collections without inventing client-side pagination semantics;
-- improve large-table navigation only when backend pagination contracts justify it;
-- add reusable form primitives only where repetition demonstrates a real maintenance benefit.
+Add the real production frontend image/deployment integration required by the platform design, including health/build verification and final frontend/backend Kubernetes acceptance.
 
-
-## P2 — frontend performance and runtime resilience
-
-Current focus; implementation complete and verification pending:
-
-- lazy-load primary feature screens at route boundaries;
-- keep shell navigation visible with an accessible route-loading state;
-- contain lazy-route failures with recoverable UI instead of a blank application;
-- verify route pages remain dynamic production-build entries;
-- report raw/gzip production asset sizes as a measured baseline before introducing numeric budgets.
-
-## P2 — delivery and security hardening
-
-Before public/shared deployment, and in coordination with the backend security/exposure model:
-
-- add authentication and authorization;
-- define the cross-origin deployment policy;
-- retain the accepted keyboard/accessibility behavior across protected workflows;
-- add production frontend deployment assets as required by the platform deployment design;
-- integrate frontend health/build verification into the intended deployment workflow.
+Target features: `WEB.ROUTE_DELIVERY`, `WEB.CONTRACT_INTEGRATION`, `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`.
 
 ## Backend dependencies
 
-The frontend roadmap intentionally does not invent contracts for missing backend capabilities. The backend contracts required for current configuration and diagnostics are available: monitoring profiles, Source Test, Results SSE, Event Observation, and processing-flow reconstruction.
+The frontend must not invent missing backend contracts.
 
-Remaining major backend/product dependencies include:
+Current backend dependencies for upcoming frontend work are:
 
-- dedicated analysis-setting configuration beyond the current criteria map;
-- authentication/authorization contract;
-- production deployment and observability integration.
+- profile-owned typed Analysis settings under `CONFIGURATION.MONITORING_PROFILES` / `ANALYSIS.CLASSIFICATION`;
+- any production Results pagination/search contract needed for larger viewer browsing under `RESULTS.BROWSING`;
+- authoritative security/OpenAPI shapes under `SECURITY.IDENTITY_ROLES`, `SECURITY.AUTHENTICATION`, and `SECURITY.AUTHORIZATION`;
+- production deployment/exposure integration under `DEPLOYMENT.KUBERNETES` and `DELIVERY.FRONTEND_BACKEND_BOUNDARY`.
 
 ## Deferred until justified
+
+Do not add these without a concrete requirement:
 
 - a second frontend application for product vs admin screens;
 - Redux or another global client-state framework;
 - a large component framework;
-- WebSockets where SSE is sufficient;
-- frontend access to Kafka, PostgreSQL, or backend implementation models.
+- WebSockets where SSE remains sufficient;
+- a service worker/offline mode;
+- external browser analytics/error-reporting infrastructure;
+- frontend access to Kafka, PostgreSQL, or backend implementation models;
+- arbitrary bundle-size budgets without a reviewed measured baseline.
