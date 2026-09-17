@@ -4,7 +4,7 @@ title: SignalHarvester Web initial product specification
 description: Active frontend umbrella specification for configuration, operational inspection, Results, live updates, and event-flow diagnostics.
 document_role: umbrella
 spec_status: active
-current_focus: subspecs/ui-performance-runtime-resilience.md
+current_focus: subspecs/ui-authentication-authorization-foundation.md
 ---
 # SignalHarvester Web initial product specification
 
@@ -18,7 +18,9 @@ Frontend implementation details belong here rather than in the backend repositor
 
 ## Current implementation focus
 
-The current bounded focus is [`subspecs/ui-performance-runtime-resilience.md`](subspecs/ui-performance-runtime-resilience.md). It adds route-level code splitting, explicit lazy-route loading/failure states, and a reproducible production asset baseline without inventing numeric bundle budgets.
+The current bounded focus is [`subspecs/ui-authentication-authorization-foundation.md`](subspecs/ui-authentication-authorization-foundation.md). It synchronizes the accepted backend security contract, adds browser login/current-principal/logout lifecycle, credentialed REST/SSE transport, CSRF proof, and explicit-role navigation without moving authorization enforcement into React.
+
+The earlier [`subspecs/ui-performance-runtime-resilience.md`](subspecs/ui-performance-runtime-resilience.md) remains active with `verification-pending` status. Its implementation is complete but has not yet met the repository acceptance gate.
 
 The accepted baseline already provides Dashboard, Sources CRUD and Source Test, Monitoring Profiles, profile-driven Collection Runs, Analysis inspection, Results list/filter/detail with SSE updates, Event Explorer history/live delivery, Processing Flow, resilience coverage, targeted visual regression, real-backend diagnostic acceptance, accessibility hardening, and responsive/large-data hardening.
 
@@ -82,8 +84,10 @@ The frontend does not own:
 | Live diagnostic acceptance | Implemented and accepted |
 | Accessibility hardening | Implemented and accepted |
 | Responsive / large-data UX hardening | Implemented and accepted |
-| Frontend performance / runtime resilience | Implemented in current focus; verification pending |
-| Authentication/authorization | Pending |
+| Frontend performance / runtime resilience | Implemented; verification pending |
+| Authentication/session and role-aware shell | Implemented in current focus; verification pending |
+| ADMIN identity management | Pending |
+| Viewer-specific Results presentation | Pending |
 
 ## Requirement map
 
@@ -326,15 +330,17 @@ The frontend must remain independently buildable and deployable from the backend
 
 Development may use a Vite reverse proxy. Separately hosted builds must use an explicit backend origin and a compatible backend CORS/security policy.
 
-### UI-R16 — trusted-environment security until hardened
+### UI-R16 — authenticated browser security and backend-authoritative authorization
 
 Features: `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`. Related backend: `SECURITY.IDENTITY_ROLES`, `SECURITY.AUTHENTICATION`, `SECURITY.AUTHORIZATION`.
 
-Until authentication and authorization are implemented, the application must clearly remain a trusted-environment tool.
+The frontend must authenticate through the published backend login/current-principal/logout contract and must support the backend's cookie/CSRF transport for protected REST and native SSE.
 
-The current build must not be documented as internet-safe.
+Frontend role checks may control routes, navigation, and presentation, but backend authorization must remain authoritative. The browser must not infer role hierarchy; in particular, `ADMIN` must not imply `VIEWER`.
 
-A later security slice must define authentication, authorization, cross-origin policy, and operational action protection before public/shared deployment.
+Authentication failure and authorization failure must remain distinct: protected `401` responses end the frontend session, while `403` responses keep the principal authenticated and expose an authorization error.
+
+Current status: implemented in [`subspecs/ui-authentication-authorization-foundation.md`](subspecs/ui-authentication-authorization-foundation.md); developer verification pending. ADMIN identity management and the dedicated viewer Results presentation remain separate later features.
 
 ### UI-R17 — accessibility and usability baseline
 
@@ -383,7 +389,7 @@ Primary feature screens should be delivered as route-level chunks so the applica
 
 Production verification should preserve the intended dynamic route structure and report generated asset sizes from a measured build. Numeric bundle budgets should be introduced only after the baseline is reviewed.
 
-Current status: implemented in the current focus; verification pending.
+Current status: implemented; verification remains pending in [`subspecs/ui-performance-runtime-resilience.md`](subspecs/ui-performance-runtime-resilience.md).
 
 ## Non-goals for the current product slice
 

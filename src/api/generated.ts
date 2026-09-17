@@ -316,10 +316,141 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Authenticate with username and password
+         * @description On success the backend sets an HttpOnly JWT cookie and a readable signed CSRF cookie.
+         */
+        post: operations["login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Clear browser authentication credentials */
+        post: operations["logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the current authenticated principal */
+        get: operations["getCurrentPrincipal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List persisted application identities */
+        get: operations["listUsers"];
+        put?: never;
+        /** Create an application identity */
+        post: operations["createUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        /** Get one persisted application identity */
+        get: operations["getUser"];
+        /** Replace identity enabled state and role assignments */
+        put: operations["updateUser"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        LoginRequest: {
+            username: string;
+            password: string;
+        };
+        /** @enum {string} */
+        UserRole: "USER" | "VIEWER" | "ADMIN" | "BOT";
+        /** @enum {string} */
+        IdentityType: "HUMAN" | "BOT";
+        CurrentPrincipal: {
+            /** Format: uuid */
+            id: string;
+            username: string;
+            identityType: components["schemas"]["IdentityType"];
+            roles: components["schemas"]["UserRole"][];
+        };
+        UserAccount: {
+            /** Format: uuid */
+            id: string;
+            username: string;
+            identityType: components["schemas"]["IdentityType"];
+            enabled: boolean;
+            roles: components["schemas"]["UserRole"][];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        UserCreateRequest: {
+            username: string;
+            password: string;
+            identityType: components["schemas"]["IdentityType"];
+            enabled: boolean;
+            /** @default [] */
+            roles: components["schemas"]["UserRole"][];
+        };
+        UserUpdateRequest: {
+            enabled: boolean;
+            roles: components["schemas"]["UserRole"][];
+        };
         /** @enum {string} */
         SourceType: "REST" | "RSS" | "HTML";
         Source: {
@@ -1357,6 +1488,284 @@ export interface operations {
             };
             /** @description Result not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Authentication succeeded and browser credentials were set */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid credentials or disabled account */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Browser authentication cookie cleared */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description CSRF validation failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getCurrentPrincipal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current principal */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentPrincipal"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listUsers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Persisted identities without credential material */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserAccount"][];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description ADMIN role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Identity created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserAccount"];
+                };
+            };
+            /** @description Invalid identity configuration */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description ADMIN role required or CSRF validation failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Username already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Persisted identity */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserAccount"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description ADMIN role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Identity not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Identity updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserAccount"];
+                };
+            };
+            /** @description Invalid identity configuration */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description ADMIN role required or CSRF validation failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Identity not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Update would leave the deployment without an enabled ADMIN identity */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

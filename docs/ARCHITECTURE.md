@@ -70,10 +70,11 @@ Feature folders own screen-specific presentation and interaction logic. Introduc
 
 - React root creation;
 - `QueryClientProvider`;
+- `AuthSessionProvider`;
 - `BrowserRouter`;
 - application-wide CSS.
 
-`src/App.tsx` owns the route table. `AppShell` owns common navigation and layout.
+`src/App.tsx` owns the route table. `/login` is the eager authentication entry point; protected routes are composed behind authentication and role presentation guards. `AppShell` owns authenticated navigation, identity display, logout, and common layout.
 
 Primary routes are lazy-loaded:
 
@@ -90,7 +91,7 @@ The shell remains mounted while a route module loads. A `Suspense` state exposes
 
 Future screens should extend this routing model. Preserve route-level splitting for primary screens unless measured delivery behavior justifies eager loading.
 
-Primary features: `WEB.APP_SHELL`, `WEB.ROUTE_DELIVERY`, `WEB.ASYNC_FEEDBACK`.
+Primary features: `WEB.APP_SHELL`, `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`, `WEB.ROUTE_DELIVERY`, `WEB.ASYNC_FEEDBACK`.
 
 ## Backend contract ownership
 
@@ -114,7 +115,7 @@ backend OpenAPI
 
 Do not manually duplicate backend DTOs or hand-edit generated types after normal generation is available.
 
-`src/api/client.ts` is the current transport boundary. It owns API base URL handling, REST path/query construction, JSON request/response handling, and common HTTP error conversion. Feature components use this adapter through TanStack Query instead of issuing independent ad-hoc requests.
+`src/api/client.ts` is the current transport boundary. It owns API base URL handling, REST path/query construction, credentialed fetch, double-submit CSRF forwarding for unsafe requests, JSON/text response handling, common HTTP error conversion, and protected-request `401` notification. Feature components use this adapter through TanStack Query instead of issuing independent ad-hoc requests. JavaScript never reads or decodes the HttpOnly authentication JWT.
 
 The adapter should remain small while that keeps behavior explicit. Introduce a larger generated client or another HTTP library only when the existing boundary becomes materially difficult to maintain.
 
@@ -122,7 +123,7 @@ Primary feature: `WEB.CONTRACT_INTEGRATION`.
 
 ## Server and local state
 
-TanStack Query owns remote/server state such as Sources, Monitoring Profiles, Collection Runs, Analysis inspection records, Results, observed events, and Processing Flows.
+TanStack Query owns remote/server state such as the current authenticated principal, Sources, Monitoring Profiles, Collection Runs, Analysis inspection records, Results, observed events, and Processing Flows. The principal is re-read from `/api/v1/auth/me` after login rather than inferred from credentials or JWT contents.
 
 Local React state owns transient browser concerns such as:
 
@@ -157,7 +158,7 @@ Primary feature: `WEB.ASYNC_FEEDBACK`.
 
 The browser uses REST for durable snapshots and backend SSE for live Results and technical Event Observation.
 
-Native `EventSource` owns reconnect and `Last-Event-ID` behavior. For race-free bootstrap, the frontend waits for SSE `ready`, then loads the REST snapshot while buffering subsequent live messages, and finally merges both into the TanStack Query cache.
+Native `EventSource` is created with `withCredentials: true` and owns reconnect and `Last-Event-ID` behavior. Authentication is never placed in SSE URLs. For race-free bootstrap, the frontend waits for SSE `ready`, then loads the REST snapshot while buffering subsequent live messages, and finally merges both into the TanStack Query cache.
 
 Live delivery supplements durable reads. It does not replace backend persistence or turn the browser into an event-store client.
 
@@ -193,19 +194,26 @@ Primary features: `WEB.ACCESSIBILITY`, `WEB.RESPONSIVE_LAYOUT`.
 
 ## Security boundary
 
-Backend security is the enforcement boundary. Frontend role checks may control navigation and presentation, but they must not replace backend authorization.
+Backend security is the enforcement boundary. Frontend role checks control navigation and presentation only; they must not replace backend authorization or infer role hierarchy. In particular, `ADMIN` does not imply `VIEWER`.
 
-The current frontend does not yet implement authentication/session or role-aware workflows. Until that slice is implemented against the backend contract, treat the application as trusted-environment software.
+The implemented security foundation uses the backend-published browser contract:
 
-A public/shared deployment must address at least:
+- anonymous login through `POST /api/v1/auth/login`;
+- current-principal bootstrap through `GET /api/v1/auth/me`;
+- HttpOnly authentication cookie transport through `credentials: 'include'`;
+- readable signed `XSRF-TOKEN` copied exactly into `X-CSRF-TOKEN` for unsafe requests other than login;
+- native SSE opened with credentials and without tokens in URLs;
+- logout through the same credentialed/CSRF-protected transport;
+- protected-request `401` invalidates the frontend principal and non-auth application cache;
+- `403` preserves the authenticated principal and remains an authorization error.
 
-- authentication/session lifecycle;
-- authorization-aware navigation and workflows;
-- CSRF behavior required by cookie authentication;
-- compatible backend CORS policy for cross-origin hosting;
-- safe presentation of source-management capabilities that authorize backend outbound access.
+`AuthSessionProvider` owns principal bootstrap/lifecycle. Login passwords remain local form state and are not stored in TanStack Query, Web Storage, URLs, or logs.
 
-Planned features: `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`, `WEB.IDENTITY_ADMIN`, `WEB.VIEWER_RESULTS`.
+Role-aware presentation currently exposes administrative/diagnostic screens to explicit `ADMIN`. The existing operational Results screen is mounted only for principals that have both `ADMIN` and `VIEWER`; a `VIEWER`-only principal receives a safe placeholder until `WEB.VIEWER_RESULTS` is implemented. `USER`-only and `BOT`-only principals receive no invented browser capability.
+
+Cross-origin production hosting still depends on an explicitly compatible backend CORS and cookie policy. ADMIN identity management and the final viewer Results presentation remain separate stages.
+
+Features: `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`. Planned follow-ups: `WEB.IDENTITY_ADMIN`, `WEB.VIEWER_RESULTS`.
 
 ## Testing architecture
 
@@ -217,7 +225,7 @@ The browser verification layers are:
 
 1. `npm run e2e` — deterministic backend-independent navigation, rendering, forms, request construction, filters, detail loading, SSE browser behavior, accessibility, responsive edge cases, route loading/failure, and representative async states;
 2. `npm run e2e:visual` — focused non-updating comparison against the reviewed Results/detail golden;
-3. `npm run e2e:live` — bounded opt-in acceptance against a separately running backend and deterministic local RSS fixture.
+3. `npm run e2e:live` — bounded opt-in acceptance against a separately running security-enabled backend and deterministic local RSS fixture, after browser login with an explicit `ADMIN` + `VIEWER` test identity.
 
 The live suite verifies browser-visible REST/SSE and processing-flow behavior. It does not verify Kafka offsets, database rows, transactions, deduplication semantics, or backend analysis rules.
 

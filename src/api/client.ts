@@ -1,5 +1,7 @@
 import type {
   AnalysisItemInspection,
+  CurrentPrincipal,
+  LoginRequest,
   CollectionRun,
   CollectionRunRequest,
   MonitoringProfile,
@@ -14,6 +16,14 @@ import type {
 } from './types';
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
+const csrfCookieName = 'XSRF-TOKEN';
+const csrfHeaderName = 'X-CSRF-TOKEN';
+const unauthorizedListeners = new Set<() => void>();
+
+export function subscribeToUnauthorized(listener: () => void): () => void {
+  unauthorizedListeners.add(listener);
+  return () => unauthorizedListeners.delete(listener);
+}
 
 
 export interface EventFilters {
@@ -52,18 +62,31 @@ export class ApiError extends Error {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
+  const method = (init?.method ?? 'GET').toUpperCase();
   headers.set('Accept', 'application/json');
-  if (init?.body) {
+  if (init?.body || requiresCsrf(method)) {
     headers.set('Content-Type', 'application/json');
+  }
+  if (requiresCsrf(method) && path !== '/api/v1/auth/login' && !headers.has(csrfHeaderName)) {
+    const csrfToken = readCookie(csrfCookieName);
+    if (csrfToken) {
+      headers.set(csrfHeaderName, csrfToken);
+    }
   }
 
   const response = await fetch(`${apiBaseUrl}${path}`, {
     ...init,
+    credentials: 'include',
     headers,
   });
 
   if (!response.ok) {
     const body = await parseResponseBody(response);
+    if (response.status === 401 && path !== '/api/v1/auth/login') {
+      for (const listener of unauthorizedListeners) {
+        listener();
+      }
+    }
     throw new ApiError(response.status, errorMessage(response.status, body), body);
   }
 
@@ -71,7 +94,16 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     return undefined as T;
   }
 
-  return (await response.json()) as T;
+  const body = await response.text();
+  if (!body.trim()) {
+    return undefined as T;
+  }
+
+  const contentType = response.headers.get('content-type') ?? '';
+  if (contentType.includes('application/json')) {
+    return JSON.parse(body) as T;
+  }
+  return body as T;
 }
 
 async function parseResponseBody(response: Response): Promise<unknown> {
@@ -94,10 +126,48 @@ function errorMessage(status: number, body: unknown): string {
       }
     }
   }
+  if (status === 401) {
+    return 'Authentication is required.';
+  }
+  if (status === 403) {
+    return 'You do not have permission to perform this action.';
+  }
   return `Request failed with HTTP ${status}`;
 }
 
+function requiresCsrf(method: string): boolean {
+  return method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS';
+}
+
+function readCookie(name: string): string | null {
+  if (typeof document === 'undefined') {
+    return null;
+  }
+
+  const prefix = `${name}=`;
+  for (const part of document.cookie.split(';')) {
+    const cookie = part.trim();
+    if (cookie.startsWith(prefix)) {
+      return cookie.slice(prefix.length);
+    }
+  }
+  return null;
+}
+
 export const api = {
+  login: (payload: LoginRequest) =>
+    request<void>('/api/v1/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  logout: () =>
+    request<void>('/api/v1/auth/logout', {
+      method: 'POST',
+    }),
+
+  getCurrentPrincipal: () => request<CurrentPrincipal>('/api/v1/auth/me'),
+
   listSources: () => request<Source[]>('/api/v1/sources'),
 
   getSource: (sourceId: string) =>

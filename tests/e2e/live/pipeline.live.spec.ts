@@ -1,17 +1,24 @@
-import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import type { CollectionRun, MonitoringProfile, Source, SourceTestResult } from '../../../src/api/types';
 import { startRssFixtureServer } from '../support/rss-fixture';
 
 const backendUrl = (process.env.SIGNALHARVESTER_BACKEND_URL || 'http://127.0.0.1:8080').replace(/\/$/, '');
 const resultWaitMs = Number(process.env.SIGNALHARVESTER_LIVE_RESULT_WAIT_MS || '30000');
 const collectionWaitMs = Number(process.env.SIGNALHARVESTER_LIVE_COLLECTION_WAIT_MS || '60000');
+const liveUsername = process.env.SIGNALHARVESTER_LIVE_USERNAME ?? '';
+const livePassword = process.env.SIGNALHARVESTER_LIVE_PASSWORD ?? '';
 
 test('live browser flow verifies Results SSE, Event Observation SSE, and Processing Flow reconstruction', async ({
   page,
   context,
-  request,
 }) => {
   test.setTimeout(collectionWaitMs * 2 + resultWaitMs * 4 + 60_000);
+
+  if (!liveUsername || !livePassword) {
+    throw new Error(
+      'Live security acceptance requires SIGNALHARVESTER_LIVE_USERNAME and SIGNALHARVESTER_LIVE_PASSWORD.',
+    );
+  }
 
   const fixtureServer = await startRssFixtureServer();
   const unique = `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
@@ -22,6 +29,13 @@ test('live browser flow verifies Results SSE, Event Observation SSE, and Process
 
   try {
     await page.goto('/sources');
+    await expect(page.getByRole('heading', { level: 1, name: 'Sign in' })).toBeVisible();
+    await page.getByLabel('Username').fill(liveUsername);
+    await page.getByLabel('Password').fill(livePassword);
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    await expect(page).toHaveURL(/\/sources$/);
+    await expect(page.getByRole('link', { name: 'Sources' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Results' })).toBeVisible();
     await page.getByLabel('Name').fill(sourceName);
     await page.getByLabel('Type').selectOption('RSS');
     await page.getByLabel('Location').fill(fixtureServer.location);
@@ -152,8 +166,8 @@ test('live browser flow verifies Results SSE, Event Observation SSE, and Process
     await expect(eventPage.getByRole('heading', { name: 'Collection-run branches' })).toBeVisible();
     await expect(eventPage.getByRole('link', { name: 'Open item flow' })).toHaveCount(2);
   } finally {
-    await cleanupProfile(request, profileId);
-    await cleanupSource(request, sourceId);
+    await cleanupProfile(context, profileId);
+    await cleanupSource(context, sourceId);
     await fixtureServer.close();
   }
 });
@@ -206,26 +220,38 @@ async function waitForLoadedCount(
     .toBe(expected);
 }
 
-async function cleanupProfile(request: APIRequestContext, profileId: string | null): Promise<void> {
+async function cleanupProfile(context: BrowserContext, profileId: string | null): Promise<void> {
   if (!profileId) {
     return;
   }
 
-  const response = await request.delete(
+  const response = await context.request.delete(
     `${backendUrl}/api/v1/monitoring-profiles/${encodeURIComponent(profileId)}`,
+    { headers: await csrfHeaders(context) },
   );
   if (!response.ok() && response.status() !== 404) {
     throw new Error(`Failed to delete live-test monitoring profile ${profileId}: HTTP ${response.status()}`);
   }
 }
 
-async function cleanupSource(request: APIRequestContext, sourceId: string | null): Promise<void> {
+async function cleanupSource(context: BrowserContext, sourceId: string | null): Promise<void> {
   if (!sourceId) {
     return;
   }
 
-  const response = await request.delete(`${backendUrl}/api/v1/sources/${encodeURIComponent(sourceId)}`);
+  const response = await context.request.delete(
+    `${backendUrl}/api/v1/sources/${encodeURIComponent(sourceId)}`,
+    { headers: await csrfHeaders(context) },
+  );
   if (!response.ok() && response.status() !== 404) {
     throw new Error(`Failed to delete live-test source ${sourceId}: HTTP ${response.status()}`);
   }
+}
+
+async function csrfHeaders(context: BrowserContext): Promise<Record<string, string>> {
+  const csrfCookie = (await context.cookies()).find((cookie) => cookie.name === 'XSRF-TOKEN');
+  if (!csrfCookie) {
+    throw new Error('Live security acceptance did not receive the XSRF-TOKEN cookie.');
+  }
+  return { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfCookie.value };
 }

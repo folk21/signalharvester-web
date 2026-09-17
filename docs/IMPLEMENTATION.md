@@ -29,7 +29,7 @@ Results and diagnostics:
 - **Event Explorer** (`/events`) — bounded retained event history plus live SSE, filters, and event detail. Feature: `WEB.EVENT_EXPLORER`.
 - **Processing Flow** (`/flows`) — backend-reconstructed run/item branches, evidence, durations, limitations, and stage metadata. Feature: `WEB.PROCESSING_FLOW`.
 
-Cross-cutting accepted behavior includes deterministic browser verification, live-backend acceptance, targeted visual regression, accessibility hardening, and responsive/large-data containment. Route-level performance/runtime-resilience behavior is implemented but remains verification-pending in the active sub-spec.
+Cross-cutting accepted behavior includes deterministic browser verification, live-backend acceptance, targeted visual regression, accessibility hardening, and responsive/large-data containment. Route-level performance/runtime-resilience remains implemented but verification-pending. The authentication/session and role-aware shell foundation is also implemented and verification-pending in the current active sub-spec.
 
 ## Sources
 
@@ -131,7 +131,7 @@ Many run-level branches remain in backend-provided order inside a bounded vertic
 
 ## Dashboard
 
-Dashboard combines small bounded reads from Sources, Monitoring Profiles, Collection Runs, Analysis, and Results.
+Dashboard combines small bounded reads from Sources, Monitoring Profiles, Collection Runs, and Analysis. It also reads Results when the current principal explicitly has `VIEWER`. An `ADMIN` principal without `VIEWER` does not call the Results boundary.
 
 It is an operational overview rather than a separate backend aggregation contract. A dedicated backend summary endpoint should be introduced only if independent reads become inefficient or semantically inconsistent.
 
@@ -141,13 +141,37 @@ The checked-in backend REST snapshot is `openapi/signalharvester-v1.yaml`.
 
 `openapi-typescript` generates `src/api/generated.ts`. Application-facing aliases live in `src/api/types.ts`. The browser `fetch` transport and common error handling live in `src/api/client.ts`.
 
-The current snapshot includes Monitoring Profiles, Source Test, Results SSE, Event Observation, and Processing Flow contracts. Frontend code consumes those public boundaries and never reads PostgreSQL or Kafka directly.
+The synchronized snapshot includes authentication/current-principal contracts, ADMIN identity-management contracts, Monitoring Profiles, Source Test, Results SSE, Event Observation, and Processing Flow. This slice consumes the authentication/current-principal contract but intentionally leaves ADMIN identity-management UI for `WEB.IDENTITY_ADMIN`. Frontend code consumes public boundaries only and never reads PostgreSQL or Kafka directly.
 
 Feature: `WEB.CONTRACT_INTEGRATION`.
 
+
+## Authentication and role-aware shell
+
+The security foundation is implemented against the backend-owned cookie/CSRF contract and remains verification-pending.
+
+`AuthSessionProvider` owns current-principal state through TanStack Query. Application bootstrap calls `GET /api/v1/auth/me`; a `401` produces anonymous state, while non-`401` bootstrap failures remain explicit and retryable.
+
+`/login` posts username/password to `POST /api/v1/auth/login`, then re-reads `/api/v1/auth/me`. The frontend does not decode or persist the HttpOnly JWT. Passwords remain local form state and are cleared after successful authentication.
+
+`src/api/client.ts` sends `credentials: 'include'` for REST. Unsafe requests other than login copy the readable `XSRF-TOKEN` cookie into `X-CSRF-TOKEN` when present. Results/Event Observation `EventSource` instances use `withCredentials: true` and do not place credentials in URLs.
+
+Logout calls the backend through the same CSRF-protected adapter. Successful logout, logout `401`, or a protected application `401` clears the principal and removes non-auth TanStack Query data so another identity cannot inherit stale cached application state. A `403` keeps the current principal and remains visible as an authorization failure.
+
+Role checks are additive presentation checks, not enforcement:
+
+- explicit `ADMIN` exposes Dashboard, Sources, Monitoring Profiles, Collection Runs, Analysis Items, Event Explorer, and Processing Flow;
+- the existing operational Results screen requires both explicit `ADMIN` and explicit `VIEWER` because it includes diagnostic/admin cross-navigation;
+- `VIEWER` without `ADMIN` is authenticated and may navigate to `/results`, but receives a bounded placeholder until `WEB.VIEWER_RESULTS` is implemented;
+- `USER` or `BOT` alone do not gain another role implicitly.
+
+Admin/diagnostic Result links are hidden when `VIEWER` is absent. The backend remains authoritative and may still return `403` regardless of frontend presentation.
+
+Features: `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`, `WEB.CONTRACT_INTEGRATION`.
+
 ## Browser state
 
-TanStack Query owns remote/server state, including Sources, Monitoring Profiles, Collection Runs, Analysis items, Results, observed events, and reconstructed Processing Flows.
+TanStack Query owns remote/server state, including the current principal, Sources, Monitoring Profiles, Collection Runs, Analysis items, Results, observed events, and reconstructed Processing Flows.
 
 Page-local React state owns forms, filters, source-test presentation, current selections, and other transient interaction state. The application does not use a second global client-state library.
 
@@ -193,11 +217,11 @@ The canonical routine repository gate is `./run_checks.sh`. It:
 5. builds the production frontend;
 6. verifies dynamic route entries and reports production assets.
 
-The deterministic browser suite covers core navigation/configuration, Source Test, Monitoring Profile and Collection Run request construction, Analysis filters, Results and Event Explorer REST/SSE behavior, Processing Flow, representative async states, accessibility interactions, SSE reconnect/resnapshot, stale bounded deep links, partial flow evidence, responsive/large-data containment, and delayed/failed lazy-route delivery.
+The deterministic browser suite covers authentication bootstrap/login/logout, additive role isolation, CSRF request construction, credentialed EventSource creation, `401`/`403` behavior, core navigation/configuration, Source Test, Monitoring Profile and Collection Run request construction, Analysis filters, Results and Event Explorer REST/SSE behavior, Processing Flow, representative async states, accessibility interactions, SSE reconnect/resnapshot, stale bounded deep links, partial flow evidence, responsive/large-data containment, and delayed/failed lazy-route delivery.
 
 `npm run e2e:visual` owns the focused non-updating comparison for the reviewed Results/detail golden. `npm run e2e:visual:update` is reserved for intentional reviewed baseline changes.
 
-The opt-in `npm run e2e:live` workflow owns a temporary RSS fixture, Source, and Monitoring Profile. It verifies real Results SSE, durable Analysis visibility, real Event Observation SSE, and navigation into backend-reconstructed item/full-run Processing Flow before cleanup.
+The opt-in `npm run e2e:live` workflow authenticates through the browser with an explicit `ADMIN` + `VIEWER` test identity, then owns a temporary RSS fixture, Source, and Monitoring Profile. It verifies real Results SSE, durable Analysis visibility, real Event Observation SSE, navigation into backend-reconstructed item/full-run Processing Flow, and authenticated CSRF-protected cleanup.
 
 Accepted browser verification features: `WEB.BROWSER_VERIFICATION`, `WEB.VISUAL_REGRESSION`, `WEB.LIVE_BACKEND_ACCEPTANCE`.
 
@@ -206,10 +230,8 @@ Accepted browser verification features: `WEB.BROWSER_VERIFICATION`, `WEB.VISUAL_
 The frontend does not yet implement:
 
 - dedicated typed Analysis-setting controls beyond the current criteria map;
-- login/session handling;
-- role-aware navigation and authorization UX;
-- ADMIN identity-management workflows;
-- viewer-specific Results presentation;
+- ADMIN identity-management workflows over the already synchronized backend contract;
+- the dedicated viewer-specific Results list/detail experience;
 - final production frontend deployment integration.
 
-The backend repository now owns security capabilities and remains authoritative for their contract/behavior. The frontend's checked-in OpenAPI snapshot has not yet been synchronized to those security APIs, so the frontend security work remains a future contract-integration stage rather than current implemented behavior.
+The authentication/session and role-aware shell foundation is implemented but remains verification-pending until its deterministic/browser/build acceptance and protected live-backend scenario pass. The older route-delivery slice is also still verification-pending. Backend authorization remains authoritative regardless of frontend presentation.

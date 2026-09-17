@@ -8,15 +8,16 @@ export async function installMockEventSource(page: Page, autoReady = false) {
       static readonly OPEN = 1;
       static readonly CLOSED = 2;
       readonly url: string;
-      readonly withCredentials = false;
+      readonly withCredentials: boolean;
       readyState = MockEventSource.OPEN;
       onopen: ((event: Event) => void) | null = null;
       onmessage: ((event: MessageEvent) => void) | null = null;
       onerror: ((event: Event) => void) | null = null;
 
-      constructor(url: string | URL) {
+      constructor(url: string | URL, init?: EventSourceInit) {
         super();
         this.url = String(url);
+        this.withCredentials = init?.withCredentials ?? false;
         sources.push(this);
         if (autoReady) {
           queueMicrotask(() =>
@@ -36,6 +37,12 @@ export async function installMockEventSource(page: Page, autoReady = false) {
         return sources.some((source) =>
           source.readyState !== MockEventSource.CLOSED && source.url.includes(urlIncludes),
         );
+      },
+      __signalHarvesterSseWithCredentials(urlIncludes: string) {
+        const source = [...sources].reverse().find((candidate) =>
+          candidate.readyState !== MockEventSource.CLOSED && candidate.url.includes(urlIncludes),
+        );
+        return source?.withCredentials ?? null;
       },
       __signalHarvesterEmitSse(eventName: string, data: unknown, urlIncludes?: string) {
         const source = [...sources].reverse().find((candidate) =>
@@ -83,4 +90,16 @@ export async function emitSse(
   if (!emitted) {
     throw new Error(`No open mock EventSource matched ${urlIncludes ?? 'the current stream'}`);
   }
+}
+
+
+export async function sseUsesCredentials(page: Page, urlIncludes: string): Promise<boolean | null> {
+  return page.evaluate((expectedUrl) => {
+    const read = (
+      window as typeof window & {
+        __signalHarvesterSseWithCredentials?: (urlPart: string) => boolean | null;
+      }
+    ).__signalHarvesterSseWithCredentials;
+    return read?.(expectedUrl) ?? null;
+  }, urlIncludes);
 }

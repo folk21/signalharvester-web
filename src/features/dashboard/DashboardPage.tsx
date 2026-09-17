@@ -3,9 +3,12 @@ import { api } from '../../api/client';
 import { ErrorState, LoadingState } from '../../components/AsyncState';
 import { PageHeader } from '../../components/PageHeader';
 import { StatusBadge } from '../../components/StatusBadge';
+import { hasRole, useAuthSession } from '../auth/AuthSession';
 import { formatDateTime, formatDuration, shortId } from '../../lib/format';
 
 export function DashboardPage() {
+  const { principal } = useAuthSession();
+  const canViewResults = hasRole(principal, 'VIEWER');
   const sourcesQuery = useQuery({ queryKey: ['sources'], queryFn: api.listSources });
   const profilesQuery = useQuery({ queryKey: ['monitoring-profiles'], queryFn: api.listMonitoringProfiles });
   const runsQuery = useQuery({
@@ -19,6 +22,7 @@ export function DashboardPage() {
   const resultsQuery = useQuery({
     queryKey: ['results', { limit: 8 }],
     queryFn: () => api.listResults({ limit: 8 }),
+    enabled: canViewResults,
   });
 
   const loading =
@@ -26,9 +30,9 @@ export function DashboardPage() {
     profilesQuery.isPending ||
     runsQuery.isPending ||
     analysisQuery.isPending ||
-    resultsQuery.isPending;
+    (canViewResults && resultsQuery.isPending);
   const error =
-    sourcesQuery.error ?? profilesQuery.error ?? runsQuery.error ?? analysisQuery.error ?? resultsQuery.error;
+    sourcesQuery.error ?? profilesQuery.error ?? runsQuery.error ?? analysisQuery.error ?? (canViewResults ? resultsQuery.error : null);
 
   if (loading) {
     return <LoadingState label="Loading operational overview…" />;
@@ -49,7 +53,7 @@ export function DashboardPage() {
       <PageHeader
         eyebrow="Operational overview"
         title="Dashboard"
-        description="A compact view of configured sources, recent collection activity, durable analysis state, and persisted results."
+        description="A compact view of configured sources, recent collection activity, durable analysis state, and Results when VIEWER access is also assigned."
       />
 
       <section className="stat-grid" aria-label="System statistics">
@@ -73,11 +77,13 @@ export function DashboardPage() {
           <strong>{analysisItems.length}</strong>
           <small>latest persisted normalized items</small>
         </article>
-        <article className="stat-card">
-          <span>Analyzed results</span>
-          <strong>{results.length}</strong>
-          <small>latest durable result projections</small>
-        </article>
+        {canViewResults ? (
+          <article className="stat-card">
+            <span>Analyzed results</span>
+            <strong>{results.length}</strong>
+            <small>latest durable result projections</small>
+          </article>
+        ) : null}
         <article className="stat-card stat-card--accent">
           <span>Latest run</span>
           <strong>{latestRun ? latestRun.publishedCount : '—'}</strong>
@@ -113,35 +119,37 @@ export function DashboardPage() {
           )}
         </article>
 
-        <article className="panel">
-          <div className="panel__header">
-            <div>
-              <span className="eyebrow">Results</span>
-              <h2>Recently analyzed</h2>
+        {canViewResults ? (
+          <article className="panel">
+            <div className="panel__header">
+              <div>
+                <span className="eyebrow">Results</span>
+                <h2>Recently analyzed</h2>
+              </div>
             </div>
-          </div>
-          {results.length === 0 ? (
-            <div className="panel__empty">No analyzed results have been persisted yet.</div>
-          ) : (
-            <div className="compact-list">
-              {results.slice(0, 5).map((result) => (
-                <div
-                  className="compact-list__row"
-                  key={`${result.monitoringProfileId}:${result.normalizedItemId}`}
-                >
-                  <div>
-                    <strong>{result.title?.trim() || shortId(result.normalizedItemId)}</strong>
-                    <span>{result.informationCategory} · {result.classification}</span>
+            {results.length === 0 ? (
+              <div className="panel__empty">No analyzed results have been persisted yet.</div>
+            ) : (
+              <div className="compact-list">
+                {results.slice(0, 5).map((result) => (
+                  <div
+                    className="compact-list__row"
+                    key={`${result.monitoringProfileId}:${result.normalizedItemId}`}
+                  >
+                    <div>
+                      <strong>{result.title?.trim() || shortId(result.normalizedItemId)}</strong>
+                      <span>{result.informationCategory} · {result.classification}</span>
+                    </div>
+                    <div className="compact-list__meta">
+                      <span>{result.relevant ? 'relevant' : 'not relevant'} · score {result.score}</span>
+                      <span>{formatDateTime(result.analyzedAt)}</span>
+                    </div>
                   </div>
-                  <div className="compact-list__meta">
-                    <span>{result.relevant ? 'relevant' : 'not relevant'} · score {result.score}</span>
-                    <span>{formatDateTime(result.analyzedAt)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </article>
+                ))}
+              </div>
+            )}
+          </article>
+        ) : null}
       </section>
     </div>
   );

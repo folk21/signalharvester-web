@@ -141,6 +141,10 @@ Umbrella:
 
 Current implementation focus:
 
+- [`active/subspecs/ui-authentication-authorization-foundation.md`](active/subspecs/ui-authentication-authorization-foundation.md) — `WEB.CONTRACT_INTEGRATION`, `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`, and security-focused browser verification; implementation complete, verification pending.
+
+Other active verification-pending work:
+
 - [`active/subspecs/ui-performance-runtime-resilience.md`](active/subspecs/ui-performance-runtime-resilience.md) — `WEB.ROUTE_DELIVERY` and `WEB.BROWSER_VERIFICATION`; implementation complete, verification pending.
 
 ## Recently completed sub-specifications

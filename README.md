@@ -2,7 +2,7 @@
 
 SignalHarvester Web is the React/TypeScript frontend for SignalHarvester. It is one coherent browser application for configuration, operations, analyzed Results, and pipeline diagnostics over backend REST/OpenAPI and SSE contracts.
 
-The current build has no frontend authentication/session implementation and is intended for local or otherwise trusted environments. The browser never reads PostgreSQL or Kafka directly.
+The current build includes the frontend authentication/session foundation over the backend cookie/CSRF contract. Backend authorization remains authoritative, and ADMIN identity management plus the dedicated viewer Results experience are still separate follow-up stages. The browser never reads PostgreSQL or Kafka directly.
 
 ## Interface
 
@@ -36,7 +36,7 @@ Results and diagnostics:
 - **Event Explorer** — bounded retained technical history plus live observed events.
 - **Processing Flow** — backend-reconstructed run/item stages, evidence, durations, limitations, and diagnostic metadata.
 
-Cross-cutting browser capabilities include deterministic Playwright verification, targeted visual regression, accessibility hardening, responsive/large-data containment, and route-level code splitting with recoverable lazy-route failures.
+Cross-cutting browser capabilities include authentication/session bootstrap, role-aware navigation, credentialed REST/SSE transport, deterministic Playwright verification, targeted visual regression, accessibility hardening, responsive/large-data containment, and route-level code splitting with recoverable lazy-route failures. The security foundation and route-delivery slices are implemented but still verification-pending.
 
 ## Technology
 
@@ -52,7 +52,7 @@ Cross-cutting browser capabilities include deterministic Playwright verification
 
 - Node.js 22+
 - npm 10+
-- SignalHarvester backend on `http://localhost:8080` for normal local integration or live-backend browser verification
+- SignalHarvester backend on `http://localhost:8080`; use its security-enabled environment and an enabled identity for protected local integration/live-backend browser verification
 
 ## Local development
 
@@ -116,10 +116,13 @@ Inspect the changed image, rerun `npm run e2e:visual`, and then run the canonica
 Run the opt-in live browser workflow against a separately running backend with:
 
 ```bash
-SIGNALHARVESTER_BACKEND_URL=http://127.0.0.1:8080 npm run e2e:live
+SIGNALHARVESTER_BACKEND_URL=http://127.0.0.1:8080 \
+SIGNALHARVESTER_LIVE_USERNAME=<admin-viewer-user> \
+SIGNALHARVESTER_LIVE_PASSWORD=<password> \
+npm run e2e:live
 ```
 
-The live workflow uses a deterministic local RSS fixture, exercises Source Test and Monitoring Profile setup, verifies real Results and Event Observation SSE delivery, follows a real Analysis event into Processing Flow, and cleans up the created profile/source. `SIGNALHARVESTER_LIVE_FIXTURE_HOST` may be used when a containerized backend needs a different hostname to reach the host fixture.
+The live workflow signs in through the browser first, then uses a deterministic local RSS fixture, exercises Source Test and Monitoring Profile setup, verifies real Results and Event Observation SSE delivery, follows a real Analysis event into Processing Flow, and cleans up through the authenticated browser context with CSRF proof. The supplied identity must have both `ADMIN` and `VIEWER`. `SIGNALHARVESTER_LIVE_FIXTURE_HOST` may be used when a containerized backend needs a different hostname to reach the host fixture, and the backend security environment must permit that fixture destination.
 
 The canonical routine repository gate is:
 
@@ -157,9 +160,9 @@ npm run typecheck
 
 ## Security status
 
-The current frontend does not implement login, session, token, or role-aware workflows. Keep it on a trusted local/private boundary until the frontend security slice is implemented against the backend security contract.
+The frontend security foundation is implemented against the synchronized backend OpenAPI contract and is verification-pending. It provides `/login`, current-principal bootstrap through `/api/v1/auth/me`, HttpOnly-cookie credential transport, double-submit CSRF forwarding for mutations, credentialed native SSE, logout/session cleanup, explicit `401`/`403` handling, and additive role-aware navigation.
 
-Backend authorization remains the security enforcement boundary. Future frontend role checks may control presentation and navigation, but must not replace backend enforcement.
+Backend authorization remains the security enforcement boundary. Frontend role checks control presentation only; they do not infer role hierarchy (`ADMIN` does not imply `VIEWER`) and do not replace backend enforcement. ADMIN identity management and the dedicated viewer Results UX are separate later stages.
 
 ## Documentation model
 

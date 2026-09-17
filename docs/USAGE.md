@@ -9,7 +9,25 @@ description: Current browser workflows for configuration, collection operations,
 
 This document describes how to use the current frontend after it is running. Installation prerequisites and local startup are owned by the root [`README.md`](../README.md).
 
-The current frontend has no login/session or role-aware workflows. Use it only with a trusted local/private backend until the security slice is implemented.
+The frontend authentication/session foundation is implemented against the backend security contract and is verification-pending. Use a security-enabled backend for protected workflows; backend authorization remains authoritative.
+
+## Authentication and roles
+
+Open any protected route. Anonymous navigation redirects to `/login`; after a successful sign-in the browser re-reads the current principal from `/api/v1/auth/me`.
+
+The frontend uses the backend's HttpOnly authentication cookie and does not expose the JWT to JavaScript. State-changing requests forward the readable signed `XSRF-TOKEN` cookie through `X-CSRF-TOKEN`, and Results/Event Observation SSE connections send browser credentials.
+
+Roles are additive:
+
+- `ADMIN` exposes configuration, operations, and diagnostic routes;
+- `VIEWER` grants viewer Results access but does not imply `ADMIN`;
+- the existing operational Results screen currently requires both `ADMIN` and `VIEWER`;
+- a `VIEWER`-only principal receives an authenticated placeholder until the dedicated viewer Results stage is implemented;
+- `USER` or `BOT` alone do not receive another browser capability implicitly.
+
+A `401` from a protected request ends the frontend session and returns protected navigation to login. A `403` keeps the principal authenticated and displays an authorization error.
+
+Use the sidebar **Sign out** action to call backend logout and clear cached application state.
 
 ## Typical workflow
 
@@ -31,7 +49,7 @@ Use the backend repository's `tools/live-backend/` workflow when you need to dis
 
 ## Dashboard
 
-Open `/` for a bounded operational overview across Sources, Monitoring Profiles, Collection Runs, Analysis, and Results.
+Open `/` with explicit `ADMIN` for a bounded operational overview across Sources, Monitoring Profiles, Collection Runs, and Analysis. Results summaries are included only when the same principal also has explicit `VIEWER`.
 
 Use the dedicated feature screens for complete actions and detailed inspection.
 
@@ -58,7 +76,7 @@ The backend uses the normal fetch/extraction boundary without publishing normal 
 
 Disabled Sources may be tested. A successful preview does not mean that the items were inserted into Results.
 
-Source management authorizes backend outbound access to configured destinations. Do not expose this workflow to untrusted users while frontend authentication/authorization is not implemented.
+Source management authorizes backend outbound access to configured destinations. The route is presented only to explicit `ADMIN`, but backend authorization and external-source destination policy remain the enforcement boundaries.
 
 ## Monitoring Profiles
 
@@ -212,14 +230,17 @@ Inspect the changed image and rerun `npm run e2e:visual`. Do not update visual b
 With a real backend already running:
 
 ```bash
-SIGNALHARVESTER_BACKEND_URL=http://127.0.0.1:8080 npm run e2e:live
+SIGNALHARVESTER_BACKEND_URL=http://127.0.0.1:8080 \
+SIGNALHARVESTER_LIVE_USERNAME=<admin-viewer-user> \
+SIGNALHARVESTER_LIVE_PASSWORD=<password> \
+npm run e2e:live
 ```
 
-The live workflow creates a temporary deterministic RSS Source and Monitoring Profile. It verifies Source Test, establishes Results SSE before a manual run, receives both fixture Results without refresh, keeps a durable Analysis check, establishes Event Observation SSE before a second run, receives a new correlated event without refresh, and follows a real Analysis event into item/full-run Processing Flow.
+The live workflow first authenticates through `/login`. The supplied test identity must explicitly have both `ADMIN` and `VIEWER`. It then creates a temporary deterministic RSS Source and Monitoring Profile, verifies Source Test, establishes Results SSE before a manual run, receives both fixture Results without refresh, keeps a durable Analysis check, establishes Event Observation SSE before a second run, receives a new correlated event without refresh, and follows a real Analysis event into item/full-run Processing Flow.
 
-Cleanup removes the Monitoring Profile before the Source so backend referential integrity is respected.
+Cleanup removes the Monitoring Profile before the Source through the authenticated browser context and includes CSRF proof.
 
-For a containerized backend, set `SIGNALHARVESTER_LIVE_FIXTURE_HOST` when the backend needs a non-loopback hostname to reach the host fixture.
+Run the backend with its security environment and test credentials. For a containerized or source-hardened backend, set `SIGNALHARVESTER_LIVE_FIXTURE_HOST` as needed and explicitly permit the deterministic fixture destination according to backend external-source security policy.
 
 ## Production route and asset verification
 
@@ -258,8 +279,8 @@ Check:
 
 In normal local development, Vite proxies `/api` to the backend configured by `VITE_DEV_PROXY_TARGET`.
 
-## Current security limitation
+## Current security status
 
-The frontend has no login/session or role-aware implementation yet. Do not deploy the current build as a public administration surface.
+The frontend now implements the browser authentication/session foundation, credentialed REST/SSE, CSRF forwarding, role-aware presentation, logout, and explicit `401`/`403` handling. This slice remains verification-pending until the repository/browser/build acceptance and protected live-backend scenario pass.
 
-Backend authorization remains authoritative when the future frontend security workflow is added.
+Backend authorization remains authoritative. The frontend does not infer role hierarchy, does not decode the JWT, and does not implement ADMIN identity management yet. Cross-origin production hosting still requires an explicitly compatible backend CORS/cookie policy.

@@ -7,6 +7,7 @@ description: Notable frontend changes organized by release state, with each chan
 
 ## Unreleased
 
+- 2026-09-17 — Synchronized the backend security OpenAPI contract and added the verification-pending frontend authentication/session foundation with credentialed REST/SSE, CSRF forwarding, additive role-aware routing, and deterministic protected-browser coverage.
 - 2026-09-17 — Added a stable `WEB.*` feature vocabulary with related backend feature IDs, aligned frontend agent rules with backend repository discipline, and refactored current documentation/active specifications for clearer ownership and retrieval without changing archived specifications.
 - 2026-09-15 — Added route-level screen code splitting, accessible lazy-route loading/error containment, deterministic chunk-failure coverage, and Vite-manifest production asset reporting.
 - 2026-09-15 — Added responsive and large-data UI hardening for bounded configuration tables, large source-membership lists, long Result detail values, and many-branch Processing Flow layouts.

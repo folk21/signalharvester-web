@@ -1,5 +1,9 @@
 import type { components } from './generated';
 
+export type LoginRequest = components['schemas']['LoginRequest'];
+export type UserRole = components['schemas']['UserRole'];
+export type CurrentPrincipal = components['schemas']['CurrentPrincipal'];
+
 export type Source = components['schemas']['Source'];
 export type SourceType = components['schemas']['SourceType'];
 export type SourceUpsertRequest = components['schemas']['SourceUpsertRequest'];

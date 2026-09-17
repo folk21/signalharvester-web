@@ -7,9 +7,11 @@ description: Current frontend focus, accepted baseline, next product stages, bac
 
 ## Current position
 
-The current bounded focus is `WEB.ROUTE_DELIVERY` in [`docs/specs/active/subspecs/ui-performance-runtime-resilience.md`](specs/active/subspecs/ui-performance-runtime-resilience.md).
+The current bounded focus is the security foundation in [`docs/specs/active/subspecs/ui-authentication-authorization-foundation.md`](specs/active/subspecs/ui-authentication-authorization-foundation.md).
 
-Implementation is complete and verification is pending. Acceptance requires the focused route-loading/failure scenarios, deterministic browser suite, production build/manifest checks, asset report, reviewed visual comparison, and canonical repository gate.
+The backend OpenAPI snapshot has been synchronized and browser authentication/session, CSRF-aware REST, credentialed SSE, `401`/`403` handling, additive role-aware routing/navigation, and protected deterministic/live acceptance coverage are implemented. Developer verification is still pending.
+
+`WEB.ROUTE_DELIVERY` remains a separate active verification-pending slice: its implementation is complete, but its closure acceptance has not yet been run successfully in the current development context.
 
 The accepted baseline already includes configuration/operations, live Results, Event Explorer, Processing Flow, deterministic/live browser verification, targeted visual regression, accessibility hardening, and responsive/large-data containment.
 
@@ -41,40 +43,23 @@ The accepted baseline already includes configuration/operations, live Results, E
 
 ## Next frontend stages
 
-### 1. Close route-delivery verification
+### 1. Accept and close the security foundation
 
-Complete acceptance for `WEB.ROUTE_DELIVERY`, archive the active sub-spec, and update current-state documentation/lifecycle indexes in one closure change.
+Run the current security sub-spec acceptance after dependencies and a protected backend are available. Acceptance includes deterministic login/role/CSRF/SSE coverage, production build checks, visual comparison, `./run_checks.sh`, and the explicit live `ADMIN` + `VIEWER` browser scenario.
 
-Do not introduce numeric bundle budgets during closure unless a measured baseline and growth policy have been explicitly reviewed.
+After acceptance, move stable behavior into accepted current-state documentation, archive the security sub-spec, and update the umbrella current focus.
 
-### 2. Synchronize backend contracts for security
+### 2. Close route-delivery verification
 
-Backend security capabilities now exist under `SECURITY.IDENTITY_ROLES`, `SECURITY.AUTHENTICATION`, and `SECURITY.AUTHORIZATION`.
+Complete the still-pending acceptance for `WEB.ROUTE_DELIVERY`, archive its active sub-spec, and update lifecycle indexes. Do not introduce numeric bundle budgets unless a measured baseline and growth policy have been explicitly reviewed.
 
-Before frontend security implementation:
+### 3. Add ADMIN identity management
 
-- update the checked-in OpenAPI snapshot from the authoritative backend contract;
-- regenerate TypeScript types;
-- review cookie, CSRF, CORS, `401`/`403`, and identity/role shapes as published by the backend;
-- define a bounded frontend security sub-spec.
-
-Target frontend features: `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`.
-
-### 3. Implement authentication/session and role-aware shell
-
-Implement browser authentication/session behavior over the synchronized backend contract.
-
-The UI should provide login/session lifecycle, credentialed API behavior, explicit authentication/authorization failure handling, and role-aware navigation while keeping backend authorization authoritative.
-
-Target frontend features: `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`.
-
-### 4. Add ADMIN identity management
-
-Expose backend-supported identity administration for users with the required ADMIN capability. Preserve backend invariants and do not infer role inheritance in the browser.
+Expose the synchronized `/api/v1/admin/users/**` contract for explicit `ADMIN` principals. Preserve backend invariants, keep backend validation/authorization authoritative, and do not infer role inheritance in the browser.
 
 Target feature: `WEB.IDENTITY_ADMIN`.
 
-### 5. Add typed Analysis settings to Monitoring Profiles
+### 4. Add typed Analysis settings to Monitoring Profiles
 
 Dedicated Analysis controls remain blocked on the backend publishing the profile-owned Analysis settings contract.
 
@@ -88,17 +73,17 @@ After that contract exists:
 
 Target feature: `WEB.MONITORING_PROFILES`.
 
-### 6. Build viewer-oriented Results presentation
+### 5. Build viewer-oriented Results presentation
 
-Add `WEB.VIEWER_RESULTS` after the backend role/authorization model and Results contract are ready for the intended viewer workflow.
+`VIEWER`-only principals currently receive a safe authenticated placeholder at `/results`; the existing operational Results surface remains restricted in presentation to principals that also have `ADMIN`.
 
-Viewer presentation should focus on user-facing analyzed Results and hide operational/internal details that belong to admin/diagnostic screens.
+Implement `WEB.VIEWER_RESULTS` as a user-facing Results experience that hides operational/internal details and consumes only backend contracts appropriate to the viewer workflow.
 
 Related backend feature: `PRESENTATION.VIEWER_RESULTS`.
 
-### 7. Complete production delivery integration
+### 6. Complete production delivery integration
 
-Add the real production frontend image/deployment integration required by the platform design, including health/build verification and final frontend/backend Kubernetes acceptance.
+Add the real production frontend image/deployment integration required by the platform design, including health/build verification, security/cross-origin deployment policy, and final frontend/backend Kubernetes acceptance.
 
 Target features: `WEB.ROUTE_DELIVERY`, `WEB.CONTRACT_INTEGRATION`, `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`.
 
@@ -110,7 +95,7 @@ Current backend dependencies for upcoming frontend work are:
 
 - profile-owned typed Analysis settings under `CONFIGURATION.MONITORING_PROFILES` / `ANALYSIS.CLASSIFICATION`;
 - any production Results pagination/search contract needed for larger viewer browsing under `RESULTS.BROWSING`;
-- authoritative security/OpenAPI shapes under `SECURITY.IDENTITY_ROLES`, `SECURITY.AUTHENTICATION`, and `SECURITY.AUTHORIZATION`;
+- future changes to authoritative security/OpenAPI shapes under `SECURITY.IDENTITY_ROLES`, `SECURITY.AUTHENTICATION`, and `SECURITY.AUTHORIZATION` (the current security contract is synchronized);
 - production deployment/exposure integration under `DEPLOYMENT.KUBERNETES` and `DELIVERY.FRONTEND_BACKEND_BOUNDARY`.
 
 ## Deferred until justified
