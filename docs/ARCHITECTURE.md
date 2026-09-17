@@ -7,7 +7,7 @@ description: Stable frontend boundaries, dependency direction, contract ownershi
 
 ## Purpose
 
-This document owns stable accepted frontend architecture. Active specifications describe intended or verification-pending changes and may contain more detail while work is in progress.
+This document owns stable accepted frontend architecture. Active specifications describe intended, blocked, or verification-pending changes and may contain more detail while work is in progress.
 
 Stable frontend capability names are owned by [`FEATURES.md`](FEATURES.md).
 
@@ -56,7 +56,8 @@ signalharvester-web/
 │   └── main.tsx                # React/query/router composition root
 ├── tests/e2e/                  # Deterministic and opt-in live Playwright tests
 ├── playwright.config.ts        # Backend-independent browser suite
-├── playwright.live.config.ts   # Real-backend browser suite
+├── playwright.live.config.ts   # Real-backend browser suite via local Vite
+├── playwright.deployed.config.ts # Real-backend suite against an external production frontend
 ├── run_checks.sh               # Canonical routine verification
 ├── package.json
 └── vite.config.ts
@@ -70,10 +71,11 @@ Feature folders own screen-specific presentation and interaction logic. Introduc
 
 - React root creation;
 - `QueryClientProvider`;
+- `AuthSessionProvider`;
 - `BrowserRouter`;
 - application-wide CSS.
 
-`src/App.tsx` owns the route table. `AppShell` owns common navigation and layout.
+`src/App.tsx` owns the route table. `/login` is the eager authentication entry point; protected routes are composed behind authentication and role presentation guards. `AppShell` owns authenticated navigation, identity display, logout, and common layout.
 
 Primary routes are lazy-loaded:
 
@@ -82,15 +84,24 @@ Primary routes are lazy-loaded:
 - `/profiles` — Monitoring Profile configuration;
 - `/runs` — profile-driven Collection Runs;
 - `/analysis` — normalized/deduplication inspection;
-- `/results` — analyzed Results browsing, detail, and live updates;
+- `/results` — role-specific analyzed Results browsing, detail, and live updates;
 - `/events` — bounded technical event history/live updates;
-- `/flows` — backend-reconstructed run/item processing graphs.
+- `/flows` — backend-reconstructed run/item processing graphs;
+- `/users` — ADMIN identity administration.
 
 The shell remains mounted while a route module loads. A `Suspense` state exposes accessible loading feedback, and a route-resetting error boundary contains route import/render failures inside the main content region.
 
 Future screens should extend this routing model. Preserve route-level splitting for primary screens unless measured delivery behavior justifies eager loading.
 
-Primary features: `WEB.APP_SHELL`, `WEB.ROUTE_DELIVERY`, `WEB.ASYNC_FEEDBACK`.
+Primary features: `WEB.APP_SHELL`, `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`, `WEB.ROUTE_DELIVERY`, `WEB.ASYNC_FEEDBACK`.
+
+## Production delivery and deployed acceptance boundary
+
+The accepted production image is built independently from backend source and serves the Vite bundle from an unprivileged static HTTP runtime on container port `8080`. `VITE_API_BASE_URL` remains a build-time browser contract; the runtime does not invent a second backend-discovery mechanism.
+
+Backend-owned Kubernetes manifests define the local `signalharvester-web` Deployment/Service. This repository owns the image and browser acceptance only. `playwright.deployed.config.ts` deliberately has no Playwright `webServer`: it targets an already running frontend URL so the same live browser pipeline can validate the production image, compiled backend origin, credentialed REST/SSE, and browser security boundary through the deployed workload.
+
+Primary features: `WEB.PRODUCTION_DELIVERY`, `WEB.CONTRACT_INTEGRATION`, `WEB.LIVE_BACKEND_ACCEPTANCE`.
 
 ## Backend contract ownership
 
@@ -114,7 +125,7 @@ backend OpenAPI
 
 Do not manually duplicate backend DTOs or hand-edit generated types after normal generation is available.
 
-`src/api/client.ts` is the current transport boundary. It owns API base URL handling, REST path/query construction, JSON request/response handling, and common HTTP error conversion. Feature components use this adapter through TanStack Query instead of issuing independent ad-hoc requests.
+`src/api/client.ts` is the current transport boundary. It owns API base URL handling, REST path/query construction, credentialed fetch, double-submit CSRF forwarding for unsafe requests, JSON/text response handling, common HTTP error conversion, and protected-request `401` notification. Feature components use this adapter through TanStack Query instead of issuing independent ad-hoc requests. JavaScript never reads or decodes the HttpOnly authentication JWT.
 
 The adapter should remain small while that keeps behavior explicit. Introduce a larger generated client or another HTTP library only when the existing boundary becomes materially difficult to maintain.
 
@@ -122,7 +133,7 @@ Primary feature: `WEB.CONTRACT_INTEGRATION`.
 
 ## Server and local state
 
-TanStack Query owns remote/server state such as Sources, Monitoring Profiles, Collection Runs, Analysis inspection records, Results, observed events, and Processing Flows.
+TanStack Query owns remote/server state such as the current authenticated principal, Sources, Monitoring Profiles, Collection Runs, Analysis inspection records, Results, observed events, and Processing Flows. The principal is re-read from `/api/v1/auth/me` after login rather than inferred from credentials or JWT contents.
 
 Local React state owns transient browser concerns such as:
 
@@ -157,7 +168,7 @@ Primary feature: `WEB.ASYNC_FEEDBACK`.
 
 The browser uses REST for durable snapshots and backend SSE for live Results and technical Event Observation.
 
-Native `EventSource` owns reconnect and `Last-Event-ID` behavior. For race-free bootstrap, the frontend waits for SSE `ready`, then loads the REST snapshot while buffering subsequent live messages, and finally merges both into the TanStack Query cache.
+Native `EventSource` is created with `withCredentials: true` and owns reconnect and `Last-Event-ID` behavior. Authentication is never placed in SSE URLs. For race-free bootstrap, the frontend waits for SSE `ready`, then loads the REST snapshot while buffering subsequent live messages, and finally merges both into the TanStack Query cache.
 
 Live delivery supplements durable reads. It does not replace backend persistence or turn the browser into an event-store client.
 
@@ -193,19 +204,26 @@ Primary features: `WEB.ACCESSIBILITY`, `WEB.RESPONSIVE_LAYOUT`.
 
 ## Security boundary
 
-Backend security is the enforcement boundary. Frontend role checks may control navigation and presentation, but they must not replace backend authorization.
+Backend security is the enforcement boundary. Frontend role checks control navigation and presentation only; they must not replace backend authorization or infer role hierarchy. In particular, `ADMIN` does not imply `VIEWER`.
 
-The current frontend does not yet implement authentication/session or role-aware workflows. Until that slice is implemented against the backend contract, treat the application as trusted-environment software.
+The implemented security foundation uses the backend-published browser contract:
 
-A public/shared deployment must address at least:
+- anonymous login through `POST /api/v1/auth/login`;
+- current-principal bootstrap through `GET /api/v1/auth/me`;
+- HttpOnly authentication cookie transport through `credentials: 'include'`;
+- readable signed `XSRF-TOKEN` copied exactly into `X-CSRF-TOKEN` for unsafe requests other than login;
+- native SSE opened with credentials and without tokens in URLs;
+- logout through the same credentialed/CSRF-protected transport;
+- protected-request `401` invalidates the frontend principal and non-auth application cache;
+- `403` preserves the authenticated principal and remains an authorization error.
 
-- authentication/session lifecycle;
-- authorization-aware navigation and workflows;
-- CSRF behavior required by cookie authentication;
-- compatible backend CORS policy for cross-origin hosting;
-- safe presentation of source-management capabilities that authorize backend outbound access.
+`AuthSessionProvider` owns principal bootstrap/lifecycle. Login passwords remain local form state and are not stored in TanStack Query, Web Storage, URLs, or logs.
 
-Planned features: `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`, `WEB.IDENTITY_ADMIN`, `WEB.VIEWER_RESULTS`.
+Role-aware presentation exposes administrative/diagnostic screens to explicit `ADMIN`. The operational Results screen is mounted only for principals that have both `ADMIN` and `VIEWER`; a `VIEWER`-only principal receives a consumer-oriented Result feed that reuses the same backend Results REST/SSE boundary without rendering operational diagnostic metadata. `USER`-only and `BOT`-only principals receive no invented browser capability.
+
+ADMIN identity management uses the same credentialed/CSRF-protected transport and remains presentation over backend-owned identity invariants. Viewer Results remains a presentation boundary rather than a new backend authorization or data contract. Cross-origin production hosting still depends on an explicitly compatible backend CORS and cookie policy.
+
+Features: `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`, `WEB.IDENTITY_ADMIN`, `WEB.VIEWER_RESULTS`.
 
 ## Testing architecture
 
@@ -217,7 +235,7 @@ The browser verification layers are:
 
 1. `npm run e2e` — deterministic backend-independent navigation, rendering, forms, request construction, filters, detail loading, SSE browser behavior, accessibility, responsive edge cases, route loading/failure, and representative async states;
 2. `npm run e2e:visual` — focused non-updating comparison against the reviewed Results/detail golden;
-3. `npm run e2e:live` — bounded opt-in acceptance against a separately running backend and deterministic local RSS fixture.
+3. `npm run e2e:live` — bounded opt-in acceptance against a separately running security-enabled backend and deterministic local RSS fixture, after browser login with an explicit `ADMIN` + `VIEWER` test identity.
 
 The live suite verifies browser-visible REST/SSE and processing-flow behavior. It does not verify Kafka offsets, database rows, transactions, deduplication semantics, or backend analysis rules.
 
@@ -231,8 +249,12 @@ Development uses Vite and normally proxies `/api` to a local backend.
 
 Production-style builds are static frontend assets configured with a backend origin through `VITE_API_BASE_URL` at build time. Vite emits a production manifest. Repository verification checks that primary screen modules remain dynamic entries and reports generated JavaScript/CSS raw and gzip sizes.
 
-The asset report is informational until a reviewed baseline and acceptable growth policy justify numeric budgets.
+The production image is owned by this repository and uses a multi-stage build: Node produces the normal `dist/` output, then an unprivileged static HTTP runtime serves only those assets on container port `8080`. React Router deep links fall back to `index.html`, while missing `/assets/` files remain `404`. Hashed assets use immutable caching; HTML navigation remains revalidation-safe.
+
+The image keeps backend selection as the existing build-time `VITE_API_BASE_URL` contract. Same-origin builds may leave it empty. Cross-origin deployments require a matching backend credentialed CORS/cookie policy. Kubernetes workload manifests remain backend-repository-owned; the frontend image stays an independent deliverable.
+
+The asset report is informational until a reviewed baseline and acceptable growth policy justify numeric budgets. The daemon-free delivery contract check belongs to the canonical frontend gate, while real container build/start verification remains an explicit Docker-backed acceptance step.
 
 Backend and frontend remain independently buildable deliverables joined through explicit REST/SSE contracts rather than source-level coupling.
 
-Primary features: `WEB.ROUTE_DELIVERY`, `WEB.CONTRACT_INTEGRATION`.
+Primary features: `WEB.ROUTE_DELIVERY`, `WEB.PRODUCTION_DELIVERY`, `WEB.CONTRACT_INTEGRATION`.

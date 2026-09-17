@@ -3,16 +3,14 @@ type: Specification
 title: Frontend performance and runtime resilience
 description: Split major screens into route-level chunks, keep the shell usable during lazy loading, recover from route chunk failures, and establish a reproducible production asset baseline.
 document_role: subspec
-spec_status: verification-pending
+spec_status: completed
 parent: ../spec-signal-harvester-web.md
 ---
 # Frontend performance and runtime resilience
 
 ## Status
 
-Implementation complete. Developer verification pending.
-
-The implementation remains active because the acceptance commands in this specification have not yet been recorded as passing for this slice.
+Completed and accepted on 2026-09-17 after the canonical frontend verification passed.
 
 ## Feature scope
 

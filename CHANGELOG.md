@@ -7,6 +7,15 @@ description: Notable frontend changes organized by release state, with each chan
 
 ## Unreleased
 
+- 2026-09-17 — Hardened viewer Result detail UX by omitting empty normalized-attribute sections and preserving readable primary-link hover contrast; documented that live/deployed acceptance leaves backend-owned Result/Event history and must use disposable test data.
+- 2026-09-17 — Accepted deployed Kubernetes production-browser verification and advanced the active frontend focus to typed Monitoring Profile Analysis settings, explicitly blocked until the backend publishes the profile-owned OpenAPI contract.
+- 2026-09-17 — Accepted production frontend delivery after the canonical repository gate and Docker-backed image verification passed; added verification-pending deployed Kubernetes browser acceptance that reuses the real-backend pipeline against an externally served production frontend.
+- 2026-09-17 — Added verification-pending production image delivery with reproducible multi-stage build, non-root static serving on port 8080, SPA deep-link fallback, delivery-contract checks, and opt-in Docker runtime verification.
+- 2026-09-17 — Accepted ADMIN identity management and viewer-oriented Results after the canonical frontend verification passed.
+- 2026-09-17 — Added a verification-pending viewer-oriented Results experience that reuses the existing relevant Results REST/SSE boundary while omitting operational identifiers and diagnostic navigation from VIEWER-only presentation.
+- 2026-09-17 — Added ADMIN identity administration for persisted user/BOT identities, including create/update role workflows, backend invariant error handling, deterministic browser coverage, and dynamic-route verification.
+- 2026-09-17 — Accepted the authentication/authorization foundation and route-delivery/runtime-resilience slices after the canonical frontend verification passed.
+- 2026-09-17 — Synchronized the backend security OpenAPI contract and added the verification-pending frontend authentication/session foundation with credentialed REST/SSE, CSRF forwarding, additive role-aware routing, and deterministic protected-browser coverage.
 - 2026-09-17 — Added a stable `WEB.*` feature vocabulary with related backend feature IDs, aligned frontend agent rules with backend repository discipline, and refactored current documentation/active specifications for clearer ownership and retrieval without changing archived specifications.
 - 2026-09-15 — Added route-level screen code splitting, accessible lazy-route loading/error containment, deterministic chunk-failure coverage, and Vite-manifest production asset reporting.
 - 2026-09-15 — Added responsive and large-data UI hardening for bounded configuration tables, large source-membership lists, long Result detail values, and many-branch Processing Flow layouts.

@@ -137,7 +137,7 @@ Backend security is the authoritative enforcement boundary.
 
 Frontend role checks may control navigation, affordances, and presentation, but they never replace backend authorization.
 
-Until the checked-in frontend contract and implementation include the intended authentication/authorization flow, treat the application as a trusted-environment tool. Do not document the current build as internet-safe.
+The frontend authentication/session foundation is present, but public/shared deployment is not considered complete until the active security slice is accepted and the deployment/CORS/cookie model is verified end to end. Do not document a verification-pending build as internet-safe.
 
 Security-related frontend work must consider together, as applicable:
 

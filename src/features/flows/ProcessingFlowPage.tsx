@@ -14,6 +14,7 @@ import {
   formatFlowDuration,
   groupProcessingFlowBranches,
 } from '../../lib/processing-flow';
+import { hasRole, useAuthSession } from '../auth/AuthSession';
 
 interface FlowQueryForm {
   collectionRunId: string;
@@ -261,6 +262,8 @@ function FlowEdgeView({ edge }: { edge: ProcessingFlowEdge | null }) {
 }
 
 function FlowNodeDetail({ flow, node }: { flow: ProcessingFlow; node: ProcessingFlowNode }) {
+  const { principal } = useAuthSession();
+  const canViewResults = hasRole(principal, 'VIEWER');
   const itemId = flowNodeItemId(node);
   const eventItemId = node.rawItemId ?? node.normalizedItemId;
   const eventLink = node.eventId
@@ -276,7 +279,7 @@ function FlowNodeDetail({ flow, node }: { flow: ProcessingFlow; node: Processing
   return <div className="detail-stack">
     <div className="detail-actions flow-detail-actions">
       {eventLink ? <Link className="button button--ghost" to={eventLink}>Open observed event</Link> : null}
-      {resultLink ? <Link className="button button--ghost" to={resultLink}>Open related Result</Link> : null}
+      {resultLink && canViewResults ? <Link className="button button--ghost" to={resultLink}>Open related Result</Link> : null}
       {itemFlowLink ? <Link className="button button--ghost" to={itemFlowLink}>Inspect item branch</Link> : null}
     </div>
     <dl className="detail-list">

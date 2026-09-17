@@ -7,11 +7,15 @@ description: Current frontend focus, accepted baseline, next product stages, bac
 
 ## Current position
 
-The current bounded focus is `WEB.ROUTE_DELIVERY` in [`docs/specs/active/subspecs/ui-performance-runtime-resilience.md`](specs/active/subspecs/ui-performance-runtime-resilience.md).
+The deployed Kubernetes browser acceptance is accepted after the developer completed the production-image browser workflow on 2026-09-17. The current bounded focus is typed Monitoring Profile Analysis settings in [`docs/specs/active/subspecs/ui-monitoring-profile-analysis-settings.md`](specs/active/subspecs/ui-monitoring-profile-analysis-settings.md).
 
-Implementation is complete and verification is pending. Acceptance requires the focused route-loading/failure scenarios, deterministic browser suite, production build/manifest checks, asset report, reviewed visual comparison, and canonical repository gate.
+That slice is contract-blocked. The checked-in backend OpenAPI snapshot still exposes the generic Monitoring Profile `criteria` map but no profile-owned Analysis-settings schema, so the frontend must not implement hidden conventions ahead of the backend contract.
 
-The accepted baseline already includes configuration/operations, live Results, Event Explorer, Processing Flow, deterministic/live browser verification, targeted visual regression, accessibility hardening, and responsive/large-data containment.
+The backend OpenAPI snapshot is otherwise synchronized and browser authentication/session, CSRF-aware REST, credentialed SSE, `401`/`403` handling, additive role-aware routing/navigation, protected deterministic/live acceptance coverage, production-image delivery, and deployed Kubernetes browser acceptance are implemented and accepted.
+
+`WEB.ROUTE_DELIVERY` is implemented and accepted after the 2026-09-17 canonical frontend gate passed.
+
+The accepted baseline already includes configuration/operations, live Results, Event Explorer, Processing Flow, deterministic/live browser verification, targeted visual regression, accessibility hardening, responsive/large-data containment, and deployed production delivery.
 
 ## Accepted product baseline
 
@@ -31,76 +35,39 @@ The accepted baseline already includes configuration/operations, live Results, E
 - `WEB.EVENT_EXPLORER` — bounded technical history and live observed events.
 - `WEB.PROCESSING_FLOW` — backend-reconstructed run/item processing-flow visualization.
 
-### UX and verification
+### UX, security, delivery, and verification
 
 - `WEB.BROWSER_VERIFICATION` — deterministic backend-independent Playwright coverage.
-- `WEB.LIVE_BACKEND_ACCEPTANCE` — bounded real-backend browser path over deterministic local fixtures.
+- `WEB.LIVE_BACKEND_ACCEPTANCE` — bounded real-backend browser path over deterministic local fixtures, including the accepted deployed Kubernetes production-browser run.
 - `WEB.VISUAL_REGRESSION` — one reviewed dense Results/detail golden.
 - `WEB.ACCESSIBILITY` — skip navigation, semantic states, accessible naming, keyboard operation, and focus management.
 - `WEB.RESPONSIVE_LAYOUT` — phone/tablet and larger bounded-response containment.
+- `WEB.PRODUCTION_DELIVERY` — reproducible non-root production image and static SPA runtime verified independently and through the backend-owned Kubernetes workload.
+- `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`, and `WEB.IDENTITY_ADMIN` — accepted authenticated role-aware browser workflows and identity administration.
+- `WEB.VIEWER_RESULTS` — accepted consumer-oriented relevant Results presentation.
 
 ## Next frontend stages
 
-### 1. Close route-delivery verification
+### 1. Add typed Analysis settings to Monitoring Profiles
 
-Complete acceptance for `WEB.ROUTE_DELIVERY`, archive the active sub-spec, and update current-state documentation/lifecycle indexes in one closure change.
-
-Do not introduce numeric bundle budgets during closure unless a measured baseline and growth policy have been explicitly reviewed.
-
-### 2. Synchronize backend contracts for security
-
-Backend security capabilities now exist under `SECURITY.IDENTITY_ROLES`, `SECURITY.AUTHENTICATION`, and `SECURITY.AUTHORIZATION`.
-
-Before frontend security implementation:
-
-- update the checked-in OpenAPI snapshot from the authoritative backend contract;
-- regenerate TypeScript types;
-- review cookie, CSRF, CORS, `401`/`403`, and identity/role shapes as published by the backend;
-- define a bounded frontend security sub-spec.
-
-Target frontend features: `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`.
-
-### 3. Implement authentication/session and role-aware shell
-
-Implement browser authentication/session behavior over the synchronized backend contract.
-
-The UI should provide login/session lifecycle, credentialed API behavior, explicit authentication/authorization failure handling, and role-aware navigation while keeping backend authorization authoritative.
-
-Target frontend features: `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`.
-
-### 4. Add ADMIN identity management
-
-Expose backend-supported identity administration for users with the required ADMIN capability. Preserve backend invariants and do not infer role inheritance in the browser.
-
-Target feature: `WEB.IDENTITY_ADMIN`.
-
-### 5. Add typed Analysis settings to Monitoring Profiles
-
-Dedicated Analysis controls remain blocked on the backend publishing the profile-owned Analysis settings contract.
+This is the current frontend focus, but implementation is blocked on the backend publishing and using the profile-owned Analysis settings contract.
 
 After that contract exists:
 
 - synchronize OpenAPI;
 - regenerate frontend types;
-- replace generic-only presentation where typed settings are available;
+- add typed controls separate from the generic `criteria` map;
+- preserve the settings through create/edit and replacement-style enabled-state updates;
 - keep backend validation authoritative;
-- add deterministic browser coverage for create/edit/default/error behavior.
+- add deterministic browser coverage for create/edit/default/error and toggle-preservation behavior.
 
-Target feature: `WEB.MONITORING_PROFILES`.
+Target features: `WEB.MONITORING_PROFILES`, `WEB.CONTRACT_INTEGRATION`, `WEB.BROWSER_VERIFICATION`.
 
-### 6. Build viewer-oriented Results presentation
+### 2. Expand viewer Results when backend browsing contracts justify it
 
-Add `WEB.VIEWER_RESULTS` after the backend role/authorization model and Results contract are ready for the intended viewer workflow.
+The first viewer Results slice reuses the existing bounded Results REST/SSE contract and keeps `relevant=true`. If larger product datasets require cursor pagination, search, profile/source display names, or richer category-specific browsing, add those backend contracts before expanding frontend behavior.
 
-Viewer presentation should focus on user-facing analyzed Results and hide operational/internal details that belong to admin/diagnostic screens.
-
-Related backend feature: `PRESENTATION.VIEWER_RESULTS`.
-
-### 7. Complete production delivery integration
-
-Add the real production frontend image/deployment integration required by the platform design, including health/build verification and final frontend/backend Kubernetes acceptance.
-
-Target features: `WEB.ROUTE_DELIVERY`, `WEB.CONTRACT_INTEGRATION`, `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`.
+Target features: `WEB.VIEWER_RESULTS`, `WEB.RESULTS_BROWSING`.
 
 ## Backend dependencies
 
@@ -110,8 +77,7 @@ Current backend dependencies for upcoming frontend work are:
 
 - profile-owned typed Analysis settings under `CONFIGURATION.MONITORING_PROFILES` / `ANALYSIS.CLASSIFICATION`;
 - any production Results pagination/search contract needed for larger viewer browsing under `RESULTS.BROWSING`;
-- authoritative security/OpenAPI shapes under `SECURITY.IDENTITY_ROLES`, `SECURITY.AUTHENTICATION`, and `SECURITY.AUTHORIZATION`;
-- production deployment/exposure integration under `DEPLOYMENT.KUBERNETES` and `DELIVERY.FRONTEND_BACKEND_BOUNDARY`.
+- future changes to authoritative security/OpenAPI shapes under `SECURITY.IDENTITY_ROLES`, `SECURITY.AUTHENTICATION`, and `SECURITY.AUTHORIZATION` (the current security contract is synchronized).
 
 ## Deferred until justified
 

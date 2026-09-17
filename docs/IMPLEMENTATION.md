@@ -7,7 +7,7 @@ description: Current SignalHarvester Web screens, API usage, browser state, veri
 
 ## Purpose
 
-This document describes accepted and currently implemented frontend behavior. Active specifications describe intended or verification-pending changes and must not be read as implementation evidence by themselves.
+This document describes accepted and currently implemented frontend behavior. Active specifications describe intended, blocked, or verification-pending changes and must not be read as implementation evidence by themselves.
 
 Stable frontend capability IDs are defined in [`FEATURES.md`](FEATURES.md).
 
@@ -25,11 +25,11 @@ Configuration and operations:
 Results and diagnostics:
 
 - **Analysis Items** (`/analysis`) — bounded normalized/deduplication inspection with profile/source filters. Feature: `WEB.ANALYSIS_INSPECTION`.
-- **Results** (`/results`) — filtered analyzed Result list, separate detail loading, and live SSE merge. Features: `WEB.RESULTS_BROWSING`, `WEB.RESULTS_LIVE`.
+- **Results** (`/results`) — role-specific Result presentation: the existing operational list/detail for `ADMIN` + `VIEWER`, or a consumer-oriented relevant feed for `VIEWER` without `ADMIN`. Features: `WEB.RESULTS_BROWSING`, `WEB.RESULTS_LIVE`, `WEB.VIEWER_RESULTS`.
 - **Event Explorer** (`/events`) — bounded retained event history plus live SSE, filters, and event detail. Feature: `WEB.EVENT_EXPLORER`.
 - **Processing Flow** (`/flows`) — backend-reconstructed run/item branches, evidence, durations, limitations, and stage metadata. Feature: `WEB.PROCESSING_FLOW`.
 
-Cross-cutting accepted behavior includes deterministic browser verification, live-backend acceptance, targeted visual regression, accessibility hardening, and responsive/large-data containment. Route-level performance/runtime-resilience behavior is implemented but remains verification-pending in the active sub-spec.
+Cross-cutting accepted behavior includes deterministic browser verification, live-backend acceptance, targeted visual regression, accessibility hardening, responsive/large-data containment, route-level performance/runtime resilience, authentication/session role-aware presentation, ADMIN identity management, and viewer-oriented Results.
 
 ## Sources
 
@@ -80,7 +80,7 @@ Analysis Items is a technical inspection surface for backend-exposed normalizati
 
 It supports bounded reads with Monitoring Profile and Source filters. It is intentionally diagnostic; user-facing terminal analysis belongs to Results.
 
-## Results
+## Operational Results
 
 The Results screen consumes the bounded Results REST API.
 
@@ -98,6 +98,18 @@ The list uses the summary representation. Selecting one Result loads the detaile
 The browser opens Results SSE before loading the durable REST snapshot. It waits for SSE `ready`, buffers later live updates during the snapshot request, and then merges snapshot/live state into TanStack Query. Connection/reconnect state is visible.
 
 Long detail values remain contained through wrapping or local content scrolling on narrower layouts.
+
+The operational Results presentation is rendered only when the principal has both explicit `ADMIN` and explicit `VIEWER`. Its detail includes internal provenance and diagnostic cross-navigation to Event Explorer and Processing Flow.
+
+## Viewer Results
+
+An explicit `VIEWER` principal without `ADMIN` uses a separate presentation component at the same `/results` route. It reuses the existing Results REST/detail/SSE contracts instead of introducing a duplicate backend API.
+
+The viewer list always requests `relevant=true`. The first bounded filter set exposes information category and analyzed time bounds only. Monitoring Profile ID, Source ID, classification, event/correlation/trace identifiers, and other operational filters are not presented as viewer controls.
+
+Selecting a viewer Result loads the same backend detail endpoint internally, but the rendered detail is limited to consumer-oriented content: title, category, source link, published/analyzed times, explanation, tags, normalized attributes when the backend provides them, and normalized content. The `Details` section is omitted when the contract-valid attributes map is empty. Profile/source/item identifiers, analyzer identity, event IDs, correlation/trace context, and links into Event Explorer or Processing Flow are intentionally not rendered.
+
+Viewer live delivery reuses the accepted Results `useLiveList` flow. SSE carries `relevant=true` and SSE-supported filters; analyzed time bounds are applied to received live summaries in the browser because the current stream contract does not publish time-range parameters.
 
 ## Event Explorer
 
@@ -131,7 +143,7 @@ Many run-level branches remain in backend-provided order inside a bounded vertic
 
 ## Dashboard
 
-Dashboard combines small bounded reads from Sources, Monitoring Profiles, Collection Runs, Analysis, and Results.
+Dashboard combines small bounded reads from Sources, Monitoring Profiles, Collection Runs, and Analysis. It also reads Results when the current principal explicitly has `VIEWER`. An `ADMIN` principal without `VIEWER` does not call the Results boundary.
 
 It is an operational overview rather than a separate backend aggregation contract. A dedicated backend summary endpoint should be introduced only if independent reads become inefficient or semantically inconsistent.
 
@@ -141,13 +153,37 @@ The checked-in backend REST snapshot is `openapi/signalharvester-v1.yaml`.
 
 `openapi-typescript` generates `src/api/generated.ts`. Application-facing aliases live in `src/api/types.ts`. The browser `fetch` transport and common error handling live in `src/api/client.ts`.
 
-The current snapshot includes Monitoring Profiles, Source Test, Results SSE, Event Observation, and Processing Flow contracts. Frontend code consumes those public boundaries and never reads PostgreSQL or Kafka directly.
+The synchronized snapshot includes authentication/current-principal contracts, ADMIN identity-management contracts, Monitoring Profiles, Source Test, Results REST/SSE, Event Observation, and Processing Flow. The frontend consumes the authentication/current-principal contract, the ADMIN identity-management contract through `WEB.IDENTITY_ADMIN`, and the same Results contract for both operational and viewer-specific presentation. Frontend code consumes public boundaries only and never reads PostgreSQL or Kafka directly.
 
 Feature: `WEB.CONTRACT_INTEGRATION`.
 
+
+## Authentication and role-aware shell
+
+The security foundation is implemented and accepted against the backend-owned cookie/CSRF contract.
+
+`AuthSessionProvider` owns current-principal state through TanStack Query. Application bootstrap calls `GET /api/v1/auth/me`; a `401` produces anonymous state, while non-`401` bootstrap failures remain explicit and retryable.
+
+`/login` posts username/password to `POST /api/v1/auth/login`, then re-reads `/api/v1/auth/me`. The frontend does not decode or persist the HttpOnly JWT. Passwords remain local form state and are cleared after successful authentication.
+
+`src/api/client.ts` sends `credentials: 'include'` for REST. Unsafe requests other than login copy the readable `XSRF-TOKEN` cookie into `X-CSRF-TOKEN` when present. Results/Event Observation `EventSource` instances use `withCredentials: true` and do not place credentials in URLs.
+
+Logout calls the backend through the same CSRF-protected adapter. Successful logout, logout `401`, or a protected application `401` clears the principal and removes non-auth TanStack Query data so another identity cannot inherit stale cached application state. A `403` keeps the current principal and remains visible as an authorization failure.
+
+Role checks are additive presentation checks, not enforcement:
+
+- explicit `ADMIN` exposes Dashboard, Sources, Monitoring Profiles, Collection Runs, Analysis Items, Event Explorer, and Processing Flow;
+- the existing operational Results screen requires both explicit `ADMIN` and explicit `VIEWER` because it includes diagnostic/admin cross-navigation;
+- `VIEWER` without `ADMIN` is authenticated and receives the consumer-oriented Results feed at `/results`;
+- `USER` or `BOT` alone do not gain another role implicitly.
+
+Admin/diagnostic Result links are hidden when `VIEWER` is absent. The backend remains authoritative and may still return `403` regardless of frontend presentation.
+
+Features: `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`, `WEB.CONTRACT_INTEGRATION`.
+
 ## Browser state
 
-TanStack Query owns remote/server state, including Sources, Monitoring Profiles, Collection Runs, Analysis items, Results, observed events, and reconstructed Processing Flows.
+TanStack Query owns remote/server state, including the current principal, Sources, Monitoring Profiles, Collection Runs, Analysis items, Results, observed events, and reconstructed Processing Flows.
 
 Page-local React state owns forms, filters, source-test presentation, current selections, and other transient interaction state. The application does not use a second global client-state library.
 
@@ -178,7 +214,7 @@ Primary feature screens are loaded through React lazy route imports.
 
 Vite emits a production manifest. Repository tooling verifies that primary feature pages remain dynamic entries and reports raw/gzip JS/CSS sizes.
 
-Implementation is complete, but this capability remains verification-pending until the active performance/runtime-resilience acceptance commands pass.
+This capability is implemented and accepted; production verification protects the dynamic route structure and asset report.
 
 Feature: `WEB.ROUTE_DELIVERY`.
 
@@ -191,25 +227,40 @@ The canonical routine repository gate is `./run_checks.sh`. It:
 3. runs Vitest;
 4. runs deterministic Playwright;
 5. builds the production frontend;
-6. verifies dynamic route entries and reports production assets.
+6. verifies dynamic route entries and reports production assets;
+7. verifies the production delivery definition without requiring Docker.
 
-The deterministic browser suite covers core navigation/configuration, Source Test, Monitoring Profile and Collection Run request construction, Analysis filters, Results and Event Explorer REST/SSE behavior, Processing Flow, representative async states, accessibility interactions, SSE reconnect/resnapshot, stale bounded deep links, partial flow evidence, responsive/large-data containment, and delayed/failed lazy-route delivery.
+The deterministic browser suite covers authentication bootstrap/login/logout, additive role isolation, CSRF request construction, credentialed EventSource creation, `401`/`403` behavior, ADMIN identity create/update and invariant-error handling, viewer vs operational Results separation, viewer-safe Result filters/detail presentation, core navigation/configuration, Source Test, Monitoring Profile and Collection Run request construction, Analysis filters, Results and Event Explorer REST/SSE behavior, Processing Flow, representative async states, accessibility interactions, SSE reconnect/resnapshot, stale bounded deep links, partial flow evidence, responsive/large-data containment, and delayed/failed lazy-route delivery.
 
 `npm run e2e:visual` owns the focused non-updating comparison for the reviewed Results/detail golden. `npm run e2e:visual:update` is reserved for intentional reviewed baseline changes.
 
-The opt-in `npm run e2e:live` workflow owns a temporary RSS fixture, Source, and Monitoring Profile. It verifies real Results SSE, durable Analysis visibility, real Event Observation SSE, and navigation into backend-reconstructed item/full-run Processing Flow before cleanup.
+The opt-in `npm run e2e:live` workflow authenticates through the browser with an explicit `ADMIN` + `VIEWER` test identity, then owns a temporary RSS fixture, Source, and Monitoring Profile. It verifies real Results SSE, durable Analysis visibility, real Event Observation SSE, navigation into backend-reconstructed item/full-run Processing Flow, and authenticated CSRF-protected cleanup of the temporary configuration records. Results and retained Event Observation records are not deleted because the published browser contract has no cleanup operation for those backend-owned histories; live/deployed acceptance therefore targets disposable backend data.
 
 Accepted browser verification features: `WEB.BROWSER_VERIFICATION`, `WEB.VISUAL_REGRESSION`, `WEB.LIVE_BACKEND_ACCEPTANCE`.
+
+## Production image delivery
+
+The repository defines the accepted production image for feature `WEB.PRODUCTION_DELIVERY`. The multi-stage Docker build installs dependencies with `npm ci`, regenerates OpenAPI types, creates the normal Vite production bundle, and copies only `dist/` into an unprivileged Nginx runtime.
+
+`VITE_API_BASE_URL` is an explicit Docker build argument. Empty remains the same-origin deployment model. The backend repository's documented local Kubernetes port-forward workflow builds with `http://localhost:8080`.
+
+The runtime listens on container port `8080`, declares a non-root user, serves hashed `/assets/` with immutable caching, and uses `index.html` as the React Router fallback for non-asset deep links. Missing hashed assets remain `404`.
+
+`npm run delivery:verify` performs daemon-free structural checks and is part of `./run_checks.sh`. `npm run image:verify` is the opt-in Docker-backed acceptance that builds `signalharvester-web:local`, verifies the non-root image user, runs the image, and checks `/` plus `/results`. Both passed during developer acceptance on 2026-09-17. Kubernetes Deployment/Service manifests remain owned by the backend repository.
+
+## Deployed Kubernetes browser acceptance
+
+The accepted deployed browser workflow reuses the existing `tests/e2e/live/pipeline.live.spec.ts` scenario through `playwright.deployed.config.ts`. Unlike `playwright.live.config.ts`, the deployed config does not start Vite and has no development proxy. Its default browser origin is `http://localhost:5173`, matching the backend repository's documented frontend Service port-forward.
+
+The deployed run explicitly uses `SIGNALHARVESTER_BACKEND_URL=http://localhost:8080` for authenticated cleanup and expects the production bundle itself to target that backend origin. This exercises the compiled `VITE_API_BASE_URL`, backend credentialed CORS/cookie behavior, CSRF-protected mutations, Results/Event SSE, and protected navigation through the production frontend image. `SIGNALHARVESTER_WEB_URL` may point at another already deployed compatible frontend.
+
+The deterministic RSS fixture remains host-owned. `SIGNALHARVESTER_LIVE_FIXTURE_HOST` is the explicit cluster-specific reachability override; backend outbound-source authorization must still permit the fixture destination. The frontend workflow does not apply manifests, create clusters, load images, read Kubernetes Secrets, or weaken backend security policy. The developer accepted this workflow on 2026-09-17 after the deployed production-browser test passed.
 
 ## Current limitations
 
 The frontend does not yet implement:
 
 - dedicated typed Analysis-setting controls beyond the current criteria map;
-- login/session handling;
-- role-aware navigation and authorization UX;
-- ADMIN identity-management workflows;
-- viewer-specific Results presentation;
-- final production frontend deployment integration.
+- production-scale viewer Results search/pagination beyond the current bounded backend contract;
 
-The backend repository now owns security capabilities and remains authoritative for their contract/behavior. The frontend's checked-in OpenAPI snapshot has not yet been synchronized to those security APIs, so the frontend security work remains a future contract-integration stage rather than current implemented behavior.
+The authentication/session role-aware shell, route delivery, ADMIN identity management, viewer-oriented Results, production image delivery, and deployed Kubernetes browser acceptance are accepted. ADMIN identity management consumes the existing backend user-administration contract, and viewer-oriented Results reuse the existing Results REST/SSE boundary. Backend authorization, identity invariants, deployment manifests, Analysis semantics, and Result semantics remain authoritative regardless of frontend presentation.

@@ -14,5 +14,6 @@ run_step "Run Vitest" npm test
 run_step "Run deterministic Playwright browser tests" npm run e2e
 run_step "Build production frontend" npm run build
 run_step "Verify route chunks and report production assets" npm run build:assets
+run_step "Verify production delivery contract" npm run delivery:verify
 
 printf '\nAll routine SignalHarvester Web checks passed.\n'

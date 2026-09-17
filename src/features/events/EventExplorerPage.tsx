@@ -8,6 +8,7 @@ import { PageHeader } from '../../components/PageHeader';
 import { StatusBadge } from '../../components/StatusBadge';
 import { formatDateTime, shortId } from '../../lib/format';
 import { useLiveList } from '../../lib/use-live-list';
+import { hasRole, useAuthSession } from '../auth/AuthSession';
 
 interface EventFilterForm {
   eventType: string;
@@ -91,6 +92,8 @@ export function EventExplorerPage() {
 }
 
 function EventDetail({ event }: { event: ObservedEvent }) {
+  const { principal } = useAuthSession();
+  const canViewResults = hasRole(principal, 'VIEWER');
   const payload = event.payload;
   const resultLink = payload.monitoringProfileId && payload.normalizedItemId
     ? `/results?monitoringProfileId=${encodeURIComponent(payload.monitoringProfileId)}&sourceId=${encodeURIComponent(payload.sourceId ?? '')}&normalizedItemId=${encodeURIComponent(payload.normalizedItemId)}`
@@ -102,7 +105,7 @@ function EventDetail({ event }: { event: ObservedEvent }) {
   return <div className="detail-stack">
     <div className="detail-actions">
       <Link className="button button--ghost" to={flowLink}>Open processing flow</Link>
-      {resultLink ? <Link className="button button--ghost" to={resultLink}>Open related Results</Link> : null}
+      {resultLink && canViewResults ? <Link className="button button--ghost" to={resultLink}>Open related Results</Link> : null}
     </div>
     <dl className="detail-list">
       <div><dt>Event ID</dt><dd className="mono break-all">{event.eventId}</dd></div><div><dt>Type</dt><dd><StatusBadge value={event.eventType} /></dd></div><div><dt>Producer</dt><dd>{event.producer}</dd></div><div><dt>Schema</dt><dd>{event.schemaVersion}</dd></div><div><dt>Occurred</dt><dd>{formatDateTime(event.occurredAt)}</dd></div><div><dt>Observed</dt><dd>{formatDateTime(event.observedAt)}</dd></div><div><dt>Correlation</dt><dd className="mono break-all">{event.correlationId}</dd></div><div><dt>Traceparent</dt><dd className="mono break-all">{event.traceparent ?? '—'}</dd></div><div><dt>Kafka</dt><dd className="mono break-all">{event.kafka.topic} / {event.kafka.partition} / {event.kafka.offset}</dd></div><div><dt>Kafka key</dt><dd className="mono break-all">{event.kafka.key}</dd></div><div><dt>Source event</dt><dd className="mono break-all">{payload.sourceEventId ?? '—'}</dd></div><div><dt>Raw item</dt><dd className="mono break-all">{payload.rawItemId ?? '—'}</dd></div><div><dt>Normalized item</dt><dd className="mono break-all">{payload.normalizedItemId ?? '—'}</dd></div><div><dt>Profile</dt><dd className="mono break-all">{payload.monitoringProfileId ?? '—'}</dd></div><div><dt>Source</dt><dd className="mono break-all">{payload.sourceId ?? '—'}</dd></div><div><dt>Classification</dt><dd>{payload.classification ?? '—'}</dd></div><div><dt>Reason</dt><dd>{payload.reasonCode ?? '—'}</dd></div>

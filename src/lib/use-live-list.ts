@@ -92,7 +92,7 @@ export function useLiveList<TItem, TEnvelope>(
     };
 
     try {
-      source = new EventSource(options.streamUrl);
+      source = new EventSource(options.streamUrl, { withCredentials: true });
     } catch (error) {
       setConnectionStatus('offline');
       setSnapshotError(error);

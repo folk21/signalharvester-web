@@ -72,7 +72,7 @@ Small local fixes may be implemented directly when the owning architecture/curre
 2. Identify the owning frontend feature IDs in `docs/FEATURES.md`.
 3. Create or update the current bounded sub-spec when the change needs one.
 4. Implement against explicit requirements and validation criteria.
-5. Keep implemented-but-unverified work active with an explicit `verification-pending` status when appropriate.
+5. Keep externally blocked work active with an explicit `blocked` status, and keep implemented-but-unverified work active with an explicit `verification-pending` status when appropriate.
 6. After acceptance, move stable knowledge into current-state documentation.
 7. Move the completed sub-spec to `archive/subspecs/`.
 8. Update the umbrella `current_focus` and this index so the active tree stays consistent.
@@ -91,7 +91,7 @@ Managed documentation uses minimal YAML frontmatter:
 Specifications additionally use workflow fields where useful:
 
 - `document_role` — `umbrella` or `subspec`;
-- `spec_status` — for example `active` or `verification-pending`;
+- `spec_status` — for example `active`, `blocked`, or `verification-pending`;
 - `parent` — umbrella path for a sub-spec;
 - `current_focus` — current sub-spec path for an umbrella.
 
@@ -141,10 +141,16 @@ Umbrella:
 
 Current implementation focus:
 
-- [`active/subspecs/ui-performance-runtime-resilience.md`](active/subspecs/ui-performance-runtime-resilience.md) — `WEB.ROUTE_DELIVERY` and `WEB.BROWSER_VERIFICATION`; implementation complete, verification pending.
+- [`active/subspecs/ui-monitoring-profile-analysis-settings.md`](active/subspecs/ui-monitoring-profile-analysis-settings.md) — contract-gated typed Monitoring Profile Analysis settings; runtime implementation is blocked until the backend publishes the profile-owned OpenAPI schema.
 
 ## Recently completed sub-specifications
 
+- [`archive/subspecs/ui-deployed-kubernetes-browser-acceptance.md`](archive/subspecs/ui-deployed-kubernetes-browser-acceptance.md) — production-image browser verification through the backend-owned Kubernetes frontend workload, accepted on 2026-09-17.
+- [`archive/subspecs/ui-production-delivery.md`](archive/subspecs/ui-production-delivery.md) — independently buildable non-root production image and container runtime verification, accepted on 2026-09-17.
+- [`archive/subspecs/ui-viewer-results.md`](archive/subspecs/ui-viewer-results.md) — consumer-oriented relevant Results presentation for explicit VIEWER principals, accepted on 2026-09-17.
+- [`archive/subspecs/ui-admin-identity-management.md`](archive/subspecs/ui-admin-identity-management.md) — ADMIN persisted identity creation/update workflows, accepted on 2026-09-17.
+- [`archive/subspecs/ui-authentication-authorization-foundation.md`](archive/subspecs/ui-authentication-authorization-foundation.md) — authenticated cookie/CSRF session foundation and additive role-aware shell, accepted on 2026-09-17.
+- [`archive/subspecs/ui-performance-runtime-resilience.md`](archive/subspecs/ui-performance-runtime-resilience.md) — route-level code splitting, lazy-route failure containment, and production asset reporting, accepted on 2026-09-17.
 - [`archive/subspecs/ui-responsive-large-data-hardening.md`](archive/subspecs/ui-responsive-large-data-hardening.md) — responsive/large bounded data containment, accepted on 2026-09-15.
 - [`archive/subspecs/ui-targeted-visual-regression.md`](archive/subspecs/ui-targeted-visual-regression.md) — targeted reviewed visual regression, accepted on 2026-09-15.
 - [`archive/subspecs/ui-accessibility-hardening.md`](archive/subspecs/ui-accessibility-hardening.md) — keyboard/focus/semantic accessibility hardening, accepted on 2026-09-15.

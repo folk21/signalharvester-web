@@ -35,6 +35,7 @@ test('a failed lazy route chunk shows recoverable UI and navigation can leave th
   await page.route('**/src/features/results/ResultsPage.tsx*', async (route) => {
     await route.abort('failed');
   });
+  await page.route('**/api/v1/**', rejectUnexpectedApi);
 
   await page.goto('/results', { waitUntil: 'domcontentloaded' });
 

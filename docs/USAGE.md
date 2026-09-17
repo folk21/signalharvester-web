@@ -9,7 +9,36 @@ description: Current browser workflows for configuration, collection operations,
 
 This document describes how to use the current frontend after it is running. Installation prerequisites and local startup are owned by the root [`README.md`](../README.md).
 
-The current frontend has no login/session or role-aware workflows. Use it only with a trusted local/private backend until the security slice is implemented.
+The frontend authentication/session foundation is implemented and accepted against the backend security contract. Use a security-enabled backend for protected workflows; backend authorization remains authoritative.
+
+## Authentication and roles
+
+Open any protected route. Anonymous navigation redirects to `/login`; after a successful sign-in the browser re-reads the current principal from `/api/v1/auth/me`.
+
+The frontend uses the backend's HttpOnly authentication cookie and does not expose the JWT to JavaScript. State-changing requests forward the readable signed `XSRF-TOKEN` cookie through `X-CSRF-TOKEN`, and Results/Event Observation SSE connections send browser credentials.
+
+Roles are additive:
+
+- `ADMIN` exposes configuration, operations, and diagnostic routes;
+- `VIEWER` grants viewer Results access but does not imply `ADMIN`;
+- the existing operational Results screen currently requires both `ADMIN` and `VIEWER`;
+- a `VIEWER`-only principal receives a consumer-oriented relevant Results feed without ADMIN diagnostic detail;
+- `USER` or `BOT` alone do not receive another browser capability implicitly.
+
+A `401` from a protected request ends the frontend session and returns protected navigation to login. A `403` keeps the principal authenticated and displays an authorization error.
+
+Use the sidebar **Sign out** action to call backend logout and clear cached application state.
+
+## Identity Administration
+
+Open `/users` with explicit `ADMIN`.
+
+The screen lists persisted identities and supports creating a `HUMAN` or `BOT` identity plus replacing an existing identity's enabled state and explicit roles. Create passwords are never displayed after submission. Username and identity type are immutable in the edit form because the current backend API does not publish mutation operations for them.
+
+Roles are additive and non-hierarchical. The form shows the backend baseline `USER` role for `HUMAN` identities and `BOT` role for `BOT` identities as required context, but the saved backend response remains authoritative.
+
+If an update would disable or remove `ADMIN` from the last enabled administrator, the backend returns `409`; the UI shows that failure instead of trying to predict the invariant from its potentially stale list snapshot. There is currently no user deletion or password reset/change workflow in the frontend contract.
+
 
 ## Typical workflow
 
@@ -31,7 +60,7 @@ Use the backend repository's `tools/live-backend/` workflow when you need to dis
 
 ## Dashboard
 
-Open `/` for a bounded operational overview across Sources, Monitoring Profiles, Collection Runs, Analysis, and Results.
+Open `/` with explicit `ADMIN` for a bounded operational overview across Sources, Monitoring Profiles, Collection Runs, and Analysis. Results summaries are included only when the same principal also has explicit `VIEWER`.
 
 Use the dedicated feature screens for complete actions and detailed inspection.
 
@@ -58,7 +87,7 @@ The backend uses the normal fetch/extraction boundary without publishing normal 
 
 Disabled Sources may be tested. A successful preview does not mean that the items were inserted into Results.
 
-Source management authorizes backend outbound access to configured destinations. Do not expose this workflow to untrusted users while frontend authentication/authorization is not implemented.
+Source management authorizes backend outbound access to configured destinations. The route is presented only to explicit `ADMIN`, but backend authorization and external-source destination policy remain the enforcement boundaries.
 
 ## Monitoring Profiles
 
@@ -103,7 +132,7 @@ Use it when diagnosing why discoveries were accepted, deduplicated, or associate
 
 Open `/results`.
 
-Current filters are:
+Principals with both explicit `ADMIN` and explicit `VIEWER` receive the operational Results presentation. Current operational filters are:
 
 - Monitoring Profile ID;
 - Source ID;
@@ -118,6 +147,16 @@ Selecting a row loads detail separately. Result detail includes normalized conte
 The page opens backend SSE before loading its durable REST snapshot. Matching live updates then appear without manual refresh. A visible indicator shows live or reconnecting state.
 
 Result detail can navigate to Event Explorer or the exact run/item Processing Flow when the required identifiers are available.
+
+### Viewer Results
+
+A `VIEWER` principal without `ADMIN` uses the same `/results` route with a consumer-oriented presentation. The browser reuses the existing Results REST/detail/SSE contracts and always requests `relevant=true` for the viewer feed.
+
+The viewer filters are limited to information category and analyzed time range. Monitoring Profile ID, Source ID, classification, item/event/correlation/trace identifiers, and diagnostic filters are not presented.
+
+Selecting a viewer Result shows consumer content such as title, category, source link, publication/analyzed times, summary/explanation, tags, normalized attributes, and normalized content. The viewer presentation does not render analyzer identity, internal provenance IDs, trace context, or links into Event Explorer and Processing Flow.
+
+The viewer feed opens Results SSE before its durable snapshot using the same race-free synchronization behavior as the operational Results screen. New matching relevant Results appear without manual page refresh.
 
 ## Event Explorer
 
@@ -212,14 +251,17 @@ Inspect the changed image and rerun `npm run e2e:visual`. Do not update visual b
 With a real backend already running:
 
 ```bash
-SIGNALHARVESTER_BACKEND_URL=http://127.0.0.1:8080 npm run e2e:live
+SIGNALHARVESTER_BACKEND_URL=http://127.0.0.1:8080 \
+SIGNALHARVESTER_LIVE_USERNAME=<admin-viewer-user> \
+SIGNALHARVESTER_LIVE_PASSWORD=<password> \
+npm run e2e:live
 ```
 
-The live workflow creates a temporary deterministic RSS Source and Monitoring Profile. It verifies Source Test, establishes Results SSE before a manual run, receives both fixture Results without refresh, keeps a durable Analysis check, establishes Event Observation SSE before a second run, receives a new correlated event without refresh, and follows a real Analysis event into item/full-run Processing Flow.
+The live workflow first authenticates through `/login`. The supplied test identity must explicitly have both `ADMIN` and `VIEWER`. It then creates a temporary deterministic RSS Source and Monitoring Profile, verifies Source Test, establishes Results SSE before a manual run, receives both fixture Results without refresh, keeps a durable Analysis check, establishes Event Observation SSE before a second run, receives a new correlated event without refresh, and follows a real Analysis event into item/full-run Processing Flow.
 
-Cleanup removes the Monitoring Profile before the Source so backend referential integrity is respected.
+Cleanup removes the Monitoring Profile before the Source through the authenticated browser context and includes CSRF proof. Results and Event Observation history are backend-owned durable/retained projections and have no browser-facing test-cleanup API, so those records may remain after the test. Their fixture item URLs point at the temporary RSS server and stop resolving when that server closes. Run `e2e:live` and `e2e:deployed` only against a disposable backend database or an environment whose diagnostic history may be discarded.
 
-For a containerized backend, set `SIGNALHARVESTER_LIVE_FIXTURE_HOST` when the backend needs a non-loopback hostname to reach the host fixture.
+Run the backend with its security environment and test credentials. For a containerized or source-hardened backend, set `SIGNALHARVESTER_LIVE_FIXTURE_HOST` as needed and explicitly permit the deterministic fixture destination according to backend external-source security policy.
 
 ## Production route and asset verification
 
@@ -240,9 +282,56 @@ Run routine repository verification with:
 ./run_checks.sh
 ```
 
-This regenerates OpenAPI types, typechecks application/browser-test code, runs Vitest and deterministic Playwright, builds the production frontend, verifies dynamic route entries, and reports production assets.
+This regenerates OpenAPI types, typechecks application/browser-test code, runs Vitest and deterministic Playwright, builds the production frontend, verifies dynamic route entries, reports production assets, and validates the daemon-free production delivery contract.
 
 Live-backend E2E remains separate because this repository does not own backend infrastructure lifecycle.
+
+## Production container verification
+
+The frontend repository owns the real production image consumed by the separately owned backend Kubernetes workload boundary. With Docker available, run:
+
+```bash
+npm run image:verify
+```
+
+The command builds `signalharvester-web:local` with the local Kubernetes browser backend origin `http://localhost:8080`, verifies the final image declares a non-root user, starts it with container port `8080` mapped to an ephemeral loopback port, and checks both `/` and `/results`.
+
+For a manual local-cluster image build:
+
+```bash
+docker build \
+  --build-arg VITE_API_BASE_URL=http://localhost:8080 \
+  -t signalharvester-web:local .
+```
+
+Load that image into the selected local cluster using the cluster's normal image-loading workflow, then apply the backend repository's `infra/kubernetes/frontend` workload. This frontend repository intentionally does not duplicate those Kubernetes manifests.
+
+For same-origin production routing, omit the build argument or pass an empty value. For a separately hosted browser origin, build with the explicit backend origin and configure the backend's credentialed CORS/cookie policy accordingly.
+
+## Deployed Kubernetes browser verification
+
+After the backend repository's frontend workload is running, keep both documented browser-facing port-forwards active:
+
+```bash
+kubectl -n signalharvester port-forward service/signalharvester-backend 8080:8080
+kubectl -n signalharvester port-forward service/signalharvester-web 5173:8080
+```
+
+Then run the production-boundary browser scenario from this repository:
+
+```bash
+SIGNALHARVESTER_WEB_URL=http://localhost:5173 \
+SIGNALHARVESTER_BACKEND_URL=http://localhost:8080 \
+SIGNALHARVESTER_LIVE_USERNAME=<admin-viewer-user> \
+SIGNALHARVESTER_LIVE_PASSWORD=<password> \
+npm run e2e:deployed
+```
+
+Use an enabled identity with explicit `ADMIN` and `VIEWER` roles. The deployed Playwright configuration does not start a local frontend server; it reuses the live pipeline against the already deployed production image. Keeping `localhost` on both sides is intentional for the documented cookie/CORS boundary.
+
+The scenario starts a deterministic RSS fixture on the developer host. If the backend pod cannot reach that host through `127.0.0.1`, set `SIGNALHARVESTER_LIVE_FIXTURE_HOST` to an address reachable from the cluster and explicitly permit that fixture destination in the backend's external-source access policy for the acceptance run.
+
+This repository does not create the cluster, apply the backend-owned workload, load images, or manage Kubernetes Secrets. Those remain backend/infrastructure responsibilities. The deployed production-browser workflow was accepted on 2026-09-17 after the developer completed this run successfully.
 
 ## Browser troubleshooting
 
@@ -258,8 +347,8 @@ Check:
 
 In normal local development, Vite proxies `/api` to the backend configured by `VITE_DEV_PROXY_TARGET`.
 
-## Current security limitation
+## Current security status
 
-The frontend has no login/session or role-aware implementation yet. Do not deploy the current build as a public administration surface.
+The frontend implements the accepted browser authentication/session foundation, credentialed REST/SSE, CSRF forwarding, role-aware presentation, logout, explicit `401`/`403` handling, ADMIN identity management, and viewer-oriented Results.
 
-Backend authorization remains authoritative when the future frontend security workflow is added.
+Backend authorization and identity invariants remain authoritative. The frontend does not infer role hierarchy or decode the JWT. Cross-origin production hosting still requires an explicitly compatible backend CORS/cookie policy.
