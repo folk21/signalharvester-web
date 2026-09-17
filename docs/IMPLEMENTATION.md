@@ -25,11 +25,11 @@ Configuration and operations:
 Results and diagnostics:
 
 - **Analysis Items** (`/analysis`) — bounded normalized/deduplication inspection with profile/source filters. Feature: `WEB.ANALYSIS_INSPECTION`.
-- **Results** (`/results`) — filtered analyzed Result list, separate detail loading, and live SSE merge. Features: `WEB.RESULTS_BROWSING`, `WEB.RESULTS_LIVE`.
+- **Results** (`/results`) — role-specific Result presentation: the existing operational list/detail for `ADMIN` + `VIEWER`, or a consumer-oriented relevant feed for `VIEWER` without `ADMIN`. Features: `WEB.RESULTS_BROWSING`, `WEB.RESULTS_LIVE`, `WEB.VIEWER_RESULTS`.
 - **Event Explorer** (`/events`) — bounded retained event history plus live SSE, filters, and event detail. Feature: `WEB.EVENT_EXPLORER`.
 - **Processing Flow** (`/flows`) — backend-reconstructed run/item branches, evidence, durations, limitations, and stage metadata. Feature: `WEB.PROCESSING_FLOW`.
 
-Cross-cutting accepted behavior includes deterministic browser verification, live-backend acceptance, targeted visual regression, accessibility hardening, responsive/large-data containment, route-level performance/runtime resilience, and the authentication/session role-aware shell foundation. ADMIN identity management is implemented in the current active sub-spec.
+Cross-cutting accepted behavior includes deterministic browser verification, live-backend acceptance, targeted visual regression, accessibility hardening, responsive/large-data containment, route-level performance/runtime resilience, and the authentication/session role-aware shell foundation. ADMIN identity management and viewer-oriented Results are implemented but remain verification-pending in active sub-specifications.
 
 ## Sources
 
@@ -80,7 +80,7 @@ Analysis Items is a technical inspection surface for backend-exposed normalizati
 
 It supports bounded reads with Monitoring Profile and Source filters. It is intentionally diagnostic; user-facing terminal analysis belongs to Results.
 
-## Results
+## Operational Results
 
 The Results screen consumes the bounded Results REST API.
 
@@ -98,6 +98,18 @@ The list uses the summary representation. Selecting one Result loads the detaile
 The browser opens Results SSE before loading the durable REST snapshot. It waits for SSE `ready`, buffers later live updates during the snapshot request, and then merges snapshot/live state into TanStack Query. Connection/reconnect state is visible.
 
 Long detail values remain contained through wrapping or local content scrolling on narrower layouts.
+
+The operational Results presentation is rendered only when the principal has both explicit `ADMIN` and explicit `VIEWER`. Its detail includes internal provenance and diagnostic cross-navigation to Event Explorer and Processing Flow.
+
+## Viewer Results
+
+An explicit `VIEWER` principal without `ADMIN` uses a separate presentation component at the same `/results` route. It reuses the existing Results REST/detail/SSE contracts instead of introducing a duplicate backend API.
+
+The viewer list always requests `relevant=true`. The first bounded filter set exposes information category and analyzed time bounds only. Monitoring Profile ID, Source ID, classification, event/correlation/trace identifiers, and other operational filters are not presented as viewer controls.
+
+Selecting a viewer Result loads the same backend detail endpoint internally, but the rendered detail is limited to consumer-oriented content: title, category, source link, published/analyzed times, explanation, tags, normalized attributes, and normalized content. Profile/source/item identifiers, analyzer identity, event IDs, correlation/trace context, and links into Event Explorer or Processing Flow are intentionally not rendered.
+
+Viewer live delivery reuses the accepted Results `useLiveList` flow. SSE carries `relevant=true` and SSE-supported filters; analyzed time bounds are applied to received live summaries in the browser because the current stream contract does not publish time-range parameters.
 
 ## Event Explorer
 
@@ -141,7 +153,7 @@ The checked-in backend REST snapshot is `openapi/signalharvester-v1.yaml`.
 
 `openapi-typescript` generates `src/api/generated.ts`. Application-facing aliases live in `src/api/types.ts`. The browser `fetch` transport and common error handling live in `src/api/client.ts`.
 
-The synchronized snapshot includes authentication/current-principal contracts, ADMIN identity-management contracts, Monitoring Profiles, Source Test, Results SSE, Event Observation, and Processing Flow. The frontend consumes the authentication/current-principal contract and the ADMIN identity-management contract through `WEB.IDENTITY_ADMIN`. Frontend code consumes public boundaries only and never reads PostgreSQL or Kafka directly.
+The synchronized snapshot includes authentication/current-principal contracts, ADMIN identity-management contracts, Monitoring Profiles, Source Test, Results REST/SSE, Event Observation, and Processing Flow. The frontend consumes the authentication/current-principal contract, the ADMIN identity-management contract through `WEB.IDENTITY_ADMIN`, and the same Results contract for both operational and viewer-specific presentation. Frontend code consumes public boundaries only and never reads PostgreSQL or Kafka directly.
 
 Feature: `WEB.CONTRACT_INTEGRATION`.
 
@@ -162,7 +174,7 @@ Role checks are additive presentation checks, not enforcement:
 
 - explicit `ADMIN` exposes Dashboard, Sources, Monitoring Profiles, Collection Runs, Analysis Items, Event Explorer, and Processing Flow;
 - the existing operational Results screen requires both explicit `ADMIN` and explicit `VIEWER` because it includes diagnostic/admin cross-navigation;
-- `VIEWER` without `ADMIN` is authenticated and may navigate to `/results`, but receives a bounded placeholder until `WEB.VIEWER_RESULTS` is implemented;
+- `VIEWER` without `ADMIN` is authenticated and receives the consumer-oriented Results feed at `/results`;
 - `USER` or `BOT` alone do not gain another role implicitly.
 
 Admin/diagnostic Result links are hidden when `VIEWER` is absent. The backend remains authoritative and may still return `403` regardless of frontend presentation.
@@ -217,7 +229,7 @@ The canonical routine repository gate is `./run_checks.sh`. It:
 5. builds the production frontend;
 6. verifies dynamic route entries and reports production assets.
 
-The deterministic browser suite covers authentication bootstrap/login/logout, additive role isolation, CSRF request construction, credentialed EventSource creation, `401`/`403` behavior, ADMIN identity create/update and invariant-error handling, core navigation/configuration, Source Test, Monitoring Profile and Collection Run request construction, Analysis filters, Results and Event Explorer REST/SSE behavior, Processing Flow, representative async states, accessibility interactions, SSE reconnect/resnapshot, stale bounded deep links, partial flow evidence, responsive/large-data containment, and delayed/failed lazy-route delivery.
+The deterministic browser suite covers authentication bootstrap/login/logout, additive role isolation, CSRF request construction, credentialed EventSource creation, `401`/`403` behavior, ADMIN identity create/update and invariant-error handling, viewer vs operational Results separation, viewer-safe Result filters/detail presentation, core navigation/configuration, Source Test, Monitoring Profile and Collection Run request construction, Analysis filters, Results and Event Explorer REST/SSE behavior, Processing Flow, representative async states, accessibility interactions, SSE reconnect/resnapshot, stale bounded deep links, partial flow evidence, responsive/large-data containment, and delayed/failed lazy-route delivery.
 
 `npm run e2e:visual` owns the focused non-updating comparison for the reviewed Results/detail golden. `npm run e2e:visual:update` is reserved for intentional reviewed baseline changes.
 
@@ -230,7 +242,7 @@ Accepted browser verification features: `WEB.BROWSER_VERIFICATION`, `WEB.VISUAL_
 The frontend does not yet implement:
 
 - dedicated typed Analysis-setting controls beyond the current criteria map;
-- the dedicated viewer-specific Results list/detail experience;
+- production-scale viewer Results search/pagination beyond the current bounded backend contract;
 - final production frontend deployment integration.
 
-The authentication/session role-aware shell and route-delivery capabilities are accepted. ADMIN identity management now consumes the existing backend user-administration contract. Backend authorization and identity invariants remain authoritative regardless of frontend presentation.
+The authentication/session role-aware shell and route-delivery capabilities are accepted. ADMIN identity management consumes the existing backend user-administration contract, and viewer-oriented Results reuse the existing Results REST/SSE boundary. Both newer slices are verification-pending. Backend authorization, identity invariants, and Result semantics remain authoritative regardless of frontend presentation.

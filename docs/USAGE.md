@@ -22,7 +22,7 @@ Roles are additive:
 - `ADMIN` exposes configuration, operations, and diagnostic routes;
 - `VIEWER` grants viewer Results access but does not imply `ADMIN`;
 - the existing operational Results screen currently requires both `ADMIN` and `VIEWER`;
-- a `VIEWER`-only principal receives an authenticated placeholder until the dedicated viewer Results stage is implemented;
+- a `VIEWER`-only principal receives a consumer-oriented relevant Results feed without ADMIN diagnostic detail;
 - `USER` or `BOT` alone do not receive another browser capability implicitly.
 
 A `401` from a protected request ends the frontend session and returns protected navigation to login. A `403` keeps the principal authenticated and displays an authorization error.
@@ -132,7 +132,7 @@ Use it when diagnosing why discoveries were accepted, deduplicated, or associate
 
 Open `/results`.
 
-Current filters are:
+Principals with both explicit `ADMIN` and explicit `VIEWER` receive the operational Results presentation. Current operational filters are:
 
 - Monitoring Profile ID;
 - Source ID;
@@ -147,6 +147,16 @@ Selecting a row loads detail separately. Result detail includes normalized conte
 The page opens backend SSE before loading its durable REST snapshot. Matching live updates then appear without manual refresh. A visible indicator shows live or reconnecting state.
 
 Result detail can navigate to Event Explorer or the exact run/item Processing Flow when the required identifiers are available.
+
+### Viewer Results
+
+A `VIEWER` principal without `ADMIN` uses the same `/results` route with a consumer-oriented presentation. The browser reuses the existing Results REST/detail/SSE contracts and always requests `relevant=true` for the viewer feed.
+
+The viewer filters are limited to information category and analyzed time range. Monitoring Profile ID, Source ID, classification, item/event/correlation/trace identifiers, and diagnostic filters are not presented.
+
+Selecting a viewer Result shows consumer content such as title, category, source link, publication/analyzed times, summary/explanation, tags, normalized attributes, and normalized content. The viewer presentation does not render analyzer identity, internal provenance IDs, trace context, or links into Event Explorer and Processing Flow.
+
+The viewer feed opens Results SSE before its durable snapshot using the same race-free synchronization behavior as the operational Results screen. New matching relevant Results appear without manual page refresh.
 
 ## Event Explorer
 

@@ -11,6 +11,7 @@ const expectedRouteEntries = [
   'src/features/runs/CollectionRunsPage.tsx',
   'src/features/analysis/AnalysisItemsPage.tsx',
   'src/features/results/ResultsPage.tsx',
+  'src/features/results/ViewerResultsPage.tsx',
   'src/features/events/EventExplorerPage.tsx',
   'src/features/flows/ProcessingFlowPage.tsx',
   'src/features/users/UserAdministrationPage.tsx',

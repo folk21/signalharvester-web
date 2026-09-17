@@ -51,13 +51,13 @@ test('unauthenticated deep links require login and logout sends CSRF proof', asy
       authenticated = false;
       return route.fulfill({ status: 200, body: '' });
     }
-    if (url.pathname === '/api/v1/sources' && request.method() === 'GET') {
+    if (url.pathname === '/api/v1/admin/users' && request.method() === 'GET') {
       return fulfillJson(route, []);
     }
     return rejectUnexpectedApi(route);
   });
 
-  await page.goto('/sources');
+  await page.goto('/users');
   await expect(page).toHaveURL(/\/login$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Sign in' })).toBeVisible();
 
@@ -68,8 +68,8 @@ test('unauthenticated deep links require login and logout sends CSRF proof', asy
 
   await page.getByLabel('Password').fill('correct-password');
   await page.getByRole('button', { name: 'Sign in' }).click();
-  await expect(page).toHaveURL(/\/sources$/);
-  await expect(page.getByRole('heading', { level: 1, name: 'Sources' })).toBeVisible();
+  await expect(page).toHaveURL(/\/users$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'Identity Administration' })).toBeVisible();
   await expect(page.getByText('admin-viewer', { exact: true })).toBeVisible();
 
   await page.evaluate(() => {
@@ -82,11 +82,16 @@ test('unauthenticated deep links require login and logout sends CSRF proof', asy
 });
 
 test('viewer-only identities do not receive operational or diagnostic navigation', async ({ page }) => {
+  await installMockEventSource(page, true);
   await page.route('**/api/v1/**', async (route) => {
     const request = route.request();
     const url = new URL(request.url());
     if (url.pathname === '/api/v1/auth/me' && request.method() === 'GET') {
       return fulfillJson(route, viewerPrincipal);
+    }
+    if (url.pathname === '/api/v1/results' && request.method() === 'GET') {
+      expect(url.searchParams.get('relevant')).toBe('true');
+      return fulfillJson(route, []);
     }
     return rejectUnexpectedApi(route);
   });
@@ -97,8 +102,8 @@ test('viewer-only identities do not receive operational or diagnostic navigation
   await expect(page.getByRole('link', { name: 'Dashboard' })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Sources' })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Event Explorer' })).toHaveCount(0);
-  await expect(page.getByRole('heading', { level: 1, name: 'Results workspace' })).toBeVisible();
-  await expect(page.getByText(/Operational and diagnostic Result details are intentionally not exposed/)).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Results feed' })).toBeVisible();
+  await expect(page.getByText('No relevant results match the current filters.')).toBeVisible();
 
   await page.goto('/sources');
   await expect(page.getByRole('heading', { level: 1, name: 'Access denied' })).toBeVisible();

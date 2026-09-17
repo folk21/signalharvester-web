@@ -4,7 +4,7 @@ title: SignalHarvester Web initial product specification
 description: Active frontend umbrella specification for configuration, operational inspection, Results, live updates, and event-flow diagnostics.
 document_role: umbrella
 spec_status: active
-current_focus: subspecs/ui-admin-identity-management.md
+current_focus: subspecs/ui-viewer-results.md
 ---
 # SignalHarvester Web initial product specification
 
@@ -18,7 +18,9 @@ Frontend implementation details belong here rather than in the backend repositor
 
 ## Current implementation focus
 
-The current bounded focus is [`subspecs/ui-admin-identity-management.md`](subspecs/ui-admin-identity-management.md). It adds ADMIN identity list/create/update workflows over the accepted backend `/api/v1/admin/users` contract while keeping identity invariants and authorization backend-owned.
+The current bounded focus is [`subspecs/ui-viewer-results.md`](subspecs/ui-viewer-results.md). It adds a consumer-facing `/results` experience for explicit `VIEWER` principals over the existing Results REST/SSE contracts while keeping operational diagnostics out of viewer presentation.
+
+`WEB.IDENTITY_ADMIN` runtime code and deterministic coverage are implemented, but its sub-spec remains active as verification-pending until the canonical frontend gate is confirmed.
 
 The authentication/authorization foundation and route-delivery slices were accepted on 2026-09-17 after the canonical frontend verification passed and are archived.
 
@@ -86,8 +88,8 @@ The frontend does not own:
 | Responsive / large-data UX hardening | Implemented and accepted |
 | Frontend performance / runtime resilience | Implemented and accepted |
 | Authentication/session and role-aware shell | Implemented and accepted |
-| ADMIN identity management | Implemented in current focus |
-| Viewer-specific Results presentation | Pending |
+| ADMIN identity management | Implemented, verification-pending |
+| Viewer-specific Results presentation | Implemented in current focus, verification-pending |
 
 ## Requirement map
 
@@ -113,6 +115,7 @@ The frontend does not own:
 | UI-R18 | `WEB.BROWSER_VERIFICATION` | `TESTING.DETERMINISTIC_LOCAL` |
 | UI-R19 | `WEB.RESPONSIVE_LAYOUT` | `DELIVERY.FRONTEND_BACKEND_BOUNDARY` |
 | UI-R20 | `WEB.ROUTE_DELIVERY` | `DELIVERY.FRONTEND_BACKEND_BOUNDARY` |
+| UI-R21 | `WEB.VIEWER_RESULTS`, `WEB.AUTHORIZATION_UX` | `PRESENTATION.VIEWER_RESULTS`, `RESULTS.BROWSING`, `SECURITY.AUTHORIZATION` |
 
 ## Requirements
 
@@ -340,7 +343,7 @@ Frontend role checks may control routes, navigation, and presentation, but backe
 
 Authentication failure and authorization failure must remain distinct: protected `401` responses end the frontend session, while `403` responses keep the principal authenticated and expose an authorization error.
 
-Current status: authentication/session and role-aware presentation are implemented and accepted. ADMIN identity management is implemented in the current focus; the dedicated viewer Results presentation remains separate.
+Current status: authentication/session and role-aware presentation are implemented and accepted. ADMIN identity management is verification-pending. Viewer-specific Results presentation is implemented in the current focus and verification-pending.
 
 ### UI-R17 — accessibility and usability baseline
 
@@ -390,6 +393,18 @@ Primary feature screens should be delivered as route-level chunks so the applica
 Production verification should preserve the intended dynamic route structure and report generated asset sizes from a measured build. Numeric bundle budgets should be introduced only after the baseline is reviewed.
 
 Current status: implemented and accepted; historical implementation details are archived in [`../archive/subspecs/ui-performance-runtime-resilience.md`](../archive/subspecs/ui-performance-runtime-resilience.md).
+
+### UI-R21 — role-specific consumer Results presentation
+
+Features: `WEB.VIEWER_RESULTS`, `WEB.AUTHORIZATION_UX`. Related backend: `PRESENTATION.VIEWER_RESULTS`, `RESULTS.BROWSING`, `SECURITY.AUTHORIZATION`.
+
+An authenticated principal with explicit `VIEWER` must have a consumer-oriented Result browsing and detail experience that does not require `ADMIN` and does not present operational pipeline or infrastructure diagnostics outside viewer scope.
+
+The viewer experience should reuse the existing Results REST/detail/SSE contracts when they already provide the required data. Different presentation alone must not create a duplicate backend API.
+
+An `ADMIN` + `VIEWER` principal may retain the operational Results presentation with diagnostic cross-navigation. An `ADMIN` principal without `VIEWER` must not gain Results access through frontend role inference.
+
+Current status: implemented in [`subspecs/ui-viewer-results.md`](subspecs/ui-viewer-results.md) and verification-pending.
 
 ## Non-goals for the current product slice
 

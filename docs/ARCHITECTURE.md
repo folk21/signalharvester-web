@@ -83,9 +83,10 @@ Primary routes are lazy-loaded:
 - `/profiles` — Monitoring Profile configuration;
 - `/runs` — profile-driven Collection Runs;
 - `/analysis` — normalized/deduplication inspection;
-- `/results` — analyzed Results browsing, detail, and live updates;
+- `/results` — role-specific analyzed Results browsing, detail, and live updates;
 - `/events` — bounded technical event history/live updates;
-- `/flows` — backend-reconstructed run/item processing graphs.
+- `/flows` — backend-reconstructed run/item processing graphs;
+- `/users` — ADMIN identity administration.
 
 The shell remains mounted while a route module loads. A `Suspense` state exposes accessible loading feedback, and a route-resetting error boundary contains route import/render failures inside the main content region.
 
@@ -209,11 +210,11 @@ The implemented security foundation uses the backend-published browser contract:
 
 `AuthSessionProvider` owns principal bootstrap/lifecycle. Login passwords remain local form state and are not stored in TanStack Query, Web Storage, URLs, or logs.
 
-Role-aware presentation currently exposes administrative/diagnostic screens to explicit `ADMIN`. The existing operational Results screen is mounted only for principals that have both `ADMIN` and `VIEWER`; a `VIEWER`-only principal receives a safe placeholder until `WEB.VIEWER_RESULTS` is implemented. `USER`-only and `BOT`-only principals receive no invented browser capability.
+Role-aware presentation exposes administrative/diagnostic screens to explicit `ADMIN`. The operational Results screen is mounted only for principals that have both `ADMIN` and `VIEWER`; a `VIEWER`-only principal receives a consumer-oriented Result feed that reuses the same backend Results REST/SSE boundary without rendering operational diagnostic metadata. `USER`-only and `BOT`-only principals receive no invented browser capability.
 
-ADMIN identity management uses the same credentialed/CSRF-protected transport and remains presentation over backend-owned identity invariants. Cross-origin production hosting still depends on an explicitly compatible backend CORS and cookie policy. The final viewer Results presentation remains a separate stage.
+ADMIN identity management uses the same credentialed/CSRF-protected transport and remains presentation over backend-owned identity invariants. Viewer Results remains a presentation boundary rather than a new backend authorization or data contract. Cross-origin production hosting still depends on an explicitly compatible backend CORS and cookie policy.
 
-Features: `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`. Planned follow-ups: `WEB.IDENTITY_ADMIN`, `WEB.VIEWER_RESULTS`.
+Features: `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`, `WEB.IDENTITY_ADMIN`, `WEB.VIEWER_RESULTS`.
 
 ## Testing architecture
 

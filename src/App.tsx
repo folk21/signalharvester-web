@@ -33,6 +33,10 @@ const ResultsPage = lazy(async () => {
   const module = await import('./features/results/ResultsPage');
   return { default: module.ResultsPage };
 });
+const ViewerResultsPage = lazy(async () => {
+  const module = await import('./features/results/ViewerResultsPage');
+  return { default: module.ViewerResultsPage };
+});
 const EventExplorerPage = lazy(async () => {
   const module = await import('./features/events/EventExplorerPage');
   return { default: module.EventExplorerPage };
@@ -57,7 +61,10 @@ export function App() {
           <Route path="profiles" element={<RequireRole role="ADMIN"><MonitoringProfilesPage /></RequireRole>} />
           <Route path="runs" element={<RequireRole role="ADMIN"><CollectionRunsPage /></RequireRole>} />
           <Route path="analysis" element={<RequireRole role="ADMIN"><AnalysisItemsPage /></RequireRole>} />
-          <Route path="results" element={<ResultsRoute operationalResults={<ResultsPage />} />} />
+          <Route
+            path="results"
+            element={<ResultsRoute operationalResults={<ResultsPage />} viewerResults={<ViewerResultsPage />} />}
+          />
           <Route path="events" element={<RequireRole role="ADMIN"><EventExplorerPage /></RequireRole>} />
           <Route path="flows" element={<RequireRole role="ADMIN"><ProcessingFlowPage /></RequireRole>} />
           <Route path="users" element={<RequireRole role="ADMIN"><UserAdministrationPage /></RequireRole>} />

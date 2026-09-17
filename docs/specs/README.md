@@ -141,7 +141,11 @@ Umbrella:
 
 Current implementation focus:
 
-- [`active/subspecs/ui-admin-identity-management.md`](active/subspecs/ui-admin-identity-management.md) — `WEB.IDENTITY_ADMIN` over the accepted backend identity-administration contract.
+- [`active/subspecs/ui-viewer-results.md`](active/subspecs/ui-viewer-results.md) — `WEB.VIEWER_RESULTS` consumer presentation over the existing Results REST/SSE contract.
+
+Supporting verification-pending work:
+
+- [`active/subspecs/ui-admin-identity-management.md`](active/subspecs/ui-admin-identity-management.md) — `WEB.IDENTITY_ADMIN` runtime code is implemented; canonical developer acceptance is still pending.
 
 ## Recently completed sub-specifications
 

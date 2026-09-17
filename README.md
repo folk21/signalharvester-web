@@ -2,7 +2,7 @@
 
 SignalHarvester Web is the React/TypeScript frontend for SignalHarvester. It is one coherent browser application for configuration, operations, analyzed Results, and pipeline diagnostics over backend REST/OpenAPI and SSE contracts.
 
-The current build includes the accepted frontend authentication/session foundation plus ADMIN identity-management workflows over the backend cookie/CSRF/RBAC contract. Backend authorization and identity invariants remain authoritative; the dedicated viewer Results experience is still a separate follow-up stage. The browser never reads PostgreSQL or Kafka directly.
+The current build includes the accepted frontend authentication/session foundation plus verification-pending ADMIN identity management and viewer-oriented Results workflows over the backend cookie/CSRF/RBAC and Results contracts. Backend authorization, identity invariants, and Result semantics remain authoritative. The browser never reads PostgreSQL or Kafka directly.
 
 ## Interface
 
@@ -32,7 +32,7 @@ Configuration and operations:
 Results and diagnostics:
 
 - **Analysis Items** — bounded normalized/deduplication inspection.
-- **Results** — filtered analyzed Result browsing, separate detail loading, and live SSE updates.
+- **Results** — role-specific analyzed Result browsing: operational ADMIN+VIEWER detail or consumer-oriented VIEWER feed, both with live SSE updates.
 - **Event Explorer** — bounded retained technical history plus live observed events.
 - **Processing Flow** — backend-reconstructed run/item stages, evidence, durations, limitations, and diagnostic metadata.
 - **Identity Administration** — ADMIN list/create/update workflows for persisted application identities and explicit roles.
@@ -163,7 +163,7 @@ npm run typecheck
 
 The frontend security foundation is implemented and accepted against the synchronized backend OpenAPI contract. It provides `/login`, current-principal bootstrap through `/api/v1/auth/me`, HttpOnly-cookie credential transport, double-submit CSRF forwarding for mutations, credentialed native SSE, logout/session cleanup, explicit `401`/`403` handling, and additive role-aware navigation.
 
-Backend authorization remains the security enforcement boundary. Frontend role checks control presentation only; they do not infer role hierarchy (`ADMIN` does not imply `VIEWER`) and do not replace backend enforcement. ADMIN identity management is available at `/users`; backend role normalization, username uniqueness, credential storage, and the last-enabled-ADMIN invariant remain authoritative. The dedicated viewer Results UX is a separate later stage.
+Backend authorization remains the security enforcement boundary. Frontend role checks control presentation only; they do not infer role hierarchy (`ADMIN` does not imply `VIEWER`) and do not replace backend enforcement. ADMIN identity management is available at `/users`; backend role normalization, username uniqueness, credential storage, and the last-enabled-ADMIN invariant remain authoritative. `VIEWER`-only principals now receive a consumer-oriented `/results` presentation that reuses the backend Results REST/SSE contract and omits operational diagnostic metadata from the rendered UI. Both `WEB.IDENTITY_ADMIN` and `WEB.VIEWER_RESULTS` remain verification-pending until the canonical repository gate is confirmed.
 
 ## Documentation model
 

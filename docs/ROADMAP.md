@@ -7,7 +7,7 @@ description: Current frontend focus, accepted baseline, next product stages, bac
 
 ## Current position
 
-The current bounded focus is ADMIN identity management in [`docs/specs/active/subspecs/ui-admin-identity-management.md`](specs/active/subspecs/ui-admin-identity-management.md).
+The current bounded focus is viewer-oriented Results in [`docs/specs/active/subspecs/ui-viewer-results.md`](specs/active/subspecs/ui-viewer-results.md).
 
 The backend OpenAPI snapshot is synchronized and browser authentication/session, CSRF-aware REST, credentialed SSE, `401`/`403` handling, additive role-aware routing/navigation, and protected deterministic/live acceptance coverage are implemented and accepted.
 
@@ -41,13 +41,15 @@ The accepted baseline already includes configuration/operations, live Results, E
 - `WEB.ACCESSIBILITY` — skip navigation, semantic states, accessible naming, keyboard operation, and focus management.
 - `WEB.RESPONSIVE_LAYOUT` — phone/tablet and larger bounded-response containment.
 
+`WEB.IDENTITY_ADMIN` runtime code and deterministic coverage are implemented, but developer acceptance is still pending until the canonical repository gate passes.
+
 ## Next frontend stages
 
-### 1. Complete ADMIN identity management
+### 1. Accept ADMIN identity management and viewer Results
 
-The current active stage exposes `/api/v1/admin/users/**` for explicit `ADMIN` principals. Acceptance must preserve backend-owned identity invariants, additive roles, CSRF transport, and deterministic create/update/error coverage.
+Run the canonical repository gate over both verification-pending security-adjacent slices. Acceptance must preserve backend-owned identity invariants, additive roles, CSRF transport, viewer/admin Results separation, and deterministic request-boundary coverage.
 
-Target feature: `WEB.IDENTITY_ADMIN`.
+Target features: `WEB.IDENTITY_ADMIN`, `WEB.VIEWER_RESULTS`.
 
 ### 2. Add typed Analysis settings to Monitoring Profiles
 
@@ -63,13 +65,11 @@ After that contract exists:
 
 Target feature: `WEB.MONITORING_PROFILES`.
 
-### 3. Build viewer-oriented Results presentation
+### 3. Expand viewer Results when backend browsing contracts justify it
 
-`VIEWER`-only principals currently receive a safe authenticated placeholder at `/results`; the existing operational Results surface remains restricted in presentation to principals that also have `ADMIN`.
+The first viewer Results slice reuses the existing bounded Results REST/SSE contract and keeps `relevant=true`. If larger product datasets require cursor pagination, search, profile/source display names, or richer category-specific browsing, add those backend contracts before expanding frontend behavior.
 
-Implement `WEB.VIEWER_RESULTS` as a user-facing Results experience that hides operational/internal details and consumes only backend contracts appropriate to the viewer workflow.
-
-Related backend feature: `PRESENTATION.VIEWER_RESULTS`.
+Target features: `WEB.VIEWER_RESULTS`, `WEB.RESULTS_BROWSING`.
 
 ### 4. Complete production delivery integration
 

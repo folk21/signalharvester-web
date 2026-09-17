@@ -61,14 +61,20 @@ export function HomeRoute({ adminHome }: { adminHome: ReactNode }) {
   return <NoBrowserCapability />;
 }
 
-export function ResultsRoute({ operationalResults }: { operationalResults: ReactNode }) {
+export function ResultsRoute({
+  operationalResults,
+  viewerResults,
+}: {
+  operationalResults: ReactNode;
+  viewerResults: ReactNode;
+}) {
   const { principal } = useAuthSession();
 
   if (!hasRole(principal, 'VIEWER')) {
     return <AccessDenied requiredRole="VIEWER" />;
   }
   if (!canOpenOperationalResults(principal)) {
-    return <ViewerResultsPending />;
+    return viewerResults;
   }
   return operationalResults;
 }
@@ -100,19 +106,3 @@ function NoBrowserCapability() {
   );
 }
 
-function ViewerResultsPending() {
-  return (
-    <div className="page-stack">
-      <PageHeader
-        eyebrow="Viewer"
-        title="Results workspace"
-        description="Viewer access is authenticated, but the dedicated viewer-oriented Results presentation is a separate frontend stage."
-      />
-      <section className="panel">
-        <div className="panel__empty">
-          Operational and diagnostic Result details are intentionally not exposed to a viewer-only identity in this stage.
-        </div>
-      </section>
-    </div>
-  );
-}

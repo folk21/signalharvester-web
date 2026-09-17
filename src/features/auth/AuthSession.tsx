@@ -157,6 +157,7 @@ export function canAccessPath(principal: CurrentPrincipal, pathname: string): bo
     || matchesRoute(pathname, '/analysis')
     || matchesRoute(pathname, '/events')
     || matchesRoute(pathname, '/flows')
+    || matchesRoute(pathname, '/users')
   ) {
     return hasRole(principal, 'ADMIN');
   }
