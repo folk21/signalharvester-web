@@ -4,6 +4,8 @@ import { resultDetailFixture, resultSummaryFixture } from './fixtures/api';
 import { fulfillJson, rejectUnexpectedApi } from './support/http';
 import { installMockEventSource, waitForSseSource } from './support/sse';
 
+const viewerDetailWithoutAttributes = { ...resultDetailFixture, attributes: {} };
+
 const viewerPrincipal: CurrentPrincipal = {
   id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
   username: 'results-viewer',
@@ -33,7 +35,7 @@ test('viewer Results uses the existing relevant Results boundary without operati
       && request.method() === 'GET'
     ) {
       expect(url.searchParams.get('monitoringProfileId')).toBe(resultSummaryFixture.monitoringProfileId);
-      return fulfillJson(route, resultDetailFixture);
+      return fulfillJson(route, viewerDetailWithoutAttributes);
     }
     return rejectUnexpectedApi(route);
   });
@@ -50,9 +52,13 @@ test('viewer Results uses the existing relevant Results boundary without operati
 
   await page.getByRole('button', { name: `Open result ${resultSummaryFixture.title}` }).click();
 
-  await expect(page.getByText(resultDetailFixture.normalizedContent, { exact: true })).toBeVisible();
-  await expect(page.getByText(resultDetailFixture.explanation, { exact: true })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Open original source' })).toHaveAttribute('href', resultDetailFixture.url);
+  await expect(page.getByText(viewerDetailWithoutAttributes.normalizedContent, { exact: true })).toBeVisible();
+  await expect(page.getByText(viewerDetailWithoutAttributes.explanation, { exact: true })).toBeVisible();
+  const originalSourceLink = page.getByRole('link', { name: 'Open original source' });
+  await expect(originalSourceLink).toHaveAttribute('href', viewerDetailWithoutAttributes.url);
+  await originalSourceLink.hover();
+  await expect(originalSourceLink).toHaveCSS('color', 'rgb(7, 19, 15)');
+  await expect(page.getByRole('heading', { level: 3, name: 'Details' })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Open processing flow' })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Explore related events' })).toHaveCount(0);
   await expect(page.getByText(resultDetailFixture.monitoringProfileId, { exact: true })).toHaveCount(0);

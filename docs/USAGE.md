@@ -259,7 +259,7 @@ npm run e2e:live
 
 The live workflow first authenticates through `/login`. The supplied test identity must explicitly have both `ADMIN` and `VIEWER`. It then creates a temporary deterministic RSS Source and Monitoring Profile, verifies Source Test, establishes Results SSE before a manual run, receives both fixture Results without refresh, keeps a durable Analysis check, establishes Event Observation SSE before a second run, receives a new correlated event without refresh, and follows a real Analysis event into item/full-run Processing Flow.
 
-Cleanup removes the Monitoring Profile before the Source through the authenticated browser context and includes CSRF proof.
+Cleanup removes the Monitoring Profile before the Source through the authenticated browser context and includes CSRF proof. Results and Event Observation history are backend-owned durable/retained projections and have no browser-facing test-cleanup API, so those records may remain after the test. Their fixture item URLs point at the temporary RSS server and stop resolving when that server closes. Run `e2e:live` and `e2e:deployed` only against a disposable backend database or an environment whose diagnostic history may be discarded.
 
 Run the backend with its security environment and test credentials. For a containerized or source-hardened backend, set `SIGNALHARVESTER_LIVE_FIXTURE_HOST` as needed and explicitly permit the deterministic fixture destination according to backend external-source security policy.
 
@@ -331,7 +331,7 @@ Use an enabled identity with explicit `ADMIN` and `VIEWER` roles. The deployed P
 
 The scenario starts a deterministic RSS fixture on the developer host. If the backend pod cannot reach that host through `127.0.0.1`, set `SIGNALHARVESTER_LIVE_FIXTURE_HOST` to an address reachable from the cluster and explicitly permit that fixture destination in the backend's external-source access policy for the acceptance run.
 
-This repository does not create the cluster, apply the backend-owned workload, load images, or manage Kubernetes Secrets. Those remain backend/infrastructure responsibilities.
+This repository does not create the cluster, apply the backend-owned workload, load images, or manage Kubernetes Secrets. Those remain backend/infrastructure responsibilities. The deployed production-browser workflow was accepted on 2026-09-17 after the developer completed this run successfully.
 
 ## Browser troubleshooting
 

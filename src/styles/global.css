@@ -406,6 +406,7 @@ p {
 
 .button--primary:hover:not(:disabled) {
   background: #8aefca;
+  color: #07130f;
 }
 
 .button--ghost,

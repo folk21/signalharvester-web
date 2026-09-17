@@ -2,7 +2,7 @@
 
 SignalHarvester Web is the React/TypeScript frontend for SignalHarvester. It is one coherent browser application for configuration, operations, analyzed Results, and pipeline diagnostics over backend REST/OpenAPI and SSE contracts.
 
-The current build includes the accepted authentication/session, ADMIN identity management, viewer-oriented Results, route-delivery, and production-image workflows over the backend cookie/CSRF/RBAC and Results contracts. The current verification-pending slice is deployed Kubernetes browser acceptance against the backend-owned frontend workload boundary. Backend authorization, identity invariants, deployment manifests, and Result semantics remain authoritative. The browser never reads PostgreSQL or Kafka directly.
+The current build includes the accepted authentication/session, ADMIN identity management, viewer-oriented Results, route-delivery, production-image, and deployed Kubernetes browser-acceptance workflows over the backend cookie/CSRF/RBAC and Results contracts. The current frontend focus is typed Monitoring Profile Analysis settings, which is blocked until the backend publishes the profile-owned OpenAPI contract. Backend authorization, identity invariants, deployment manifests, Analysis semantics, and Result semantics remain authoritative. The browser never reads PostgreSQL or Kafka directly.
 
 ## Interface
 
@@ -37,7 +37,7 @@ Results and diagnostics:
 - **Processing Flow** — backend-reconstructed run/item stages, evidence, durations, limitations, and diagnostic metadata.
 - **Identity Administration** — ADMIN list/create/update workflows for persisted application identities and explicit roles.
 
-Cross-cutting browser capabilities include authentication/session bootstrap, role-aware navigation, credentialed REST/SSE transport, deterministic Playwright verification, targeted visual regression, accessibility hardening, responsive/large-data containment, route-level code splitting with recoverable lazy-route failures, and an independently buildable non-root production image. The security foundation, identity administration, viewer Results, route delivery, and production image delivery are accepted.
+Cross-cutting browser capabilities include authentication/session bootstrap, role-aware navigation, credentialed REST/SSE transport, deterministic Playwright verification, targeted visual regression, accessibility hardening, responsive/large-data containment, route-level code splitting with recoverable lazy-route failures, an independently buildable non-root production image, and deployed production-browser verification. The security foundation, identity administration, viewer Results, route delivery, production image delivery, and deployed Kubernetes browser acceptance are accepted.
 
 ## Technology
 
@@ -125,6 +125,8 @@ npm run e2e:live
 
 The live workflow signs in through the browser first, then uses a deterministic local RSS fixture, exercises Source Test and Monitoring Profile setup, verifies real Results and Event Observation SSE delivery, follows a real Analysis event into Processing Flow, and cleans up through the authenticated browser context with CSRF proof. The supplied identity must have both `ADMIN` and `VIEWER`. `SIGNALHARVESTER_LIVE_FIXTURE_HOST` may be used when a containerized backend needs a different hostname to reach the host fixture, and the backend security environment must permit that fixture destination.
 
+Run live/deployed acceptance only against a disposable backend database or an environment whose diagnostic history may be discarded. The workflow deletes its temporary Monitoring Profile and Source, but the backend has no browser-facing cleanup contract for durable Results or retained Event Observation records. Fixture Results can therefore remain visible after the local RSS server has stopped, and their original-source URLs intentionally point at that no-longer-running fixture.
+
 The canonical routine repository gate is:
 
 ```bash
@@ -201,7 +203,7 @@ Backend authorization remains the security enforcement boundary. Frontend role c
 
 ## Documentation model
 
-Current-state documents describe accepted implementation. Active specifications describe intended or verification-pending changes and are not implementation evidence.
+Current-state documents describe accepted implementation. Active specifications describe intended, blocked, or verification-pending changes and are not implementation evidence.
 
 `docs/FEATURES.md` owns the durable frontend capability vocabulary. Active specifications reference those IDs and may also reference related backend feature IDs for cross-repository navigation.
 

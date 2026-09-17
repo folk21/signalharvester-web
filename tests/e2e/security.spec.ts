@@ -47,6 +47,7 @@ test('unauthenticated deep links require login and logout sends CSRF proof', asy
       return route.fulfill({ status: 200, body: '' });
     }
     if (url.pathname === '/api/v1/auth/logout' && request.method() === 'POST') {
+      expect(request.postDataJSON()).toEqual({});
       logoutCsrf = request.headers()['x-csrf-token'] ?? null;
       authenticated = false;
       return route.fulfill({ status: 200, body: '' });
@@ -162,6 +163,7 @@ test('authenticated mutations send CSRF proof and SSE uses credentialed EventSou
       return fulfillJson(route, [sourceFixture]);
     }
     if (url.pathname === `/api/v1/sources/${sourceFixture.id}/test` && request.method() === 'POST') {
+      expect(request.postDataJSON()).toEqual({});
       sourceTestCsrf = request.headers()['x-csrf-token'] ?? null;
       return fulfillJson(route, sourceTestFixture);
     }

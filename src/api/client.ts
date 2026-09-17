@@ -66,8 +66,10 @@ export class ApiError extends Error {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
   const method = (init?.method ?? 'GET').toUpperCase();
+  // Keep bodyless mutations inside the JSON CSRF filter with a parseable empty payload.
+  const requestBody = init?.body ?? (requiresCsrf(method) ? '{}' : undefined);
   headers.set('Accept', 'application/json');
-  if (init?.body || requiresCsrf(method)) {
+  if (requestBody) {
     headers.set('Content-Type', 'application/json');
   }
   if (requiresCsrf(method) && path !== '/api/v1/auth/login' && !headers.has(csrfHeaderName)) {
@@ -77,11 +79,16 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     }
   }
 
-  const response = await fetch(`${apiBaseUrl}${path}`, {
+  const requestInit: RequestInit = {
     ...init,
     credentials: 'include',
     headers,
-  });
+  };
+  if (requestBody !== undefined) {
+    requestInit.body = requestBody;
+  }
+
+  const response = await fetch(`${apiBaseUrl}${path}`, requestInit);
 
   if (!response.ok) {
     const body = await parseResponseBody(response);

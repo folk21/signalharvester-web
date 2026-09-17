@@ -7,7 +7,7 @@ description: Stable frontend boundaries, dependency direction, contract ownershi
 
 ## Purpose
 
-This document owns stable accepted frontend architecture. Active specifications describe intended or verification-pending changes and may contain more detail while work is in progress.
+This document owns stable accepted frontend architecture. Active specifications describe intended, blocked, or verification-pending changes and may contain more detail while work is in progress.
 
 Stable frontend capability names are owned by [`FEATURES.md`](FEATURES.md).
 

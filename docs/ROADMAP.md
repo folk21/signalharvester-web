@@ -7,13 +7,15 @@ description: Current frontend focus, accepted baseline, next product stages, bac
 
 ## Current position
 
-The current bounded focus is deployed Kubernetes browser acceptance in [`docs/specs/active/subspecs/ui-deployed-kubernetes-browser-acceptance.md`](specs/active/subspecs/ui-deployed-kubernetes-browser-acceptance.md).
+The deployed Kubernetes browser acceptance is accepted after the developer completed the production-image browser workflow on 2026-09-17. The current bounded focus is typed Monitoring Profile Analysis settings in [`docs/specs/active/subspecs/ui-monitoring-profile-analysis-settings.md`](specs/active/subspecs/ui-monitoring-profile-analysis-settings.md).
 
-The backend OpenAPI snapshot is synchronized and browser authentication/session, CSRF-aware REST, credentialed SSE, `401`/`403` handling, additive role-aware routing/navigation, and protected deterministic/live acceptance coverage are implemented and accepted.
+That slice is contract-blocked. The checked-in backend OpenAPI snapshot still exposes the generic Monitoring Profile `criteria` map but no profile-owned Analysis-settings schema, so the frontend must not implement hidden conventions ahead of the backend contract.
+
+The backend OpenAPI snapshot is otherwise synchronized and browser authentication/session, CSRF-aware REST, credentialed SSE, `401`/`403` handling, additive role-aware routing/navigation, protected deterministic/live acceptance coverage, production-image delivery, and deployed Kubernetes browser acceptance are implemented and accepted.
 
 `WEB.ROUTE_DELIVERY` is implemented and accepted after the 2026-09-17 canonical frontend gate passed.
 
-The accepted baseline already includes configuration/operations, live Results, Event Explorer, Processing Flow, deterministic/live browser verification, targeted visual regression, accessibility hardening, and responsive/large-data containment.
+The accepted baseline already includes configuration/operations, live Results, Event Explorer, Processing Flow, deterministic/live browser verification, targeted visual regression, accessibility hardening, responsive/large-data containment, and deployed production delivery.
 
 ## Accepted product baseline
 
@@ -33,40 +35,35 @@ The accepted baseline already includes configuration/operations, live Results, E
 - `WEB.EVENT_EXPLORER` — bounded technical history and live observed events.
 - `WEB.PROCESSING_FLOW` — backend-reconstructed run/item processing-flow visualization.
 
-### UX and verification
+### UX, security, delivery, and verification
 
 - `WEB.BROWSER_VERIFICATION` — deterministic backend-independent Playwright coverage.
-- `WEB.LIVE_BACKEND_ACCEPTANCE` — bounded real-backend browser path over deterministic local fixtures.
+- `WEB.LIVE_BACKEND_ACCEPTANCE` — bounded real-backend browser path over deterministic local fixtures, including the accepted deployed Kubernetes production-browser run.
 - `WEB.VISUAL_REGRESSION` — one reviewed dense Results/detail golden.
 - `WEB.ACCESSIBILITY` — skip navigation, semantic states, accessible naming, keyboard operation, and focus management.
 - `WEB.RESPONSIVE_LAYOUT` — phone/tablet and larger bounded-response containment.
-- `WEB.PRODUCTION_DELIVERY` — reproducible non-root production image and static SPA runtime verified independently from backend source.
-
-`WEB.IDENTITY_ADMIN`, `WEB.VIEWER_RESULTS`, and `WEB.PRODUCTION_DELIVERY` are accepted after their 2026-09-17 frontend verification passed.
+- `WEB.PRODUCTION_DELIVERY` — reproducible non-root production image and static SPA runtime verified independently and through the backend-owned Kubernetes workload.
+- `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`, and `WEB.IDENTITY_ADMIN` — accepted authenticated role-aware browser workflows and identity administration.
+- `WEB.VIEWER_RESULTS` — accepted consumer-oriented relevant Results presentation.
 
 ## Next frontend stages
 
-### 1. Verify the deployed production frontend in Kubernetes
+### 1. Add typed Analysis settings to Monitoring Profiles
 
-Run the production image through the backend-owned `infra/kubernetes/frontend` workload and execute `npm run e2e:deployed` against the real frontend/backend port-forwards. This closes the browser side of the cross-repository deployment, CORS/cookie, REST/SSE, and protected-flow boundary without duplicating Kubernetes ownership.
-
-Target features: `WEB.PRODUCTION_DELIVERY`, `WEB.LIVE_BACKEND_ACCEPTANCE`, `WEB.CONTRACT_INTEGRATION`, `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`.
-
-### 2. Add typed Analysis settings to Monitoring Profiles
-
-Dedicated Analysis controls remain blocked on the backend publishing the profile-owned Analysis settings contract.
+This is the current frontend focus, but implementation is blocked on the backend publishing and using the profile-owned Analysis settings contract.
 
 After that contract exists:
 
 - synchronize OpenAPI;
 - regenerate frontend types;
-- replace generic-only presentation where typed settings are available;
+- add typed controls separate from the generic `criteria` map;
+- preserve the settings through create/edit and replacement-style enabled-state updates;
 - keep backend validation authoritative;
-- add deterministic browser coverage for create/edit/default/error behavior.
+- add deterministic browser coverage for create/edit/default/error and toggle-preservation behavior.
 
-Target feature: `WEB.MONITORING_PROFILES`.
+Target features: `WEB.MONITORING_PROFILES`, `WEB.CONTRACT_INTEGRATION`, `WEB.BROWSER_VERIFICATION`.
 
-### 3. Expand viewer Results when backend browsing contracts justify it
+### 2. Expand viewer Results when backend browsing contracts justify it
 
 The first viewer Results slice reuses the existing bounded Results REST/SSE contract and keeps `relevant=true`. If larger product datasets require cursor pagination, search, profile/source display names, or richer category-specific browsing, add those backend contracts before expanding frontend behavior.
 
@@ -80,8 +77,7 @@ Current backend dependencies for upcoming frontend work are:
 
 - profile-owned typed Analysis settings under `CONFIGURATION.MONITORING_PROFILES` / `ANALYSIS.CLASSIFICATION`;
 - any production Results pagination/search contract needed for larger viewer browsing under `RESULTS.BROWSING`;
-- future changes to authoritative security/OpenAPI shapes under `SECURITY.IDENTITY_ROLES`, `SECURITY.AUTHENTICATION`, and `SECURITY.AUTHORIZATION` (the current security contract is synchronized);
-- production deployment/exposure integration under `DEPLOYMENT.KUBERNETES` and `DELIVERY.FRONTEND_BACKEND_BOUNDARY`.
+- future changes to authoritative security/OpenAPI shapes under `SECURITY.IDENTITY_ROLES`, `SECURITY.AUTHENTICATION`, and `SECURITY.AUTHORIZATION` (the current security contract is synchronized).
 
 ## Deferred until justified
 

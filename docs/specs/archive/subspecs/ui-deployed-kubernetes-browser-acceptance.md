@@ -3,14 +3,14 @@ type: Specification
 title: Deployed Kubernetes browser acceptance
 description: Verify the real production frontend image against the backend-owned Kubernetes frontend workload and security boundary without duplicating cluster ownership.
 document_role: subspec
-spec_status: verification-pending
+spec_status: completed
 parent: ../spec-signal-harvester-web.md
 ---
 # Deployed Kubernetes browser acceptance
 
 ## Status
 
-Verification-pending. The frontend repository now provides an opt-in Playwright configuration that reuses the accepted live browser pipeline against an already deployed production frontend instead of starting Vite. Developer acceptance requires a real local Kubernetes run with the backend-owned frontend workload.
+Completed and accepted on 2026-09-17 after the developer ran the deployed production-browser workflow successfully against the backend-owned Kubernetes frontend workload.
 
 ## Feature scope
 
@@ -136,7 +136,7 @@ This stage does not:
 
 ## Validation
 
-The stage is ready for acceptance when:
+The accepted stage was verified with:
 
 - `./run_checks.sh` still passes;
 - `npm run image:verify` still passes;

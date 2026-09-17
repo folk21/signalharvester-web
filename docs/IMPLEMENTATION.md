@@ -7,7 +7,7 @@ description: Current SignalHarvester Web screens, API usage, browser state, veri
 
 ## Purpose
 
-This document describes accepted and currently implemented frontend behavior. Active specifications describe intended or verification-pending changes and must not be read as implementation evidence by themselves.
+This document describes accepted and currently implemented frontend behavior. Active specifications describe intended, blocked, or verification-pending changes and must not be read as implementation evidence by themselves.
 
 Stable frontend capability IDs are defined in [`FEATURES.md`](FEATURES.md).
 
@@ -107,7 +107,7 @@ An explicit `VIEWER` principal without `ADMIN` uses a separate presentation comp
 
 The viewer list always requests `relevant=true`. The first bounded filter set exposes information category and analyzed time bounds only. Monitoring Profile ID, Source ID, classification, event/correlation/trace identifiers, and other operational filters are not presented as viewer controls.
 
-Selecting a viewer Result loads the same backend detail endpoint internally, but the rendered detail is limited to consumer-oriented content: title, category, source link, published/analyzed times, explanation, tags, normalized attributes, and normalized content. Profile/source/item identifiers, analyzer identity, event IDs, correlation/trace context, and links into Event Explorer or Processing Flow are intentionally not rendered.
+Selecting a viewer Result loads the same backend detail endpoint internally, but the rendered detail is limited to consumer-oriented content: title, category, source link, published/analyzed times, explanation, tags, normalized attributes when the backend provides them, and normalized content. The `Details` section is omitted when the contract-valid attributes map is empty. Profile/source/item identifiers, analyzer identity, event IDs, correlation/trace context, and links into Event Explorer or Processing Flow are intentionally not rendered.
 
 Viewer live delivery reuses the accepted Results `useLiveList` flow. SSE carries `relevant=true` and SSE-supported filters; analyzed time bounds are applied to received live summaries in the browser because the current stream contract does not publish time-range parameters.
 
@@ -234,7 +234,7 @@ The deterministic browser suite covers authentication bootstrap/login/logout, ad
 
 `npm run e2e:visual` owns the focused non-updating comparison for the reviewed Results/detail golden. `npm run e2e:visual:update` is reserved for intentional reviewed baseline changes.
 
-The opt-in `npm run e2e:live` workflow authenticates through the browser with an explicit `ADMIN` + `VIEWER` test identity, then owns a temporary RSS fixture, Source, and Monitoring Profile. It verifies real Results SSE, durable Analysis visibility, real Event Observation SSE, navigation into backend-reconstructed item/full-run Processing Flow, and authenticated CSRF-protected cleanup.
+The opt-in `npm run e2e:live` workflow authenticates through the browser with an explicit `ADMIN` + `VIEWER` test identity, then owns a temporary RSS fixture, Source, and Monitoring Profile. It verifies real Results SSE, durable Analysis visibility, real Event Observation SSE, navigation into backend-reconstructed item/full-run Processing Flow, and authenticated CSRF-protected cleanup of the temporary configuration records. Results and retained Event Observation records are not deleted because the published browser contract has no cleanup operation for those backend-owned histories; live/deployed acceptance therefore targets disposable backend data.
 
 Accepted browser verification features: `WEB.BROWSER_VERIFICATION`, `WEB.VISUAL_REGRESSION`, `WEB.LIVE_BACKEND_ACCEPTANCE`.
 
@@ -250,11 +250,11 @@ The runtime listens on container port `8080`, declares a non-root user, serves h
 
 ## Deployed Kubernetes browser acceptance
 
-The verification-pending deployed acceptance reuses the existing `tests/e2e/live/pipeline.live.spec.ts` scenario through `playwright.deployed.config.ts`. Unlike `playwright.live.config.ts`, the deployed config does not start Vite and has no development proxy. Its default browser origin is `http://localhost:5173`, matching the backend repository's documented frontend Service port-forward.
+The accepted deployed browser workflow reuses the existing `tests/e2e/live/pipeline.live.spec.ts` scenario through `playwright.deployed.config.ts`. Unlike `playwright.live.config.ts`, the deployed config does not start Vite and has no development proxy. Its default browser origin is `http://localhost:5173`, matching the backend repository's documented frontend Service port-forward.
 
 The deployed run explicitly uses `SIGNALHARVESTER_BACKEND_URL=http://localhost:8080` for authenticated cleanup and expects the production bundle itself to target that backend origin. This exercises the compiled `VITE_API_BASE_URL`, backend credentialed CORS/cookie behavior, CSRF-protected mutations, Results/Event SSE, and protected navigation through the production frontend image. `SIGNALHARVESTER_WEB_URL` may point at another already deployed compatible frontend.
 
-The deterministic RSS fixture remains host-owned. `SIGNALHARVESTER_LIVE_FIXTURE_HOST` is the explicit cluster-specific reachability override; backend outbound-source authorization must still permit the fixture destination. The frontend workflow does not apply manifests, create clusters, load images, read Kubernetes Secrets, or weaken backend security policy.
+The deterministic RSS fixture remains host-owned. `SIGNALHARVESTER_LIVE_FIXTURE_HOST` is the explicit cluster-specific reachability override; backend outbound-source authorization must still permit the fixture destination. The frontend workflow does not apply manifests, create clusters, load images, read Kubernetes Secrets, or weaken backend security policy. The developer accepted this workflow on 2026-09-17 after the deployed production-browser test passed.
 
 ## Current limitations
 
@@ -262,6 +262,5 @@ The frontend does not yet implement:
 
 - dedicated typed Analysis-setting controls beyond the current criteria map;
 - production-scale viewer Results search/pagination beyond the current bounded backend contract;
-- developer acceptance of the deployed Kubernetes browser workflow against the real frontend image.
 
-The authentication/session role-aware shell, route delivery, ADMIN identity management, viewer-oriented Results, and production image delivery are accepted. ADMIN identity management consumes the existing backend user-administration contract, and viewer-oriented Results reuse the existing Results REST/SSE boundary. The deployed Kubernetes browser acceptance remains verification-pending. Backend authorization, identity invariants, deployment manifests, and Result semantics remain authoritative regardless of frontend presentation.
+The authentication/session role-aware shell, route delivery, ADMIN identity management, viewer-oriented Results, production image delivery, and deployed Kubernetes browser acceptance are accepted. ADMIN identity management consumes the existing backend user-administration contract, and viewer-oriented Results reuse the existing Results REST/SSE boundary. Backend authorization, identity invariants, deployment manifests, Analysis semantics, and Result semantics remain authoritative regardless of frontend presentation.

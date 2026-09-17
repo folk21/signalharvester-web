@@ -209,11 +209,9 @@ function ViewerResultDetail({ result }: { result: ResultDetail }) {
         <p className="result-tags">{result.tags.length > 0 ? result.tags.join(', ') : '—'}</p>
       </section>
 
-      <section className="result-section">
-        <h3>Details</h3>
-        {Object.keys(result.attributes).length === 0 ? (
-          <p>—</p>
-        ) : (
+      {Object.keys(result.attributes).length > 0 ? (
+        <section className="result-section">
+          <h3>Details</h3>
           <dl className="attribute-list">
             {Object.entries(result.attributes).map(([key, value]) => (
               <div key={key}>
@@ -222,8 +220,8 @@ function ViewerResultDetail({ result }: { result: ResultDetail }) {
               </div>
             ))}
           </dl>
-        )}
-      </section>
+        </section>
+      ) : null}
 
       <section className="result-section">
         <h3>Content</h3>
