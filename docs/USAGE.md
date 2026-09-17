@@ -9,7 +9,7 @@ description: Current browser workflows for configuration, collection operations,
 
 This document describes how to use the current frontend after it is running. Installation prerequisites and local startup are owned by the root [`README.md`](../README.md).
 
-The frontend authentication/session foundation is implemented against the backend security contract and is verification-pending. Use a security-enabled backend for protected workflows; backend authorization remains authoritative.
+The frontend authentication/session foundation is implemented and accepted against the backend security contract. Use a security-enabled backend for protected workflows; backend authorization remains authoritative.
 
 ## Authentication and roles
 
@@ -28,6 +28,17 @@ Roles are additive:
 A `401` from a protected request ends the frontend session and returns protected navigation to login. A `403` keeps the principal authenticated and displays an authorization error.
 
 Use the sidebar **Sign out** action to call backend logout and clear cached application state.
+
+## Identity Administration
+
+Open `/users` with explicit `ADMIN`.
+
+The screen lists persisted identities and supports creating a `HUMAN` or `BOT` identity plus replacing an existing identity's enabled state and explicit roles. Create passwords are never displayed after submission. Username and identity type are immutable in the edit form because the current backend API does not publish mutation operations for them.
+
+Roles are additive and non-hierarchical. The form shows the backend baseline `USER` role for `HUMAN` identities and `BOT` role for `BOT` identities as required context, but the saved backend response remains authoritative.
+
+If an update would disable or remove `ADMIN` from the last enabled administrator, the backend returns `409`; the UI shows that failure instead of trying to predict the invariant from its potentially stale list snapshot. There is currently no user deletion or password reset/change workflow in the frontend contract.
+
 
 ## Typical workflow
 
@@ -281,6 +292,6 @@ In normal local development, Vite proxies `/api` to the backend configured by `V
 
 ## Current security status
 
-The frontend now implements the browser authentication/session foundation, credentialed REST/SSE, CSRF forwarding, role-aware presentation, logout, and explicit `401`/`403` handling. This slice remains verification-pending until the repository/browser/build acceptance and protected live-backend scenario pass.
+The frontend implements the accepted browser authentication/session foundation, credentialed REST/SSE, CSRF forwarding, role-aware presentation, logout, explicit `401`/`403` handling, and ADMIN identity management.
 
-Backend authorization remains authoritative. The frontend does not infer role hierarchy, does not decode the JWT, and does not implement ADMIN identity management yet. Cross-origin production hosting still requires an explicitly compatible backend CORS/cookie policy.
+Backend authorization and identity invariants remain authoritative. The frontend does not infer role hierarchy or decode the JWT. Cross-origin production hosting still requires an explicitly compatible backend CORS/cookie policy.

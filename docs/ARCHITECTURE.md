@@ -211,7 +211,7 @@ The implemented security foundation uses the backend-published browser contract:
 
 Role-aware presentation currently exposes administrative/diagnostic screens to explicit `ADMIN`. The existing operational Results screen is mounted only for principals that have both `ADMIN` and `VIEWER`; a `VIEWER`-only principal receives a safe placeholder until `WEB.VIEWER_RESULTS` is implemented. `USER`-only and `BOT`-only principals receive no invented browser capability.
 
-Cross-origin production hosting still depends on an explicitly compatible backend CORS and cookie policy. ADMIN identity management and the final viewer Results presentation remain separate stages.
+ADMIN identity management uses the same credentialed/CSRF-protected transport and remains presentation over backend-owned identity invariants. Cross-origin production hosting still depends on an explicitly compatible backend CORS and cookie policy. The final viewer Results presentation remains a separate stage.
 
 Features: `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`. Planned follow-ups: `WEB.IDENTITY_ADMIN`, `WEB.VIEWER_RESULTS`.
 

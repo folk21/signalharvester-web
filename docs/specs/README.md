@@ -141,14 +141,12 @@ Umbrella:
 
 Current implementation focus:
 
-- [`active/subspecs/ui-authentication-authorization-foundation.md`](active/subspecs/ui-authentication-authorization-foundation.md) — `WEB.CONTRACT_INTEGRATION`, `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`, and security-focused browser verification; implementation complete, verification pending.
-
-Other active verification-pending work:
-
-- [`active/subspecs/ui-performance-runtime-resilience.md`](active/subspecs/ui-performance-runtime-resilience.md) — `WEB.ROUTE_DELIVERY` and `WEB.BROWSER_VERIFICATION`; implementation complete, verification pending.
+- [`active/subspecs/ui-admin-identity-management.md`](active/subspecs/ui-admin-identity-management.md) — `WEB.IDENTITY_ADMIN` over the accepted backend identity-administration contract.
 
 ## Recently completed sub-specifications
 
+- [`archive/subspecs/ui-authentication-authorization-foundation.md`](archive/subspecs/ui-authentication-authorization-foundation.md) — authenticated cookie/CSRF session foundation and additive role-aware shell, accepted on 2026-09-17.
+- [`archive/subspecs/ui-performance-runtime-resilience.md`](archive/subspecs/ui-performance-runtime-resilience.md) — route-level code splitting, lazy-route failure containment, and production asset reporting, accepted on 2026-09-17.
 - [`archive/subspecs/ui-responsive-large-data-hardening.md`](archive/subspecs/ui-responsive-large-data-hardening.md) — responsive/large bounded data containment, accepted on 2026-09-15.
 - [`archive/subspecs/ui-targeted-visual-regression.md`](archive/subspecs/ui-targeted-visual-regression.md) — targeted reviewed visual regression, accepted on 2026-09-15.
 - [`archive/subspecs/ui-accessibility-hardening.md`](archive/subspecs/ui-accessibility-hardening.md) — keyboard/focus/semantic accessibility hardening, accepted on 2026-09-15.

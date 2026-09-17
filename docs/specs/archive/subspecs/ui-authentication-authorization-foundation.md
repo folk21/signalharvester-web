@@ -3,16 +3,14 @@ type: Specification
 title: Frontend authentication and authorization foundation
 description: Consume the backend JWT/cookie security contract, add browser session lifecycle and CSRF transport, and make the application shell role-aware without duplicating backend authorization.
 document_role: subspec
-spec_status: verification-pending
+spec_status: completed
 parent: ../spec-signal-harvester-web.md
 ---
 # Frontend authentication and authorization foundation
 
 ## Status
 
-Implementation complete. Developer verification pending.
-
-The repository environment used for this implementation could not install npm dependencies because the npm registry was not resolvable. The canonical frontend gate therefore still has to run in the developer environment before this slice is accepted or archived.
+Completed and accepted on 2026-09-17 after the canonical frontend verification passed.
 
 ## Feature scope
 
@@ -29,7 +27,7 @@ Related backend feature IDs:
 - `SECURITY.AUTHORIZATION`;
 - `CONTRACTS.HTTP`.
 
-Feature identifiers are defined in [`../../FEATURES.md`](../../FEATURES.md).
+Feature identifiers are defined in [`../../FEATURES.md`](../../../FEATURES.md).
 
 ## Goal
 

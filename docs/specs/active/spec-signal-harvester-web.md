@@ -4,7 +4,7 @@ title: SignalHarvester Web initial product specification
 description: Active frontend umbrella specification for configuration, operational inspection, Results, live updates, and event-flow diagnostics.
 document_role: umbrella
 spec_status: active
-current_focus: subspecs/ui-authentication-authorization-foundation.md
+current_focus: subspecs/ui-admin-identity-management.md
 ---
 # SignalHarvester Web initial product specification
 
@@ -18,9 +18,9 @@ Frontend implementation details belong here rather than in the backend repositor
 
 ## Current implementation focus
 
-The current bounded focus is [`subspecs/ui-authentication-authorization-foundation.md`](subspecs/ui-authentication-authorization-foundation.md). It synchronizes the accepted backend security contract, adds browser login/current-principal/logout lifecycle, credentialed REST/SSE transport, CSRF proof, and explicit-role navigation without moving authorization enforcement into React.
+The current bounded focus is [`subspecs/ui-admin-identity-management.md`](subspecs/ui-admin-identity-management.md). It adds ADMIN identity list/create/update workflows over the accepted backend `/api/v1/admin/users` contract while keeping identity invariants and authorization backend-owned.
 
-The earlier [`subspecs/ui-performance-runtime-resilience.md`](subspecs/ui-performance-runtime-resilience.md) remains active with `verification-pending` status. Its implementation is complete but has not yet met the repository acceptance gate.
+The authentication/authorization foundation and route-delivery slices were accepted on 2026-09-17 after the canonical frontend verification passed and are archived.
 
 The accepted baseline already provides Dashboard, Sources CRUD and Source Test, Monitoring Profiles, profile-driven Collection Runs, Analysis inspection, Results list/filter/detail with SSE updates, Event Explorer history/live delivery, Processing Flow, resilience coverage, targeted visual regression, real-backend diagnostic acceptance, accessibility hardening, and responsive/large-data hardening.
 
@@ -84,9 +84,9 @@ The frontend does not own:
 | Live diagnostic acceptance | Implemented and accepted |
 | Accessibility hardening | Implemented and accepted |
 | Responsive / large-data UX hardening | Implemented and accepted |
-| Frontend performance / runtime resilience | Implemented; verification pending |
-| Authentication/session and role-aware shell | Implemented in current focus; verification pending |
-| ADMIN identity management | Pending |
+| Frontend performance / runtime resilience | Implemented and accepted |
+| Authentication/session and role-aware shell | Implemented and accepted |
+| ADMIN identity management | Implemented in current focus |
 | Viewer-specific Results presentation | Pending |
 
 ## Requirement map
@@ -340,7 +340,7 @@ Frontend role checks may control routes, navigation, and presentation, but backe
 
 Authentication failure and authorization failure must remain distinct: protected `401` responses end the frontend session, while `403` responses keep the principal authenticated and expose an authorization error.
 
-Current status: implemented in [`subspecs/ui-authentication-authorization-foundation.md`](subspecs/ui-authentication-authorization-foundation.md); developer verification pending. ADMIN identity management and the dedicated viewer Results presentation remain separate later features.
+Current status: authentication/session and role-aware presentation are implemented and accepted. ADMIN identity management is implemented in the current focus; the dedicated viewer Results presentation remains separate.
 
 ### UI-R17 — accessibility and usability baseline
 
@@ -389,7 +389,7 @@ Primary feature screens should be delivered as route-level chunks so the applica
 
 Production verification should preserve the intended dynamic route structure and report generated asset sizes from a measured build. Numeric bundle budgets should be introduced only after the baseline is reviewed.
 
-Current status: implemented; verification remains pending in [`subspecs/ui-performance-runtime-resilience.md`](subspecs/ui-performance-runtime-resilience.md).
+Current status: implemented and accepted; historical implementation details are archived in [`../archive/subspecs/ui-performance-runtime-resilience.md`](../archive/subspecs/ui-performance-runtime-resilience.md).
 
 ## Non-goals for the current product slice
 

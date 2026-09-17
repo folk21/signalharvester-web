@@ -2,6 +2,9 @@ import type {
   AnalysisItemInspection,
   CurrentPrincipal,
   LoginRequest,
+  UserAccount,
+  UserCreateRequest,
+  UserUpdateRequest,
   CollectionRun,
   CollectionRunRequest,
   MonitoringProfile,
@@ -167,6 +170,23 @@ export const api = {
     }),
 
   getCurrentPrincipal: () => request<CurrentPrincipal>('/api/v1/auth/me'),
+
+  listUsers: () => request<UserAccount[]>('/api/v1/admin/users'),
+
+  getUser: (userId: string) =>
+    request<UserAccount>(`/api/v1/admin/users/${encodeURIComponent(userId)}`),
+
+  createUser: (payload: UserCreateRequest) =>
+    request<UserAccount>('/api/v1/admin/users', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  updateUser: (userId: string, payload: UserUpdateRequest) =>
+    request<UserAccount>(`/api/v1/admin/users/${encodeURIComponent(userId)}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
 
   listSources: () => request<Source[]>('/api/v1/sources'),
 

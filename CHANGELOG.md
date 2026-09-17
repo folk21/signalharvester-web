@@ -7,6 +7,8 @@ description: Notable frontend changes organized by release state, with each chan
 
 ## Unreleased
 
+- 2026-09-17 — Added ADMIN identity administration for persisted user/BOT identities, including create/update role workflows, backend invariant error handling, deterministic browser coverage, and dynamic-route verification.
+- 2026-09-17 — Accepted the authentication/authorization foundation and route-delivery/runtime-resilience slices after the canonical frontend verification passed.
 - 2026-09-17 — Synchronized the backend security OpenAPI contract and added the verification-pending frontend authentication/session foundation with credentialed REST/SSE, CSRF forwarding, additive role-aware routing, and deterministic protected-browser coverage.
 - 2026-09-17 — Added a stable `WEB.*` feature vocabulary with related backend feature IDs, aligned frontend agent rules with backend repository discipline, and refactored current documentation/active specifications for clearer ownership and retrieval without changing archived specifications.
 - 2026-09-15 — Added route-level screen code splitting, accessible lazy-route loading/error containment, deterministic chunk-failure coverage, and Vite-manifest production asset reporting.

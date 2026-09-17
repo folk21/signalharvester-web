@@ -13,6 +13,7 @@ const expectedRouteEntries = [
   'src/features/results/ResultsPage.tsx',
   'src/features/events/EventExplorerPage.tsx',
   'src/features/flows/ProcessingFlowPage.tsx',
+  'src/features/users/UserAdministrationPage.tsx',
 ];
 
 const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));

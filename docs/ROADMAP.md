@@ -7,11 +7,11 @@ description: Current frontend focus, accepted baseline, next product stages, bac
 
 ## Current position
 
-The current bounded focus is the security foundation in [`docs/specs/active/subspecs/ui-authentication-authorization-foundation.md`](specs/active/subspecs/ui-authentication-authorization-foundation.md).
+The current bounded focus is ADMIN identity management in [`docs/specs/active/subspecs/ui-admin-identity-management.md`](specs/active/subspecs/ui-admin-identity-management.md).
 
-The backend OpenAPI snapshot has been synchronized and browser authentication/session, CSRF-aware REST, credentialed SSE, `401`/`403` handling, additive role-aware routing/navigation, and protected deterministic/live acceptance coverage are implemented. Developer verification is still pending.
+The backend OpenAPI snapshot is synchronized and browser authentication/session, CSRF-aware REST, credentialed SSE, `401`/`403` handling, additive role-aware routing/navigation, and protected deterministic/live acceptance coverage are implemented and accepted.
 
-`WEB.ROUTE_DELIVERY` remains a separate active verification-pending slice: its implementation is complete, but its closure acceptance has not yet been run successfully in the current development context.
+`WEB.ROUTE_DELIVERY` is implemented and accepted after the 2026-09-17 canonical frontend gate passed.
 
 The accepted baseline already includes configuration/operations, live Results, Event Explorer, Processing Flow, deterministic/live browser verification, targeted visual regression, accessibility hardening, and responsive/large-data containment.
 
@@ -43,23 +43,13 @@ The accepted baseline already includes configuration/operations, live Results, E
 
 ## Next frontend stages
 
-### 1. Accept and close the security foundation
+### 1. Complete ADMIN identity management
 
-Run the current security sub-spec acceptance after dependencies and a protected backend are available. Acceptance includes deterministic login/role/CSRF/SSE coverage, production build checks, visual comparison, `./run_checks.sh`, and the explicit live `ADMIN` + `VIEWER` browser scenario.
-
-After acceptance, move stable behavior into accepted current-state documentation, archive the security sub-spec, and update the umbrella current focus.
-
-### 2. Close route-delivery verification
-
-Complete the still-pending acceptance for `WEB.ROUTE_DELIVERY`, archive its active sub-spec, and update lifecycle indexes. Do not introduce numeric bundle budgets unless a measured baseline and growth policy have been explicitly reviewed.
-
-### 3. Add ADMIN identity management
-
-Expose the synchronized `/api/v1/admin/users/**` contract for explicit `ADMIN` principals. Preserve backend invariants, keep backend validation/authorization authoritative, and do not infer role inheritance in the browser.
+The current active stage exposes `/api/v1/admin/users/**` for explicit `ADMIN` principals. Acceptance must preserve backend-owned identity invariants, additive roles, CSRF transport, and deterministic create/update/error coverage.
 
 Target feature: `WEB.IDENTITY_ADMIN`.
 
-### 4. Add typed Analysis settings to Monitoring Profiles
+### 2. Add typed Analysis settings to Monitoring Profiles
 
 Dedicated Analysis controls remain blocked on the backend publishing the profile-owned Analysis settings contract.
 
@@ -73,7 +63,7 @@ After that contract exists:
 
 Target feature: `WEB.MONITORING_PROFILES`.
 
-### 5. Build viewer-oriented Results presentation
+### 3. Build viewer-oriented Results presentation
 
 `VIEWER`-only principals currently receive a safe authenticated placeholder at `/results`; the existing operational Results surface remains restricted in presentation to principals that also have `ADMIN`.
 
@@ -81,7 +71,7 @@ Implement `WEB.VIEWER_RESULTS` as a user-facing Results experience that hides op
 
 Related backend feature: `PRESENTATION.VIEWER_RESULTS`.
 
-### 6. Complete production delivery integration
+### 4. Complete production delivery integration
 
 Add the real production frontend image/deployment integration required by the platform design, including health/build verification, security/cross-origin deployment policy, and final frontend/backend Kubernetes acceptance.
 

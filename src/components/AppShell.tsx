@@ -14,6 +14,7 @@ const navigation: Array<{ to: string; label: string; end: boolean; role: UserRol
   { to: '/results', label: 'Results', end: false, role: 'VIEWER' },
   { to: '/events', label: 'Event Explorer', end: false, role: 'ADMIN' },
   { to: '/flows', label: 'Processing Flow', end: false, role: 'ADMIN' },
+  { to: '/users', label: 'Identity Administration', end: false, role: 'ADMIN' },
 ];
 
 export function AppShell() {

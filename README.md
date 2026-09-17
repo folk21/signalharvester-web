@@ -2,7 +2,7 @@
 
 SignalHarvester Web is the React/TypeScript frontend for SignalHarvester. It is one coherent browser application for configuration, operations, analyzed Results, and pipeline diagnostics over backend REST/OpenAPI and SSE contracts.
 
-The current build includes the frontend authentication/session foundation over the backend cookie/CSRF contract. Backend authorization remains authoritative, and ADMIN identity management plus the dedicated viewer Results experience are still separate follow-up stages. The browser never reads PostgreSQL or Kafka directly.
+The current build includes the accepted frontend authentication/session foundation plus ADMIN identity-management workflows over the backend cookie/CSRF/RBAC contract. Backend authorization and identity invariants remain authoritative; the dedicated viewer Results experience is still a separate follow-up stage. The browser never reads PostgreSQL or Kafka directly.
 
 ## Interface
 
@@ -35,8 +35,9 @@ Results and diagnostics:
 - **Results** — filtered analyzed Result browsing, separate detail loading, and live SSE updates.
 - **Event Explorer** — bounded retained technical history plus live observed events.
 - **Processing Flow** — backend-reconstructed run/item stages, evidence, durations, limitations, and diagnostic metadata.
+- **Identity Administration** — ADMIN list/create/update workflows for persisted application identities and explicit roles.
 
-Cross-cutting browser capabilities include authentication/session bootstrap, role-aware navigation, credentialed REST/SSE transport, deterministic Playwright verification, targeted visual regression, accessibility hardening, responsive/large-data containment, and route-level code splitting with recoverable lazy-route failures. The security foundation and route-delivery slices are implemented but still verification-pending.
+Cross-cutting browser capabilities include authentication/session bootstrap, role-aware navigation, credentialed REST/SSE transport, deterministic Playwright verification, targeted visual regression, accessibility hardening, responsive/large-data containment, and route-level code splitting with recoverable lazy-route failures. The security foundation and route-delivery slices are accepted.
 
 ## Technology
 
@@ -160,9 +161,9 @@ npm run typecheck
 
 ## Security status
 
-The frontend security foundation is implemented against the synchronized backend OpenAPI contract and is verification-pending. It provides `/login`, current-principal bootstrap through `/api/v1/auth/me`, HttpOnly-cookie credential transport, double-submit CSRF forwarding for mutations, credentialed native SSE, logout/session cleanup, explicit `401`/`403` handling, and additive role-aware navigation.
+The frontend security foundation is implemented and accepted against the synchronized backend OpenAPI contract. It provides `/login`, current-principal bootstrap through `/api/v1/auth/me`, HttpOnly-cookie credential transport, double-submit CSRF forwarding for mutations, credentialed native SSE, logout/session cleanup, explicit `401`/`403` handling, and additive role-aware navigation.
 
-Backend authorization remains the security enforcement boundary. Frontend role checks control presentation only; they do not infer role hierarchy (`ADMIN` does not imply `VIEWER`) and do not replace backend enforcement. ADMIN identity management and the dedicated viewer Results UX are separate later stages.
+Backend authorization remains the security enforcement boundary. Frontend role checks control presentation only; they do not infer role hierarchy (`ADMIN` does not imply `VIEWER`) and do not replace backend enforcement. ADMIN identity management is available at `/users`; backend role normalization, username uniqueness, credential storage, and the last-enabled-ADMIN invariant remain authoritative. The dedicated viewer Results UX is a separate later stage.
 
 ## Documentation model
 

@@ -47,6 +47,9 @@ test('application shell navigates across the current admin screens', async ({ pa
     if (url.pathname === '/api/v1/events') {
       return fulfillJson(route, [observedRawEventFixture]);
     }
+    if (url.pathname === '/api/v1/admin/users') {
+      return fulfillJson(route, []);
+    }
     return rejectUnexpectedApi(route);
   });
 
@@ -63,6 +66,7 @@ test('application shell navigates across the current admin screens', async ({ pa
     ['Results', 'Analyzed Results'],
     ['Event Explorer', 'Event Explorer'],
     ['Processing Flow', 'Processing Flow'],
+    ['Identity Administration', 'Identity Administration'],
   ] as const;
 
   for (const [linkName, heading] of destinations) {

@@ -41,6 +41,10 @@ const ProcessingFlowPage = lazy(async () => {
   const module = await import('./features/flows/ProcessingFlowPage');
   return { default: module.ProcessingFlowPage };
 });
+const UserAdministrationPage = lazy(async () => {
+  const module = await import('./features/users/UserAdministrationPage');
+  return { default: module.UserAdministrationPage };
+});
 
 export function App() {
   return (
@@ -56,6 +60,7 @@ export function App() {
           <Route path="results" element={<ResultsRoute operationalResults={<ResultsPage />} />} />
           <Route path="events" element={<RequireRole role="ADMIN"><EventExplorerPage /></RequireRole>} />
           <Route path="flows" element={<RequireRole role="ADMIN"><ProcessingFlowPage /></RequireRole>} />
+          <Route path="users" element={<RequireRole role="ADMIN"><UserAdministrationPage /></RequireRole>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Route>

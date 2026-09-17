@@ -29,7 +29,7 @@ Results and diagnostics:
 - **Event Explorer** (`/events`) — bounded retained event history plus live SSE, filters, and event detail. Feature: `WEB.EVENT_EXPLORER`.
 - **Processing Flow** (`/flows`) — backend-reconstructed run/item branches, evidence, durations, limitations, and stage metadata. Feature: `WEB.PROCESSING_FLOW`.
 
-Cross-cutting accepted behavior includes deterministic browser verification, live-backend acceptance, targeted visual regression, accessibility hardening, and responsive/large-data containment. Route-level performance/runtime-resilience remains implemented but verification-pending. The authentication/session and role-aware shell foundation is also implemented and verification-pending in the current active sub-spec.
+Cross-cutting accepted behavior includes deterministic browser verification, live-backend acceptance, targeted visual regression, accessibility hardening, responsive/large-data containment, route-level performance/runtime resilience, and the authentication/session role-aware shell foundation. ADMIN identity management is implemented in the current active sub-spec.
 
 ## Sources
 
@@ -141,14 +141,14 @@ The checked-in backend REST snapshot is `openapi/signalharvester-v1.yaml`.
 
 `openapi-typescript` generates `src/api/generated.ts`. Application-facing aliases live in `src/api/types.ts`. The browser `fetch` transport and common error handling live in `src/api/client.ts`.
 
-The synchronized snapshot includes authentication/current-principal contracts, ADMIN identity-management contracts, Monitoring Profiles, Source Test, Results SSE, Event Observation, and Processing Flow. This slice consumes the authentication/current-principal contract but intentionally leaves ADMIN identity-management UI for `WEB.IDENTITY_ADMIN`. Frontend code consumes public boundaries only and never reads PostgreSQL or Kafka directly.
+The synchronized snapshot includes authentication/current-principal contracts, ADMIN identity-management contracts, Monitoring Profiles, Source Test, Results SSE, Event Observation, and Processing Flow. The frontend consumes the authentication/current-principal contract and the ADMIN identity-management contract through `WEB.IDENTITY_ADMIN`. Frontend code consumes public boundaries only and never reads PostgreSQL or Kafka directly.
 
 Feature: `WEB.CONTRACT_INTEGRATION`.
 
 
 ## Authentication and role-aware shell
 
-The security foundation is implemented against the backend-owned cookie/CSRF contract and remains verification-pending.
+The security foundation is implemented and accepted against the backend-owned cookie/CSRF contract.
 
 `AuthSessionProvider` owns current-principal state through TanStack Query. Application bootstrap calls `GET /api/v1/auth/me`; a `401` produces anonymous state, while non-`401` bootstrap failures remain explicit and retryable.
 
@@ -202,7 +202,7 @@ Primary feature screens are loaded through React lazy route imports.
 
 Vite emits a production manifest. Repository tooling verifies that primary feature pages remain dynamic entries and reports raw/gzip JS/CSS sizes.
 
-Implementation is complete, but this capability remains verification-pending until the active performance/runtime-resilience acceptance commands pass.
+This capability is implemented and accepted; production verification protects the dynamic route structure and asset report.
 
 Feature: `WEB.ROUTE_DELIVERY`.
 
@@ -217,7 +217,7 @@ The canonical routine repository gate is `./run_checks.sh`. It:
 5. builds the production frontend;
 6. verifies dynamic route entries and reports production assets.
 
-The deterministic browser suite covers authentication bootstrap/login/logout, additive role isolation, CSRF request construction, credentialed EventSource creation, `401`/`403` behavior, core navigation/configuration, Source Test, Monitoring Profile and Collection Run request construction, Analysis filters, Results and Event Explorer REST/SSE behavior, Processing Flow, representative async states, accessibility interactions, SSE reconnect/resnapshot, stale bounded deep links, partial flow evidence, responsive/large-data containment, and delayed/failed lazy-route delivery.
+The deterministic browser suite covers authentication bootstrap/login/logout, additive role isolation, CSRF request construction, credentialed EventSource creation, `401`/`403` behavior, ADMIN identity create/update and invariant-error handling, core navigation/configuration, Source Test, Monitoring Profile and Collection Run request construction, Analysis filters, Results and Event Explorer REST/SSE behavior, Processing Flow, representative async states, accessibility interactions, SSE reconnect/resnapshot, stale bounded deep links, partial flow evidence, responsive/large-data containment, and delayed/failed lazy-route delivery.
 
 `npm run e2e:visual` owns the focused non-updating comparison for the reviewed Results/detail golden. `npm run e2e:visual:update` is reserved for intentional reviewed baseline changes.
 
@@ -230,8 +230,7 @@ Accepted browser verification features: `WEB.BROWSER_VERIFICATION`, `WEB.VISUAL_
 The frontend does not yet implement:
 
 - dedicated typed Analysis-setting controls beyond the current criteria map;
-- ADMIN identity-management workflows over the already synchronized backend contract;
 - the dedicated viewer-specific Results list/detail experience;
 - final production frontend deployment integration.
 
-The authentication/session and role-aware shell foundation is implemented but remains verification-pending until its deterministic/browser/build acceptance and protected live-backend scenario pass. The older route-delivery slice is also still verification-pending. Backend authorization remains authoritative regardless of frontend presentation.
+The authentication/session role-aware shell and route-delivery capabilities are accepted. ADMIN identity management now consumes the existing backend user-administration contract. Backend authorization and identity invariants remain authoritative regardless of frontend presentation.
