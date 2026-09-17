@@ -56,7 +56,8 @@ signalharvester-web/
 │   └── main.tsx                # React/query/router composition root
 ├── tests/e2e/                  # Deterministic and opt-in live Playwright tests
 ├── playwright.config.ts        # Backend-independent browser suite
-├── playwright.live.config.ts   # Real-backend browser suite
+├── playwright.live.config.ts   # Real-backend browser suite via local Vite
+├── playwright.deployed.config.ts # Real-backend suite against an external production frontend
 ├── run_checks.sh               # Canonical routine verification
 ├── package.json
 └── vite.config.ts
@@ -93,6 +94,14 @@ The shell remains mounted while a route module loads. A `Suspense` state exposes
 Future screens should extend this routing model. Preserve route-level splitting for primary screens unless measured delivery behavior justifies eager loading.
 
 Primary features: `WEB.APP_SHELL`, `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`, `WEB.ROUTE_DELIVERY`, `WEB.ASYNC_FEEDBACK`.
+
+## Production delivery and deployed acceptance boundary
+
+The accepted production image is built independently from backend source and serves the Vite bundle from an unprivileged static HTTP runtime on container port `8080`. `VITE_API_BASE_URL` remains a build-time browser contract; the runtime does not invent a second backend-discovery mechanism.
+
+Backend-owned Kubernetes manifests define the local `signalharvester-web` Deployment/Service. This repository owns the image and browser acceptance only. `playwright.deployed.config.ts` deliberately has no Playwright `webServer`: it targets an already running frontend URL so the same live browser pipeline can validate the production image, compiled backend origin, credentialed REST/SSE, and browser security boundary through the deployed workload.
+
+Primary features: `WEB.PRODUCTION_DELIVERY`, `WEB.CONTRACT_INTEGRATION`, `WEB.LIVE_BACKEND_ACCEPTANCE`.
 
 ## Backend contract ownership
 

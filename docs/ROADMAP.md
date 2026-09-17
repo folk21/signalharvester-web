@@ -7,7 +7,7 @@ description: Current frontend focus, accepted baseline, next product stages, bac
 
 ## Current position
 
-The current bounded focus is production frontend delivery in [`docs/specs/active/subspecs/ui-production-delivery.md`](specs/active/subspecs/ui-production-delivery.md).
+The current bounded focus is deployed Kubernetes browser acceptance in [`docs/specs/active/subspecs/ui-deployed-kubernetes-browser-acceptance.md`](specs/active/subspecs/ui-deployed-kubernetes-browser-acceptance.md).
 
 The backend OpenAPI snapshot is synchronized and browser authentication/session, CSRF-aware REST, credentialed SSE, `401`/`403` handling, additive role-aware routing/navigation, and protected deterministic/live acceptance coverage are implemented and accepted.
 
@@ -40,16 +40,17 @@ The accepted baseline already includes configuration/operations, live Results, E
 - `WEB.VISUAL_REGRESSION` — one reviewed dense Results/detail golden.
 - `WEB.ACCESSIBILITY` — skip navigation, semantic states, accessible naming, keyboard operation, and focus management.
 - `WEB.RESPONSIVE_LAYOUT` — phone/tablet and larger bounded-response containment.
+- `WEB.PRODUCTION_DELIVERY` — reproducible non-root production image and static SPA runtime verified independently from backend source.
 
-`WEB.IDENTITY_ADMIN` and `WEB.VIEWER_RESULTS` are accepted after the 2026-09-17 canonical repository gate passed.
+`WEB.IDENTITY_ADMIN`, `WEB.VIEWER_RESULTS`, and `WEB.PRODUCTION_DELIVERY` are accepted after their 2026-09-17 frontend verification passed.
 
 ## Next frontend stages
 
-### 1. Verify the production frontend image
+### 1. Verify the deployed production frontend in Kubernetes
 
-Complete the frontend-owned delivery boundary with the real non-root image expected by the backend Kubernetes manifests. Run the canonical repository gate and the Docker-backed image verification before cross-repository cluster acceptance.
+Run the production image through the backend-owned `infra/kubernetes/frontend` workload and execute `npm run e2e:deployed` against the real frontend/backend port-forwards. This closes the browser side of the cross-repository deployment, CORS/cookie, REST/SSE, and protected-flow boundary without duplicating Kubernetes ownership.
 
-Target features: `WEB.PRODUCTION_DELIVERY`, `WEB.CONTRACT_INTEGRATION`, `WEB.ROUTE_DELIVERY`.
+Target features: `WEB.PRODUCTION_DELIVERY`, `WEB.LIVE_BACKEND_ACCEPTANCE`, `WEB.CONTRACT_INTEGRATION`, `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`.
 
 ### 2. Add typed Analysis settings to Monitoring Profiles
 
@@ -70,12 +71,6 @@ Target feature: `WEB.MONITORING_PROFILES`.
 The first viewer Results slice reuses the existing bounded Results REST/SSE contract and keeps `relevant=true`. If larger product datasets require cursor pagination, search, profile/source display names, or richer category-specific browsing, add those backend contracts before expanding frontend behavior.
 
 Target features: `WEB.VIEWER_RESULTS`, `WEB.RESULTS_BROWSING`.
-
-### 4. Complete cross-repository Kubernetes acceptance
-
-After the frontend image passes its repository-owned verification, load `signalharvester-web:local` into the backend-owned Kubernetes frontend workload and complete platform exposure/CORS/security acceptance there.
-
-Target features: `WEB.PRODUCTION_DELIVERY`, `WEB.CONTRACT_INTEGRATION`, `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`.
 
 ## Backend dependencies
 

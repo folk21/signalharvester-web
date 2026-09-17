@@ -2,7 +2,7 @@
 
 SignalHarvester Web is the React/TypeScript frontend for SignalHarvester. It is one coherent browser application for configuration, operations, analyzed Results, and pipeline diagnostics over backend REST/OpenAPI and SSE contracts.
 
-The current build includes the accepted authentication/session, ADMIN identity management, and viewer-oriented Results workflows over the backend cookie/CSRF/RBAC and Results contracts, plus a verification-pending production image delivery slice. Backend authorization, identity invariants, and Result semantics remain authoritative. The browser never reads PostgreSQL or Kafka directly.
+The current build includes the accepted authentication/session, ADMIN identity management, viewer-oriented Results, route-delivery, and production-image workflows over the backend cookie/CSRF/RBAC and Results contracts. The current verification-pending slice is deployed Kubernetes browser acceptance against the backend-owned frontend workload boundary. Backend authorization, identity invariants, deployment manifests, and Result semantics remain authoritative. The browser never reads PostgreSQL or Kafka directly.
 
 ## Interface
 
@@ -37,7 +37,7 @@ Results and diagnostics:
 - **Processing Flow** — backend-reconstructed run/item stages, evidence, durations, limitations, and diagnostic metadata.
 - **Identity Administration** — ADMIN list/create/update workflows for persisted application identities and explicit roles.
 
-Cross-cutting browser capabilities include authentication/session bootstrap, role-aware navigation, credentialed REST/SSE transport, deterministic Playwright verification, targeted visual regression, accessibility hardening, responsive/large-data containment, and route-level code splitting with recoverable lazy-route failures. The security foundation, identity administration, viewer Results, and route-delivery slices are accepted.
+Cross-cutting browser capabilities include authentication/session bootstrap, role-aware navigation, credentialed REST/SSE transport, deterministic Playwright verification, targeted visual regression, accessibility hardening, responsive/large-data containment, route-level code splitting with recoverable lazy-route failures, and an independently buildable non-root production image. The security foundation, identity administration, viewer Results, route delivery, and production image delivery are accepted.
 
 ## Technology
 
@@ -161,6 +161,20 @@ docker build \
 ```
 
 The runtime serves static production assets on container port `8080`. An empty `VITE_API_BASE_URL` remains valid for a same-origin reverse-proxy deployment. Cross-origin hosting requires a compatible backend credentialed CORS/cookie policy.
+
+## Deployed Kubernetes browser acceptance
+
+After `signalharvester-web:local` is loaded into the local cluster and the backend repository's `infra/kubernetes/frontend` workload is running, verify the real deployed browser boundary with:
+
+```bash
+SIGNALHARVESTER_WEB_URL=http://localhost:5173 \
+SIGNALHARVESTER_BACKEND_URL=http://localhost:8080 \
+SIGNALHARVESTER_LIVE_USERNAME=<admin-viewer-user> \
+SIGNALHARVESTER_LIVE_PASSWORD=<password> \
+npm run e2e:deployed
+```
+
+The deployed command does not start Vite or apply Kubernetes resources. It reuses the existing real-backend browser pipeline against the production image exposed by the cluster. Keep `localhost` on both documented port-forwards so the acceptance run exercises the intended cookie/CORS boundary. Set `SIGNALHARVESTER_LIVE_FIXTURE_HOST` when the in-cluster backend needs a different address to reach the deterministic host RSS fixture.
 
 ## Backend OpenAPI workflow
 

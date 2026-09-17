@@ -308,6 +308,31 @@ Load that image into the selected local cluster using the cluster's normal image
 
 For same-origin production routing, omit the build argument or pass an empty value. For a separately hosted browser origin, build with the explicit backend origin and configure the backend's credentialed CORS/cookie policy accordingly.
 
+## Deployed Kubernetes browser verification
+
+After the backend repository's frontend workload is running, keep both documented browser-facing port-forwards active:
+
+```bash
+kubectl -n signalharvester port-forward service/signalharvester-backend 8080:8080
+kubectl -n signalharvester port-forward service/signalharvester-web 5173:8080
+```
+
+Then run the production-boundary browser scenario from this repository:
+
+```bash
+SIGNALHARVESTER_WEB_URL=http://localhost:5173 \
+SIGNALHARVESTER_BACKEND_URL=http://localhost:8080 \
+SIGNALHARVESTER_LIVE_USERNAME=<admin-viewer-user> \
+SIGNALHARVESTER_LIVE_PASSWORD=<password> \
+npm run e2e:deployed
+```
+
+Use an enabled identity with explicit `ADMIN` and `VIEWER` roles. The deployed Playwright configuration does not start a local frontend server; it reuses the live pipeline against the already deployed production image. Keeping `localhost` on both sides is intentional for the documented cookie/CORS boundary.
+
+The scenario starts a deterministic RSS fixture on the developer host. If the backend pod cannot reach that host through `127.0.0.1`, set `SIGNALHARVESTER_LIVE_FIXTURE_HOST` to an address reachable from the cluster and explicitly permit that fixture destination in the backend's external-source access policy for the acceptance run.
+
+This repository does not create the cluster, apply the backend-owned workload, load images, or manage Kubernetes Secrets. Those remain backend/infrastructure responsibilities.
+
 ## Browser troubleshooting
 
 When a screen looks inconsistent, inspect the browser Network panel first.

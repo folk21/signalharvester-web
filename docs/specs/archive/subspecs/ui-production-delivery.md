@@ -3,14 +3,14 @@ type: Specification
 title: Production frontend delivery
 description: Package the production React build as an independently buildable non-root HTTP image compatible with the backend-owned Kubernetes frontend workload boundary.
 document_role: subspec
-spec_status: verification-pending
+spec_status: completed
 parent: ../spec-signal-harvester-web.md
 ---
 # Production frontend delivery
 
 ## Status
 
-Verification-pending. The production image definition, static-server configuration, repository delivery checks, and opt-in container verification are implemented. Developer acceptance still requires the canonical frontend gate plus a real container-image verification run.
+Completed and accepted on 2026-09-17 after the canonical frontend gate and Docker-backed production image verification passed.
 
 ## Feature scope
 

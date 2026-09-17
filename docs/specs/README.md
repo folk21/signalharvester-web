@@ -141,10 +141,11 @@ Umbrella:
 
 Current implementation focus:
 
-- [`active/subspecs/ui-production-delivery.md`](active/subspecs/ui-production-delivery.md) — `WEB.PRODUCTION_DELIVERY` real production image and static runtime compatible with the backend-owned Kubernetes frontend workload boundary.
+- [`active/subspecs/ui-deployed-kubernetes-browser-acceptance.md`](active/subspecs/ui-deployed-kubernetes-browser-acceptance.md) — deployed production-image browser acceptance through the backend-owned Kubernetes frontend workload boundary.
 
 ## Recently completed sub-specifications
 
+- [`archive/subspecs/ui-production-delivery.md`](archive/subspecs/ui-production-delivery.md) — independently buildable non-root production image and container runtime verification, accepted on 2026-09-17.
 - [`archive/subspecs/ui-viewer-results.md`](archive/subspecs/ui-viewer-results.md) — consumer-oriented relevant Results presentation for explicit VIEWER principals, accepted on 2026-09-17.
 - [`archive/subspecs/ui-admin-identity-management.md`](archive/subspecs/ui-admin-identity-management.md) — ADMIN persisted identity creation/update workflows, accepted on 2026-09-17.
 - [`archive/subspecs/ui-authentication-authorization-foundation.md`](archive/subspecs/ui-authentication-authorization-foundation.md) — authenticated cookie/CSRF session foundation and additive role-aware shell, accepted on 2026-09-17.

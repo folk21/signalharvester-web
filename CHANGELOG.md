@@ -7,6 +7,7 @@ description: Notable frontend changes organized by release state, with each chan
 
 ## Unreleased
 
+- 2026-09-17 — Accepted production frontend delivery after the canonical repository gate and Docker-backed image verification passed; added verification-pending deployed Kubernetes browser acceptance that reuses the real-backend pipeline against an externally served production frontend.
 - 2026-09-17 — Added verification-pending production image delivery with reproducible multi-stage build, non-root static serving on port 8080, SPA deep-link fallback, delivery-contract checks, and opt-in Docker runtime verification.
 - 2026-09-17 — Accepted ADMIN identity management and viewer-oriented Results after the canonical frontend verification passed.
 - 2026-09-17 — Added a verification-pending viewer-oriented Results experience that reuses the existing relevant Results REST/SSE boundary while omitting operational identifiers and diagnostic navigation from VIEWER-only presentation.

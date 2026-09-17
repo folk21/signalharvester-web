@@ -18,6 +18,7 @@
     "e2e:visual": "playwright test --config=playwright.config.ts tests/e2e/visual-regression.spec.ts",
     "e2e:visual:update": "playwright test --config=playwright.config.ts tests/e2e/visual-regression.spec.ts --update-snapshots",
     "e2e:live": "playwright test --config=playwright.live.config.ts",
+    "e2e:deployed": "playwright test --config=playwright.deployed.config.ts",
     "e2e:install": "playwright install chromium",
     "build:assets": "node ./tools/verify-build-assets.mjs",
     "delivery:verify": "node ./tools/verify-production-delivery.mjs",

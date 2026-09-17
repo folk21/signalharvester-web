@@ -4,7 +4,7 @@ title: SignalHarvester Web initial product specification
 description: Active frontend umbrella specification for configuration, operational inspection, Results, live updates, and event-flow diagnostics.
 document_role: umbrella
 spec_status: active
-current_focus: subspecs/ui-production-delivery.md
+current_focus: subspecs/ui-deployed-kubernetes-browser-acceptance.md
 ---
 # SignalHarvester Web initial product specification
 
@@ -18,9 +18,9 @@ Frontend implementation details belong here rather than in the backend repositor
 
 ## Current implementation focus
 
-The current bounded focus is [`subspecs/ui-production-delivery.md`](subspecs/ui-production-delivery.md). It packages the accepted production frontend as the real independently buildable non-root image required by the backend-owned Kubernetes frontend workload boundary.
+The current bounded focus is [`subspecs/ui-deployed-kubernetes-browser-acceptance.md`](subspecs/ui-deployed-kubernetes-browser-acceptance.md). It verifies the accepted production image through the backend-owned Kubernetes frontend workload and real browser security/integration boundary without moving cluster ownership into this repository.
 
-`WEB.IDENTITY_ADMIN` and `WEB.VIEWER_RESULTS` were accepted on 2026-09-17 after the canonical frontend verification passed and are archived.
+`WEB.IDENTITY_ADMIN`, `WEB.VIEWER_RESULTS`, and `WEB.PRODUCTION_DELIVERY` were accepted on 2026-09-17 after their required frontend verification passed and are archived.
 
 The authentication/authorization foundation and route-delivery slices were also accepted on 2026-09-17 and remain archived.
 
@@ -90,7 +90,8 @@ The frontend does not own:
 | Authentication/session and role-aware shell | Implemented and accepted |
 | ADMIN identity management | Implemented and accepted |
 | Viewer-specific Results presentation | Implemented and accepted |
-| Production frontend image | Implemented, verification-pending |
+| Production frontend image | Implemented and accepted |
+| Deployed Kubernetes browser acceptance | Implemented, verification-pending |
 
 ## Requirement map
 
@@ -118,6 +119,7 @@ The frontend does not own:
 | UI-R20 | `WEB.ROUTE_DELIVERY` | `DELIVERY.FRONTEND_BACKEND_BOUNDARY` |
 | UI-R21 | `WEB.VIEWER_RESULTS`, `WEB.AUTHORIZATION_UX` | `PRESENTATION.VIEWER_RESULTS`, `RESULTS.BROWSING`, `SECURITY.AUTHORIZATION` |
 | UI-R22 | `WEB.PRODUCTION_DELIVERY`, `WEB.CONTRACT_INTEGRATION`, `WEB.ROUTE_DELIVERY` | `DEPLOYMENT.KUBERNETES`, `DELIVERY.FRONTEND_BACKEND_BOUNDARY` |
+| UI-R23 | `WEB.PRODUCTION_DELIVERY`, `WEB.LIVE_BACKEND_ACCEPTANCE`, `WEB.CONTRACT_INTEGRATION`, `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX` | `DEPLOYMENT.KUBERNETES`, `DELIVERY.FRONTEND_BACKEND_BOUNDARY`, `SECURITY.AUTHENTICATION`, `SECURITY.AUTHORIZATION` |
 
 ## Requirements
 
@@ -416,7 +418,17 @@ The frontend must be independently packageable as a production static HTTP image
 
 The backend origin used by browser REST/SSE must remain an explicit build-time contract through `VITE_API_BASE_URL`; deployment-specific CORS/cookie policy remains backend-owned.
 
-Current status: implemented in [`subspecs/ui-production-delivery.md`](subspecs/ui-production-delivery.md) and verification-pending.
+Current status: implemented and accepted; historical implementation details are archived in [`../archive/subspecs/ui-production-delivery.md`](../archive/subspecs/ui-production-delivery.md).
+
+### UI-R23 — deployed production browser acceptance
+
+Features: `WEB.PRODUCTION_DELIVERY`, `WEB.LIVE_BACKEND_ACCEPTANCE`, `WEB.CONTRACT_INTEGRATION`, `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`. Related backend: `DEPLOYMENT.KUBERNETES`, `DELIVERY.FRONTEND_BACKEND_BOUNDARY`, `SECURITY.AUTHENTICATION`, `SECURITY.AUTHORIZATION`.
+
+The real production frontend image must be verifiable through the backend-owned Kubernetes frontend workload without the Vite development server or proxy. The acceptance path must exercise the compiled backend origin, authenticated cookie/CSRF behavior, protected REST requests, live SSE delivery, and representative protected navigation through an externally served frontend origin.
+
+The frontend repository must not duplicate or mutate backend-owned Kubernetes manifests to perform this verification. Cluster lifecycle, image loading, port-forwards, backend credentials, and outbound-source authorization remain explicit external prerequisites.
+
+Current status: implemented in [`subspecs/ui-deployed-kubernetes-browser-acceptance.md`](subspecs/ui-deployed-kubernetes-browser-acceptance.md) and verification-pending.
 
 ## Non-goals for the current product slice
 

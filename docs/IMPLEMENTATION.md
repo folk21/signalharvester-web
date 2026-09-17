@@ -240,13 +240,21 @@ Accepted browser verification features: `WEB.BROWSER_VERIFICATION`, `WEB.VISUAL_
 
 ## Production image delivery
 
-The repository now defines a verification-pending production image for feature `WEB.PRODUCTION_DELIVERY`. The multi-stage Docker build installs dependencies with `npm ci`, regenerates OpenAPI types, creates the normal Vite production bundle, and copies only `dist/` into an unprivileged Nginx runtime.
+The repository defines the accepted production image for feature `WEB.PRODUCTION_DELIVERY`. The multi-stage Docker build installs dependencies with `npm ci`, regenerates OpenAPI types, creates the normal Vite production bundle, and copies only `dist/` into an unprivileged Nginx runtime.
 
 `VITE_API_BASE_URL` is an explicit Docker build argument. Empty remains the same-origin deployment model. The backend repository's documented local Kubernetes port-forward workflow builds with `http://localhost:8080`.
 
 The runtime listens on container port `8080`, declares a non-root user, serves hashed `/assets/` with immutable caching, and uses `index.html` as the React Router fallback for non-asset deep links. Missing hashed assets remain `404`.
 
-`npm run delivery:verify` performs daemon-free structural checks and is part of `./run_checks.sh`. `npm run image:verify` is the opt-in Docker-backed acceptance that builds `signalharvester-web:local`, verifies the non-root image user, runs the image, and checks `/` plus `/results`. Kubernetes Deployment/Service manifests remain owned by the backend repository.
+`npm run delivery:verify` performs daemon-free structural checks and is part of `./run_checks.sh`. `npm run image:verify` is the opt-in Docker-backed acceptance that builds `signalharvester-web:local`, verifies the non-root image user, runs the image, and checks `/` plus `/results`. Both passed during developer acceptance on 2026-09-17. Kubernetes Deployment/Service manifests remain owned by the backend repository.
+
+## Deployed Kubernetes browser acceptance
+
+The verification-pending deployed acceptance reuses the existing `tests/e2e/live/pipeline.live.spec.ts` scenario through `playwright.deployed.config.ts`. Unlike `playwright.live.config.ts`, the deployed config does not start Vite and has no development proxy. Its default browser origin is `http://localhost:5173`, matching the backend repository's documented frontend Service port-forward.
+
+The deployed run explicitly uses `SIGNALHARVESTER_BACKEND_URL=http://localhost:8080` for authenticated cleanup and expects the production bundle itself to target that backend origin. This exercises the compiled `VITE_API_BASE_URL`, backend credentialed CORS/cookie behavior, CSRF-protected mutations, Results/Event SSE, and protected navigation through the production frontend image. `SIGNALHARVESTER_WEB_URL` may point at another already deployed compatible frontend.
+
+The deterministic RSS fixture remains host-owned. `SIGNALHARVESTER_LIVE_FIXTURE_HOST` is the explicit cluster-specific reachability override; backend outbound-source authorization must still permit the fixture destination. The frontend workflow does not apply manifests, create clusters, load images, read Kubernetes Secrets, or weaken backend security policy.
 
 ## Current limitations
 
@@ -254,6 +262,6 @@ The frontend does not yet implement:
 
 - dedicated typed Analysis-setting controls beyond the current criteria map;
 - production-scale viewer Results search/pagination beyond the current bounded backend contract;
-- cross-repository Kubernetes acceptance of the real frontend image.
+- developer acceptance of the deployed Kubernetes browser workflow against the real frontend image.
 
-The authentication/session role-aware shell, route delivery, ADMIN identity management, and viewer-oriented Results are accepted. ADMIN identity management consumes the existing backend user-administration contract, and viewer-oriented Results reuse the existing Results REST/SSE boundary. Backend authorization, identity invariants, and Result semantics remain authoritative regardless of frontend presentation.
+The authentication/session role-aware shell, route delivery, ADMIN identity management, viewer-oriented Results, and production image delivery are accepted. ADMIN identity management consumes the existing backend user-administration contract, and viewer-oriented Results reuse the existing Results REST/SSE boundary. The deployed Kubernetes browser acceptance remains verification-pending. Backend authorization, identity invariants, deployment manifests, and Result semantics remain authoritative regardless of frontend presentation.
