@@ -82,6 +82,7 @@ Current implementation state belongs in `docs/IMPLEMENTATION.md` and `docs/ROADM
 - `WEB.ACCESSIBILITY` — keyboard-operable navigation and inspection, semantic status/error behavior, accessible names, and focus management across core workflows. Related backend feature IDs: `DELIVERY.FRONTEND_BACKEND_BOUNDARY`.
 - `WEB.RESPONSIVE_LAYOUT` — phone/tablet containment and large bounded dataset presentation without inventing backend pagination semantics. Related backend feature IDs: `DELIVERY.FRONTEND_BACKEND_BOUNDARY`.
 - `WEB.ROUTE_DELIVERY` — route-level code splitting, explicit lazy-route loading, runtime failure containment, and reproducible production asset structure. Related backend feature IDs: `DELIVERY.FRONTEND_BACKEND_BOUNDARY`.
+- `WEB.PRODUCTION_DELIVERY` — independently buildable non-root production image, static SPA serving, build-time backend-origin binding, and container runtime verification. Related backend feature IDs: `DEPLOYMENT.KUBERNETES`, `DELIVERY.FRONTEND_BACKEND_BOUNDARY`.
 
 ### Security and role-specific presentation
 

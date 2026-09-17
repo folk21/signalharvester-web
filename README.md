@@ -2,7 +2,7 @@
 
 SignalHarvester Web is the React/TypeScript frontend for SignalHarvester. It is one coherent browser application for configuration, operations, analyzed Results, and pipeline diagnostics over backend REST/OpenAPI and SSE contracts.
 
-The current build includes the accepted frontend authentication/session foundation plus verification-pending ADMIN identity management and viewer-oriented Results workflows over the backend cookie/CSRF/RBAC and Results contracts. Backend authorization, identity invariants, and Result semantics remain authoritative. The browser never reads PostgreSQL or Kafka directly.
+The current build includes the accepted authentication/session, ADMIN identity management, and viewer-oriented Results workflows over the backend cookie/CSRF/RBAC and Results contracts, plus a verification-pending production image delivery slice. Backend authorization, identity invariants, and Result semantics remain authoritative. The browser never reads PostgreSQL or Kafka directly.
 
 ## Interface
 
@@ -37,7 +37,7 @@ Results and diagnostics:
 - **Processing Flow** — backend-reconstructed run/item stages, evidence, durations, limitations, and diagnostic metadata.
 - **Identity Administration** — ADMIN list/create/update workflows for persisted application identities and explicit roles.
 
-Cross-cutting browser capabilities include authentication/session bootstrap, role-aware navigation, credentialed REST/SSE transport, deterministic Playwright verification, targeted visual regression, accessibility hardening, responsive/large-data containment, and route-level code splitting with recoverable lazy-route failures. The security foundation and route-delivery slices are accepted.
+Cross-cutting browser capabilities include authentication/session bootstrap, role-aware navigation, credentialed REST/SSE transport, deterministic Playwright verification, targeted visual regression, accessibility hardening, responsive/large-data containment, and route-level code splitting with recoverable lazy-route failures. The security foundation, identity administration, viewer Results, and route-delivery slices are accepted.
 
 ## Technology
 
@@ -142,6 +142,26 @@ npm run build:assets
 
 Asset sizes are currently an informational measured baseline. Numeric budgets should be introduced only after a reviewed growth policy exists.
 
+## Production image
+
+Build and verify the independently deployable frontend image with:
+
+```bash
+npm run image:verify
+```
+
+The command requires a working Docker daemon. It builds `signalharvester-web:local` with `VITE_API_BASE_URL=http://localhost:8080`, verifies the final image is non-root, starts it on an ephemeral loopback port, and checks both `/` and the `/results` SPA deep link.
+
+For a manual build using a different backend origin:
+
+```bash
+docker build \
+  --build-arg VITE_API_BASE_URL=https://api.example.test \
+  -t signalharvester-web:local .
+```
+
+The runtime serves static production assets on container port `8080`. An empty `VITE_API_BASE_URL` remains valid for a same-origin reverse-proxy deployment. Cross-origin hosting requires a compatible backend credentialed CORS/cookie policy.
+
 ## Backend OpenAPI workflow
 
 The checked-in backend REST contract snapshot is:
@@ -163,7 +183,7 @@ npm run typecheck
 
 The frontend security foundation is implemented and accepted against the synchronized backend OpenAPI contract. It provides `/login`, current-principal bootstrap through `/api/v1/auth/me`, HttpOnly-cookie credential transport, double-submit CSRF forwarding for mutations, credentialed native SSE, logout/session cleanup, explicit `401`/`403` handling, and additive role-aware navigation.
 
-Backend authorization remains the security enforcement boundary. Frontend role checks control presentation only; they do not infer role hierarchy (`ADMIN` does not imply `VIEWER`) and do not replace backend enforcement. ADMIN identity management is available at `/users`; backend role normalization, username uniqueness, credential storage, and the last-enabled-ADMIN invariant remain authoritative. `VIEWER`-only principals now receive a consumer-oriented `/results` presentation that reuses the backend Results REST/SSE contract and omits operational diagnostic metadata from the rendered UI. Both `WEB.IDENTITY_ADMIN` and `WEB.VIEWER_RESULTS` remain verification-pending until the canonical repository gate is confirmed.
+Backend authorization remains the security enforcement boundary. Frontend role checks control presentation only; they do not infer role hierarchy (`ADMIN` does not imply `VIEWER`) and do not replace backend enforcement. ADMIN identity management is available at `/users`; backend role normalization, username uniqueness, credential storage, and the last-enabled-ADMIN invariant remain authoritative. `VIEWER`-only principals now receive a consumer-oriented `/results` presentation that reuses the backend Results REST/SSE contract and omits operational diagnostic metadata from the rendered UI. `WEB.IDENTITY_ADMIN` and `WEB.VIEWER_RESULTS` are accepted after the canonical repository gate passed.
 
 ## Documentation model
 

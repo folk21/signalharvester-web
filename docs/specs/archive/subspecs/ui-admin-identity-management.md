@@ -3,14 +3,14 @@ type: Specification
 title: Frontend ADMIN identity management
 description: Add ADMIN-oriented application identity list, creation, enabled-state, and explicit-role management over the backend security administration contract.
 document_role: subspec
-spec_status: verification-pending
+spec_status: completed
 parent: ../spec-signal-harvester-web.md
 ---
 # Frontend ADMIN identity management
 
 ## Status
 
-Verification-pending. Runtime code, documentation, deterministic browser coverage, and dynamic-route verification are implemented. Developer acceptance remains pending until the canonical repository gate passes.
+Completed and accepted on 2026-09-17 after the canonical frontend verification passed.
 
 ## Feature scope
 

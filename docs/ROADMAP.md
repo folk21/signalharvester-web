@@ -7,7 +7,7 @@ description: Current frontend focus, accepted baseline, next product stages, bac
 
 ## Current position
 
-The current bounded focus is viewer-oriented Results in [`docs/specs/active/subspecs/ui-viewer-results.md`](specs/active/subspecs/ui-viewer-results.md).
+The current bounded focus is production frontend delivery in [`docs/specs/active/subspecs/ui-production-delivery.md`](specs/active/subspecs/ui-production-delivery.md).
 
 The backend OpenAPI snapshot is synchronized and browser authentication/session, CSRF-aware REST, credentialed SSE, `401`/`403` handling, additive role-aware routing/navigation, and protected deterministic/live acceptance coverage are implemented and accepted.
 
@@ -41,15 +41,15 @@ The accepted baseline already includes configuration/operations, live Results, E
 - `WEB.ACCESSIBILITY` — skip navigation, semantic states, accessible naming, keyboard operation, and focus management.
 - `WEB.RESPONSIVE_LAYOUT` — phone/tablet and larger bounded-response containment.
 
-`WEB.IDENTITY_ADMIN` runtime code and deterministic coverage are implemented, but developer acceptance is still pending until the canonical repository gate passes.
+`WEB.IDENTITY_ADMIN` and `WEB.VIEWER_RESULTS` are accepted after the 2026-09-17 canonical repository gate passed.
 
 ## Next frontend stages
 
-### 1. Accept ADMIN identity management and viewer Results
+### 1. Verify the production frontend image
 
-Run the canonical repository gate over both verification-pending security-adjacent slices. Acceptance must preserve backend-owned identity invariants, additive roles, CSRF transport, viewer/admin Results separation, and deterministic request-boundary coverage.
+Complete the frontend-owned delivery boundary with the real non-root image expected by the backend Kubernetes manifests. Run the canonical repository gate and the Docker-backed image verification before cross-repository cluster acceptance.
 
-Target features: `WEB.IDENTITY_ADMIN`, `WEB.VIEWER_RESULTS`.
+Target features: `WEB.PRODUCTION_DELIVERY`, `WEB.CONTRACT_INTEGRATION`, `WEB.ROUTE_DELIVERY`.
 
 ### 2. Add typed Analysis settings to Monitoring Profiles
 
@@ -71,11 +71,11 @@ The first viewer Results slice reuses the existing bounded Results REST/SSE cont
 
 Target features: `WEB.VIEWER_RESULTS`, `WEB.RESULTS_BROWSING`.
 
-### 4. Complete production delivery integration
+### 4. Complete cross-repository Kubernetes acceptance
 
-Add the real production frontend image/deployment integration required by the platform design, including health/build verification, security/cross-origin deployment policy, and final frontend/backend Kubernetes acceptance.
+After the frontend image passes its repository-owned verification, load `signalharvester-web:local` into the backend-owned Kubernetes frontend workload and complete platform exposure/CORS/security acceptance there.
 
-Target features: `WEB.ROUTE_DELIVERY`, `WEB.CONTRACT_INTEGRATION`, `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`.
+Target features: `WEB.PRODUCTION_DELIVERY`, `WEB.CONTRACT_INTEGRATION`, `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`.
 
 ## Backend dependencies
 

@@ -141,14 +141,12 @@ Umbrella:
 
 Current implementation focus:
 
-- [`active/subspecs/ui-viewer-results.md`](active/subspecs/ui-viewer-results.md) — `WEB.VIEWER_RESULTS` consumer presentation over the existing Results REST/SSE contract.
-
-Supporting verification-pending work:
-
-- [`active/subspecs/ui-admin-identity-management.md`](active/subspecs/ui-admin-identity-management.md) — `WEB.IDENTITY_ADMIN` runtime code is implemented; canonical developer acceptance is still pending.
+- [`active/subspecs/ui-production-delivery.md`](active/subspecs/ui-production-delivery.md) — `WEB.PRODUCTION_DELIVERY` real production image and static runtime compatible with the backend-owned Kubernetes frontend workload boundary.
 
 ## Recently completed sub-specifications
 
+- [`archive/subspecs/ui-viewer-results.md`](archive/subspecs/ui-viewer-results.md) — consumer-oriented relevant Results presentation for explicit VIEWER principals, accepted on 2026-09-17.
+- [`archive/subspecs/ui-admin-identity-management.md`](archive/subspecs/ui-admin-identity-management.md) — ADMIN persisted identity creation/update workflows, accepted on 2026-09-17.
 - [`archive/subspecs/ui-authentication-authorization-foundation.md`](archive/subspecs/ui-authentication-authorization-foundation.md) — authenticated cookie/CSRF session foundation and additive role-aware shell, accepted on 2026-09-17.
 - [`archive/subspecs/ui-performance-runtime-resilience.md`](archive/subspecs/ui-performance-runtime-resilience.md) — route-level code splitting, lazy-route failure containment, and production asset reporting, accepted on 2026-09-17.
 - [`archive/subspecs/ui-responsive-large-data-hardening.md`](archive/subspecs/ui-responsive-large-data-hardening.md) — responsive/large bounded data containment, accepted on 2026-09-15.

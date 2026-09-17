@@ -240,8 +240,12 @@ Development uses Vite and normally proxies `/api` to a local backend.
 
 Production-style builds are static frontend assets configured with a backend origin through `VITE_API_BASE_URL` at build time. Vite emits a production manifest. Repository verification checks that primary screen modules remain dynamic entries and reports generated JavaScript/CSS raw and gzip sizes.
 
-The asset report is informational until a reviewed baseline and acceptable growth policy justify numeric budgets.
+The production image is owned by this repository and uses a multi-stage build: Node produces the normal `dist/` output, then an unprivileged static HTTP runtime serves only those assets on container port `8080`. React Router deep links fall back to `index.html`, while missing `/assets/` files remain `404`. Hashed assets use immutable caching; HTML navigation remains revalidation-safe.
+
+The image keeps backend selection as the existing build-time `VITE_API_BASE_URL` contract. Same-origin builds may leave it empty. Cross-origin deployments require a matching backend credentialed CORS/cookie policy. Kubernetes workload manifests remain backend-repository-owned; the frontend image stays an independent deliverable.
+
+The asset report is informational until a reviewed baseline and acceptable growth policy justify numeric budgets. The daemon-free delivery contract check belongs to the canonical frontend gate, while real container build/start verification remains an explicit Docker-backed acceptance step.
 
 Backend and frontend remain independently buildable deliverables joined through explicit REST/SSE contracts rather than source-level coupling.
 
-Primary features: `WEB.ROUTE_DELIVERY`, `WEB.CONTRACT_INTEGRATION`.
+Primary features: `WEB.ROUTE_DELIVERY`, `WEB.PRODUCTION_DELIVERY`, `WEB.CONTRACT_INTEGRATION`.

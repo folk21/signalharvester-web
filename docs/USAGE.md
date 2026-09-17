@@ -282,9 +282,31 @@ Run routine repository verification with:
 ./run_checks.sh
 ```
 
-This regenerates OpenAPI types, typechecks application/browser-test code, runs Vitest and deterministic Playwright, builds the production frontend, verifies dynamic route entries, and reports production assets.
+This regenerates OpenAPI types, typechecks application/browser-test code, runs Vitest and deterministic Playwright, builds the production frontend, verifies dynamic route entries, reports production assets, and validates the daemon-free production delivery contract.
 
 Live-backend E2E remains separate because this repository does not own backend infrastructure lifecycle.
+
+## Production container verification
+
+The frontend repository owns the real production image consumed by the separately owned backend Kubernetes workload boundary. With Docker available, run:
+
+```bash
+npm run image:verify
+```
+
+The command builds `signalharvester-web:local` with the local Kubernetes browser backend origin `http://localhost:8080`, verifies the final image declares a non-root user, starts it with container port `8080` mapped to an ephemeral loopback port, and checks both `/` and `/results`.
+
+For a manual local-cluster image build:
+
+```bash
+docker build \
+  --build-arg VITE_API_BASE_URL=http://localhost:8080 \
+  -t signalharvester-web:local .
+```
+
+Load that image into the selected local cluster using the cluster's normal image-loading workflow, then apply the backend repository's `infra/kubernetes/frontend` workload. This frontend repository intentionally does not duplicate those Kubernetes manifests.
+
+For same-origin production routing, omit the build argument or pass an empty value. For a separately hosted browser origin, build with the explicit backend origin and configure the backend's credentialed CORS/cookie policy accordingly.
 
 ## Browser troubleshooting
 
@@ -302,6 +324,6 @@ In normal local development, Vite proxies `/api` to the backend configured by `V
 
 ## Current security status
 
-The frontend implements the accepted browser authentication/session foundation, credentialed REST/SSE, CSRF forwarding, role-aware presentation, logout, explicit `401`/`403` handling, and ADMIN identity management.
+The frontend implements the accepted browser authentication/session foundation, credentialed REST/SSE, CSRF forwarding, role-aware presentation, logout, explicit `401`/`403` handling, ADMIN identity management, and viewer-oriented Results.
 
 Backend authorization and identity invariants remain authoritative. The frontend does not infer role hierarchy or decode the JWT. Cross-origin production hosting still requires an explicitly compatible backend CORS/cookie policy.

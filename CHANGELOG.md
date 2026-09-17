@@ -7,6 +7,8 @@ description: Notable frontend changes organized by release state, with each chan
 
 ## Unreleased
 
+- 2026-09-17 — Added verification-pending production image delivery with reproducible multi-stage build, non-root static serving on port 8080, SPA deep-link fallback, delivery-contract checks, and opt-in Docker runtime verification.
+- 2026-09-17 — Accepted ADMIN identity management and viewer-oriented Results after the canonical frontend verification passed.
 - 2026-09-17 — Added a verification-pending viewer-oriented Results experience that reuses the existing relevant Results REST/SSE boundary while omitting operational identifiers and diagnostic navigation from VIEWER-only presentation.
 - 2026-09-17 — Added ADMIN identity administration for persisted user/BOT identities, including create/update role workflows, backend invariant error handling, deterministic browser coverage, and dynamic-route verification.
 - 2026-09-17 — Accepted the authentication/authorization foundation and route-delivery/runtime-resilience slices after the canonical frontend verification passed.

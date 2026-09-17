@@ -29,7 +29,7 @@ Results and diagnostics:
 - **Event Explorer** (`/events`) — bounded retained event history plus live SSE, filters, and event detail. Feature: `WEB.EVENT_EXPLORER`.
 - **Processing Flow** (`/flows`) — backend-reconstructed run/item branches, evidence, durations, limitations, and stage metadata. Feature: `WEB.PROCESSING_FLOW`.
 
-Cross-cutting accepted behavior includes deterministic browser verification, live-backend acceptance, targeted visual regression, accessibility hardening, responsive/large-data containment, route-level performance/runtime resilience, and the authentication/session role-aware shell foundation. ADMIN identity management and viewer-oriented Results are implemented but remain verification-pending in active sub-specifications.
+Cross-cutting accepted behavior includes deterministic browser verification, live-backend acceptance, targeted visual regression, accessibility hardening, responsive/large-data containment, route-level performance/runtime resilience, authentication/session role-aware presentation, ADMIN identity management, and viewer-oriented Results.
 
 ## Sources
 
@@ -227,7 +227,8 @@ The canonical routine repository gate is `./run_checks.sh`. It:
 3. runs Vitest;
 4. runs deterministic Playwright;
 5. builds the production frontend;
-6. verifies dynamic route entries and reports production assets.
+6. verifies dynamic route entries and reports production assets;
+7. verifies the production delivery definition without requiring Docker.
 
 The deterministic browser suite covers authentication bootstrap/login/logout, additive role isolation, CSRF request construction, credentialed EventSource creation, `401`/`403` behavior, ADMIN identity create/update and invariant-error handling, viewer vs operational Results separation, viewer-safe Result filters/detail presentation, core navigation/configuration, Source Test, Monitoring Profile and Collection Run request construction, Analysis filters, Results and Event Explorer REST/SSE behavior, Processing Flow, representative async states, accessibility interactions, SSE reconnect/resnapshot, stale bounded deep links, partial flow evidence, responsive/large-data containment, and delayed/failed lazy-route delivery.
 
@@ -237,12 +238,22 @@ The opt-in `npm run e2e:live` workflow authenticates through the browser with an
 
 Accepted browser verification features: `WEB.BROWSER_VERIFICATION`, `WEB.VISUAL_REGRESSION`, `WEB.LIVE_BACKEND_ACCEPTANCE`.
 
+## Production image delivery
+
+The repository now defines a verification-pending production image for feature `WEB.PRODUCTION_DELIVERY`. The multi-stage Docker build installs dependencies with `npm ci`, regenerates OpenAPI types, creates the normal Vite production bundle, and copies only `dist/` into an unprivileged Nginx runtime.
+
+`VITE_API_BASE_URL` is an explicit Docker build argument. Empty remains the same-origin deployment model. The backend repository's documented local Kubernetes port-forward workflow builds with `http://localhost:8080`.
+
+The runtime listens on container port `8080`, declares a non-root user, serves hashed `/assets/` with immutable caching, and uses `index.html` as the React Router fallback for non-asset deep links. Missing hashed assets remain `404`.
+
+`npm run delivery:verify` performs daemon-free structural checks and is part of `./run_checks.sh`. `npm run image:verify` is the opt-in Docker-backed acceptance that builds `signalharvester-web:local`, verifies the non-root image user, runs the image, and checks `/` plus `/results`. Kubernetes Deployment/Service manifests remain owned by the backend repository.
+
 ## Current limitations
 
 The frontend does not yet implement:
 
 - dedicated typed Analysis-setting controls beyond the current criteria map;
 - production-scale viewer Results search/pagination beyond the current bounded backend contract;
-- final production frontend deployment integration.
+- cross-repository Kubernetes acceptance of the real frontend image.
 
-The authentication/session role-aware shell and route-delivery capabilities are accepted. ADMIN identity management consumes the existing backend user-administration contract, and viewer-oriented Results reuse the existing Results REST/SSE boundary. Both newer slices are verification-pending. Backend authorization, identity invariants, and Result semantics remain authoritative regardless of frontend presentation.
+The authentication/session role-aware shell, route delivery, ADMIN identity management, and viewer-oriented Results are accepted. ADMIN identity management consumes the existing backend user-administration contract, and viewer-oriented Results reuse the existing Results REST/SSE boundary. Backend authorization, identity invariants, and Result semantics remain authoritative regardless of frontend presentation.

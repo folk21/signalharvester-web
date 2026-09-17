@@ -3,14 +3,14 @@ type: Specification
 title: Viewer-oriented Results experience
 description: Add a consumer-facing VIEWER Results list/detail experience over the existing backend Results REST and SSE contracts without exposing admin diagnostics.
 document_role: subspec
-spec_status: active
+spec_status: completed
 parent: ../spec-signal-harvester-web.md
 ---
 # Viewer-oriented Results experience
 
 ## Status
 
-Active implementation focus. Runtime code and deterministic browser coverage are implemented in this patch; developer acceptance remains pending until the canonical repository gate passes.
+Completed and accepted on 2026-09-17 after the canonical frontend verification passed.
 
 ## Feature scope
 

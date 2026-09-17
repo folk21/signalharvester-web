@@ -4,7 +4,7 @@ title: SignalHarvester Web initial product specification
 description: Active frontend umbrella specification for configuration, operational inspection, Results, live updates, and event-flow diagnostics.
 document_role: umbrella
 spec_status: active
-current_focus: subspecs/ui-viewer-results.md
+current_focus: subspecs/ui-production-delivery.md
 ---
 # SignalHarvester Web initial product specification
 
@@ -18,11 +18,11 @@ Frontend implementation details belong here rather than in the backend repositor
 
 ## Current implementation focus
 
-The current bounded focus is [`subspecs/ui-viewer-results.md`](subspecs/ui-viewer-results.md). It adds a consumer-facing `/results` experience for explicit `VIEWER` principals over the existing Results REST/SSE contracts while keeping operational diagnostics out of viewer presentation.
+The current bounded focus is [`subspecs/ui-production-delivery.md`](subspecs/ui-production-delivery.md). It packages the accepted production frontend as the real independently buildable non-root image required by the backend-owned Kubernetes frontend workload boundary.
 
-`WEB.IDENTITY_ADMIN` runtime code and deterministic coverage are implemented, but its sub-spec remains active as verification-pending until the canonical frontend gate is confirmed.
+`WEB.IDENTITY_ADMIN` and `WEB.VIEWER_RESULTS` were accepted on 2026-09-17 after the canonical frontend verification passed and are archived.
 
-The authentication/authorization foundation and route-delivery slices were accepted on 2026-09-17 after the canonical frontend verification passed and are archived.
+The authentication/authorization foundation and route-delivery slices were also accepted on 2026-09-17 and remain archived.
 
 The accepted baseline already provides Dashboard, Sources CRUD and Source Test, Monitoring Profiles, profile-driven Collection Runs, Analysis inspection, Results list/filter/detail with SSE updates, Event Explorer history/live delivery, Processing Flow, resilience coverage, targeted visual regression, real-backend diagnostic acceptance, accessibility hardening, and responsive/large-data hardening.
 
@@ -33,7 +33,7 @@ This umbrella owns the browser capabilities cataloged in [`../../FEATURES.md`](.
 - application/contract boundary: `WEB.APP_SHELL`, `WEB.CONTRACT_INTEGRATION`, `WEB.SERVER_STATE`, `WEB.ASYNC_FEEDBACK`;
 - configuration/operations: `WEB.DASHBOARD`, `WEB.SOURCE_CONFIGURATION`, `WEB.SOURCE_TEST`, `WEB.MONITORING_PROFILES`, `WEB.COLLECTION_RUNS`;
 - Results/diagnostics: `WEB.ANALYSIS_INSPECTION`, `WEB.RESULTS_BROWSING`, `WEB.RESULTS_LIVE`, `WEB.EVENT_EXPLORER`, `WEB.PROCESSING_FLOW`;
-- UX/delivery: `WEB.ACCESSIBILITY`, `WEB.RESPONSIVE_LAYOUT`, `WEB.ROUTE_DELIVERY`;
+- UX/delivery: `WEB.ACCESSIBILITY`, `WEB.RESPONSIVE_LAYOUT`, `WEB.ROUTE_DELIVERY`, `WEB.PRODUCTION_DELIVERY`;
 - security/role-specific presentation: `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`, `WEB.IDENTITY_ADMIN`, `WEB.VIEWER_RESULTS`;
 - verification: `WEB.BROWSER_VERIFICATION`, `WEB.VISUAL_REGRESSION`, `WEB.LIVE_BACKEND_ACCEPTANCE`.
 
@@ -88,8 +88,9 @@ The frontend does not own:
 | Responsive / large-data UX hardening | Implemented and accepted |
 | Frontend performance / runtime resilience | Implemented and accepted |
 | Authentication/session and role-aware shell | Implemented and accepted |
-| ADMIN identity management | Implemented, verification-pending |
-| Viewer-specific Results presentation | Implemented in current focus, verification-pending |
+| ADMIN identity management | Implemented and accepted |
+| Viewer-specific Results presentation | Implemented and accepted |
+| Production frontend image | Implemented, verification-pending |
 
 ## Requirement map
 
@@ -116,6 +117,7 @@ The frontend does not own:
 | UI-R19 | `WEB.RESPONSIVE_LAYOUT` | `DELIVERY.FRONTEND_BACKEND_BOUNDARY` |
 | UI-R20 | `WEB.ROUTE_DELIVERY` | `DELIVERY.FRONTEND_BACKEND_BOUNDARY` |
 | UI-R21 | `WEB.VIEWER_RESULTS`, `WEB.AUTHORIZATION_UX` | `PRESENTATION.VIEWER_RESULTS`, `RESULTS.BROWSING`, `SECURITY.AUTHORIZATION` |
+| UI-R22 | `WEB.PRODUCTION_DELIVERY`, `WEB.CONTRACT_INTEGRATION`, `WEB.ROUTE_DELIVERY` | `DEPLOYMENT.KUBERNETES`, `DELIVERY.FRONTEND_BACKEND_BOUNDARY` |
 
 ## Requirements
 
@@ -343,7 +345,7 @@ Frontend role checks may control routes, navigation, and presentation, but backe
 
 Authentication failure and authorization failure must remain distinct: protected `401` responses end the frontend session, while `403` responses keep the principal authenticated and expose an authorization error.
 
-Current status: authentication/session and role-aware presentation are implemented and accepted. ADMIN identity management is verification-pending. Viewer-specific Results presentation is implemented in the current focus and verification-pending.
+Current status: authentication/session, role-aware presentation, ADMIN identity management, and viewer-specific Results presentation are implemented and accepted.
 
 ### UI-R17 — accessibility and usability baseline
 
@@ -404,7 +406,17 @@ The viewer experience should reuse the existing Results REST/detail/SSE contract
 
 An `ADMIN` + `VIEWER` principal may retain the operational Results presentation with diagnostic cross-navigation. An `ADMIN` principal without `VIEWER` must not gain Results access through frontend role inference.
 
-Current status: implemented in [`subspecs/ui-viewer-results.md`](subspecs/ui-viewer-results.md) and verification-pending.
+Current status: implemented and accepted; historical implementation details are archived in [`../archive/subspecs/ui-viewer-results.md`](../archive/subspecs/ui-viewer-results.md).
+
+### UI-R22 — reproducible production frontend image
+
+Features: `WEB.PRODUCTION_DELIVERY`, `WEB.CONTRACT_INTEGRATION`, `WEB.ROUTE_DELIVERY`. Related backend: `DEPLOYMENT.KUBERNETES`, `DELIVERY.FRONTEND_BACKEND_BOUNDARY`.
+
+The frontend must be independently packageable as a production static HTTP image without backend source or backend build artifacts. The runtime must serve the Vite bundle as a non-root process on the platform-agreed container port and preserve React Router deep-link fallback.
+
+The backend origin used by browser REST/SSE must remain an explicit build-time contract through `VITE_API_BASE_URL`; deployment-specific CORS/cookie policy remains backend-owned.
+
+Current status: implemented in [`subspecs/ui-production-delivery.md`](subspecs/ui-production-delivery.md) and verification-pending.
 
 ## Non-goals for the current product slice
 
