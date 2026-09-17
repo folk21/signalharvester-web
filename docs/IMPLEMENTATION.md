@@ -1,107 +1,117 @@
 ---
 type: Implementation Guide
 title: Current implementation
-description: Current implemented SignalHarvester Web screens, API usage, code organization, and known limitations.
+description: Current SignalHarvester Web screens, API usage, browser state, verification, and known limitations.
 ---
 # Current implementation
 
 ## Purpose
 
-This document describes what the frontend currently implements. Active specifications describe intended changes and must not be read as evidence that a feature already exists.
+This document describes accepted and currently implemented frontend behavior. Active specifications describe intended or verification-pending changes and must not be read as implementation evidence by themselves.
 
-The accepted baseline includes Monitoring Profiles, Source Test, profile-driven manual Collection Runs, live Results, Event Explorer, Processing Flow visualization, the resilience/edge-case browser suite, real-backend diagnostic acceptance through Results/Event SSE and Processing Flow, and focused accessibility hardening. Targeted visual regression is implemented as a small reviewed Results/detail baseline. The current branch hardens phone/tablet containment and larger bounded datasets with locally scrollable configuration collections, bounded source membership, wrapping Result detail values, and many-branch Processing Flow scrolling.
+Stable frontend capability IDs are defined in [`FEATURES.md`](FEATURES.md).
 
-## Current screens
+## Current product surface
 
-| Screen | Route | Current capability | Backend boundary |
-|---|---|---|---|
-| Dashboard | `/` | Shows source/profile, collection, analysis, and recent Results summaries | Existing REST reads |
-| Sources | `/sources` | Lists, creates, edits, enables/disables, deletes, and diagnostically tests sources | `/api/v1/sources`, `/api/v1/sources/{sourceId}/test` |
-| Monitoring Profiles | `/profiles` | CRUD for persisted profiles, interval, source membership, criteria, and scheduled enabled state | `/api/v1/monitoring-profiles` |
-| Collection Runs | `/runs` | Starts persisted profiles manually, lists recent runs, and inspects durable source outcomes | `/api/v1/admin/collection-runs` |
-| Analysis Items | `/analysis` | Inspects normalized/deduplication state with profile/source filters | `/api/v1/admin/analysis/items` |
-| Results | `/results` | Lists analyzed Results, loads detail on selection, and merges live SSE updates with durable REST snapshots | `/api/v1/results`, `/api/v1/results/stream` |
-| Event Explorer | `/events` | Shows bounded technical event history and live observed events with diagnostic filters/detail | `/api/v1/events`, `/api/v1/events/stream` |
-| Processing Flow | `/flows` | Visualizes reconstructed run/item branches, stage evidence, durations, limitations, and stage metadata | `/api/v1/flows/collection-runs/{collectionRunId}`, `/api/v1/flows/collection-runs/{collectionRunId}/items/{itemId}` |
+The application remains one coherent operational/product frontend.
 
-The application shell remains one coherent operational/product frontend.
+Configuration and operations:
+
+- **Dashboard** (`/`) — bounded overview built from existing Source, Monitoring Profile, Collection Run, Analysis, and Results reads. Feature: `WEB.DASHBOARD`.
+- **Sources** (`/sources`) — Source CRUD, enabled state, and persisted Source Test. Features: `WEB.SOURCE_CONFIGURATION`, `WEB.SOURCE_TEST`.
+- **Monitoring Profiles** (`/profiles`) — profile CRUD, information category, scheduled enabled state, collection interval, ordered source membership, and criteria. Feature: `WEB.MONITORING_PROFILES`.
+- **Collection Runs** (`/runs`) — profile-driven manual runs, recent durable runs, and per-source/item outcomes. Feature: `WEB.COLLECTION_RUNS`.
+
+Results and diagnostics:
+
+- **Analysis Items** (`/analysis`) — bounded normalized/deduplication inspection with profile/source filters. Feature: `WEB.ANALYSIS_INSPECTION`.
+- **Results** (`/results`) — filtered analyzed Result list, separate detail loading, and live SSE merge. Features: `WEB.RESULTS_BROWSING`, `WEB.RESULTS_LIVE`.
+- **Event Explorer** (`/events`) — bounded retained event history plus live SSE, filters, and event detail. Feature: `WEB.EVENT_EXPLORER`.
+- **Processing Flow** (`/flows`) — backend-reconstructed run/item branches, evidence, durations, limitations, and stage metadata. Feature: `WEB.PROCESSING_FLOW`.
+
+Cross-cutting accepted behavior includes deterministic browser verification, live-backend acceptance, targeted visual regression, accessibility hardening, and responsive/large-data containment. Route-level performance/runtime-resilience behavior is implemented but remains verification-pending in the active sub-spec.
 
 ## Sources
 
-The Sources screen supports the backend source CRUD contract:
+The Sources screen consumes the backend Source contract and supports:
 
-- list configured sources;
-- create a source;
-- edit a source;
-- enable or disable a source by updating its configuration;
-- delete a source.
+- list configured Sources;
+- create a Source;
+- edit Source fields;
+- enable or disable a Source;
+- delete a Source;
+- run a bounded diagnostic Test for a persisted Source.
 
-The form exposes the backend source-specific settings map as JSON.
+The form exposes backend source-specific settings as a JSON string map.
 
-Persisted sources also expose a `Test` action. The diagnostic response is rendered separately from normal pipeline state and includes available backend-provided information such as:
+Source Test is separate from normal pipeline state. The UI presents available backend-provided diagnostic fields such as status, HTTP response metadata, fetch/extraction duration, candidate count, failure text, and bounded item previews.
 
-- diagnostic status;
-- HTTP status and response metadata;
-- fetch and extraction duration;
-- extracted candidate count;
-- failure text;
-- bounded item previews.
-
-Disabled persisted sources may be tested. Source Test does not create a Collection Run or imply that preview items were published into Results.
+Disabled persisted Sources may be tested. A successful preview does not create a Collection Run or imply that preview items were published into Results.
 
 ## Monitoring Profiles
 
-The Monitoring Profiles screen consumes the persisted backend profile contract.
-
-It supports:
+The Monitoring Profiles screen supports:
 
 - create, edit, enable/disable, and delete;
 - information category;
 - collection interval in minutes;
-- ordered source membership;
+- ordered Source membership;
 - criteria as a JSON string map.
 
-Existing profile source order is preserved when the user edits other profile fields without changing membership. Newly selected sources are appended to the membership order.
+Existing Source order is preserved when other profile fields are edited. Newly selected Sources are appended to the membership order.
 
-The UI presents source enabled/disabled state for context, but the backend remains authoritative for scheduling and collection semantics.
+The UI shows Source enabled/disabled state for context, but backend scheduling/collection semantics remain authoritative.
 
-Large Source/Profile collections remain fully rendered from the current backend response. Configuration tables use bounded local scrolling with sticky headers, and the source-membership editor uses a bounded native checkbox list instead of introducing frontend pagination or truncation.
+Large Source/Profile collections remain fully rendered from the current backend response. Configuration tables use bounded local scrolling with sticky headers. The Source-membership editor uses a bounded native checkbox list instead of inventing frontend pagination or truncation.
+
+Dedicated typed Analysis settings are not yet available in this frontend contract. They remain planned under `WEB.MONITORING_PROFILES` after the backend publishes the corresponding profile-owned contract and the frontend snapshot is synchronized.
 
 ## Collection Runs
 
-The Collection Runs screen starts manual collection by selecting a persisted Monitoring Profile.
+Manual collection starts from a persisted Monitoring Profile.
 
-The request contains only `monitoringProfileId`. Information category and ordered source membership come from backend profile configuration; the browser no longer asks the user to duplicate that state in the run form.
+The browser sends only `monitoringProfileId`. Information category and ordered Source membership come from backend profile configuration instead of being duplicated in the run form.
 
-The screen also lists recent durable runs and per-source/item terminal outcomes. Manual execution remains available independently of the profile's scheduled enabled state.
+The screen lists recent durable runs and per-source/item terminal outcomes. Manual execution remains available independently of the profile's scheduled enabled state.
 
 ## Analysis Items
 
-The Analysis Items screen exposes the backend operational inspection API for durable normalization/deduplication state.
+Analysis Items is a technical inspection surface for backend-exposed normalization/deduplication state.
 
-This screen is primarily diagnostic. User-facing terminal analyzed state belongs to Results.
+It supports bounded reads with Monitoring Profile and Source filters. It is intentionally diagnostic; user-facing terminal analysis belongs to Results.
 
 ## Results
 
-The Results screen uses the bounded Results REST API.
+The Results screen consumes the bounded Results REST API.
 
-The list supports current backend filters for:
+Current list filters are:
 
-- monitoring profile;
-- source;
+- Monitoring Profile;
+- Source;
 - information category;
 - relevance;
 - classification;
 - analyzed time range.
 
-The list intentionally uses the summary representation and does not request full normalized content for every row. Selecting one result loads its detail separately and shows content, attributes, tags, analysis metadata, and provenance.
+The list uses the summary representation. Selecting one Result loads the detailed representation separately, including normalized content, attributes, tags, analysis metadata, and provenance.
 
-Results SSE supplements the durable REST snapshot. The browser establishes SSE first, waits for `ready`, loads the REST snapshot while buffering live updates, then merges both into the TanStack Query cache. Connection/reconnect state is visible. Long detail values, including tags, attributes, identifiers, and normalized content, remain contained by wrapping or local content scrolling on narrower layouts.
+The browser opens Results SSE before loading the durable REST snapshot. It waits for SSE `ready`, buffers later live updates during the snapshot request, and then merges snapshot/live state into TanStack Query. Connection/reconnect state is visible.
 
+Long detail values remain contained through wrapping or local content scrolling on narrower layouts.
+
+## Event Explorer
+
+Event Explorer loads bounded retained technical history and follows new observed events through backend SSE.
+
+Current filters include event type, producer, Kafka topic, correlation ID, Collection Run ID, item ID, and trace ID where supported by the backend contract.
+
+Selected event detail exposes backend-provided Kafka position/key, trace/correlation context, producer/schema metadata, and decoded diagnostic payload.
+
+This is a bounded backend projection, not direct Kafka history. Backend retention determines available history.
 
 ## Processing Flow
 
-The Processing Flow screen consumes the backend reconstruction API. The browser does not rebuild pipeline semantics from Event Explorer rows.
+Processing Flow consumes the backend reconstruction API. The browser does not rebuild pipeline semantics from Event Explorer rows.
 
 The screen supports:
 
@@ -109,78 +119,97 @@ The screen supports:
 - one horizontal lane per backend `branchId`;
 - stage status, evidence classification, and observed timestamps;
 - transition kind and duration from backend edges;
-- explicit backend limitations such as partial retained history or unobserved Results persistence;
-- selected-stage detail with event, item, profile/source, trace, outcome, score, and Kafka metadata;
+- explicit reconstruction limitations;
+- selected-stage event/item/profile/source/trace/outcome/score/Kafka metadata;
 - drill-down from run flow to run-scoped item flow.
 
-Collection Runs, Results, and Event Explorer deep-link into this view when they have the required identifiers. Flow stages link back to bounded Event Explorer and Results views. Frontend-only `eventId` and `normalizedItemId` query parameters select a matching row after its normal bounded snapshot is loaded; they are not sent as unsupported backend filters. Many run-level branches remain in the backend-provided order inside a bounded vertical graph region, while each branch keeps its own horizontal stage-track scroll. Phone-sized layouts return branch scrolling to the normal page to avoid nested vertical scroll traps.
+Collection Runs, Results, and Event Explorer deep-link into this view when they have the required identifiers. Flow stages link back to bounded Event Explorer and Results views.
+
+Frontend-only `eventId` and `normalizedItemId` query parameters select matching rows after normal bounded snapshots load; they are not sent as unsupported backend filters.
+
+Many run-level branches remain in backend-provided order inside a bounded vertical graph region. Each branch has its own horizontal stage-track scroll. Phone-sized layouts return branch scrolling to normal page flow to avoid nested vertical scroll traps.
 
 ## Dashboard
 
-The Dashboard combines small recent reads from Sources, Monitoring Profiles, Collection Runs, Analysis, and Results.
+Dashboard combines small bounded reads from Sources, Monitoring Profiles, Collection Runs, Analysis, and Results.
 
-It is an operational overview rather than a separate backend aggregation contract. Dashboard queries should remain bounded; a dedicated backend summary endpoint should be introduced only if independent reads become inefficient or semantically inconsistent.
+It is an operational overview rather than a separate backend aggregation contract. A dedicated backend summary endpoint should be introduced only if independent reads become inefficient or semantically inconsistent.
 
-## API implementation
+## API and contract integration
 
-The frontend REST boundary is `src/api/client.ts`.
+The checked-in backend REST snapshot is `openapi/signalharvester-v1.yaml`.
 
-The current application uses the browser `fetch` API and converts non-success responses into a shared `ApiError`. REST schema types come from the checked-in OpenAPI document through `openapi-typescript`.
+`openapi-typescript` generates `src/api/generated.ts`. Application-facing aliases live in `src/api/types.ts`. The browser `fetch` transport and common error handling live in `src/api/client.ts`.
 
-The checked-in OpenAPI snapshot includes Monitoring Profiles, Source Test, Results SSE, Event Observation, and processing-flow contracts. The frontend consumes the configuration/run REST APIs, Results and Event Observation REST/SSE contracts, and the processing-flow REST read model.
+The current snapshot includes Monitoring Profiles, Source Test, Results SSE, Event Observation, and Processing Flow contracts. Frontend code consumes those public boundaries and never reads PostgreSQL or Kafka directly.
 
-No frontend code reads PostgreSQL or Kafka directly.
+Feature: `WEB.CONTRACT_INTEGRATION`.
 
-## Client state
+## Browser state
 
-TanStack Query owns remote/server state, including sources, monitoring profiles, runs, analysis items, Results, observed events, and reconstructed processing flows.
+TanStack Query owns remote/server state, including Sources, Monitoring Profiles, Collection Runs, Analysis items, Results, observed events, and reconstructed Processing Flows.
 
-Page-local React state owns forms, filters, source-test presentation, and current selections. The application does not use a second global client-state library.
+Page-local React state owns forms, filters, source-test presentation, current selections, and other transient interaction state. The application does not use a second global client-state library.
 
-## Styling
+Feature: `WEB.SERVER_STATE`.
 
-The application uses one repository-owned global stylesheet and small reusable presentation components. There is no third-party component framework.
+## Styling, accessibility, and responsive behavior
 
-## Current verification
+The application uses repository-owned CSS and small reusable presentation components. There is no third-party component framework.
 
-The repository's canonical routine verification is `./run_checks.sh`. It regenerates the checked-in API types, typechecks application and browser-test code, runs Vitest, runs deterministic Playwright browser tests, builds the production frontend, verifies route-level dynamic build entries from the Vite manifest, and prints the generated JavaScript/CSS raw and gzip asset baseline. `npm run e2e:visual` is the focused non-updating comparison for the reviewed Results/detail golden, while `npm run e2e:visual:update` is reserved for intentional baseline changes.
+Accepted browser hardening includes:
 
-The deterministic browser suite now covers:
-
-- application-shell navigation including Monitoring Profiles, Event Explorer, and Processing Flow;
-- a reviewed golden screenshot for the populated Results/detail composition at a fixed high-DPI viewport;
-- Sources create behavior and Source Test diagnostics;
-- Monitoring Profile create request construction and source membership;
-- profile-driven manual Collection Run request/detail behavior;
-- Analysis filters;
-- Results filters/detail and live SSE merge behavior;
-- Event Explorer history/live behavior;
-- Processing Flow run/item visualization and drill-down;
-- representative loading/error/empty states;
-- keyboard-only selection in the main tabular diagnostic screens;
 - a first-focusable skip link into the main content landmark;
-- named representative forms/tables and entity-specific Source/Profile row actions;
+- accessible names for representative forms/tables and repeated Source/Profile actions;
 - Source/Profile edit focus entry and cancellation focus restoration;
 - semantic loading/live status and request/validation alert behavior;
-- SSE reconnect/resnapshot behavior without duplicate logical rows;
-- stale deep links against bounded Result/Event snapshots;
-- partial Processing Flow evidence and retained-history limitations;
-- long diagnostic identifiers on a narrow mobile viewport without page-level horizontal overflow.
-- 320 px configuration layouts with dozens of long-named Sources/Profiles and bounded local table/membership scrolling;
-- long Result detail values on tablet layouts without document overflow;
-- many-branch Processing Flow layouts with local vertical branch and horizontal stage-track scrolling;
-- delayed lazy-route delivery while the shell remains usable and an accessible route-loading state is shown;
-- failed lazy-route delivery with a contained reload fallback and recovery by navigating to another route.
+- keyboard-only selection in main tabular diagnostic screens;
+- 320–390 px and tablet containment;
+- bounded local scrolling for large configuration collections and many-branch flows;
+- wrapping/containment for long Result and diagnostic values.
 
-The opt-in live Playwright workflow owns a temporary RSS source and monitoring profile and uses two manual Collection Runs. Before the first run, a profile/source-filtered Results page establishes the real SSE stream and must receive both fixture Results without manual refresh. Before the second run, Event Explorer establishes the real Event Observation SSE stream and must receive a newly correlated event without refresh. The workflow then selects a real Analysis event, opens its backend-reconstructed item flow, and expands to the full run flow. Analysis inspection remains a bounded durable-state check. Cleanup still removes the profile before the source so backend referential integrity is respected.
+Features: `WEB.ACCESSIBILITY`, `WEB.RESPONSIVE_LAYOUT`, `WEB.ASYNC_FEEDBACK`.
 
-Monitoring Profiles / Source Test, live Results / Event Explorer, and Processing Flow were accepted on 2026-09-14. UI resilience and edge-case verification, targeted visual regression, live diagnostic acceptance, accessibility hardening, and responsive/large-data hardening were accepted on 2026-09-15 after their required developer checks passed. Route-level performance/runtime resilience is implemented and remains verification-pending until its focused browser scenarios, production manifest check, visual comparison, and routine gate pass.
+## Route delivery
+
+Primary feature screens are loaded through React lazy route imports.
+
+`AppShell` remains visible while a route module loads. The main content area exposes accessible loading status, and route import/render failures are contained by a route-resetting error boundary with a full-page reload fallback.
+
+Vite emits a production manifest. Repository tooling verifies that primary feature pages remain dynamic entries and reports raw/gzip JS/CSS sizes.
+
+Implementation is complete, but this capability remains verification-pending until the active performance/runtime-resilience acceptance commands pass.
+
+Feature: `WEB.ROUTE_DELIVERY`.
+
+## Verification
+
+The canonical routine repository gate is `./run_checks.sh`. It:
+
+1. regenerates OpenAPI TypeScript types;
+2. typechecks application and browser-test code;
+3. runs Vitest;
+4. runs deterministic Playwright;
+5. builds the production frontend;
+6. verifies dynamic route entries and reports production assets.
+
+The deterministic browser suite covers core navigation/configuration, Source Test, Monitoring Profile and Collection Run request construction, Analysis filters, Results and Event Explorer REST/SSE behavior, Processing Flow, representative async states, accessibility interactions, SSE reconnect/resnapshot, stale bounded deep links, partial flow evidence, responsive/large-data containment, and delayed/failed lazy-route delivery.
+
+`npm run e2e:visual` owns the focused non-updating comparison for the reviewed Results/detail golden. `npm run e2e:visual:update` is reserved for intentional reviewed baseline changes.
+
+The opt-in `npm run e2e:live` workflow owns a temporary RSS fixture, Source, and Monitoring Profile. It verifies real Results SSE, durable Analysis visibility, real Event Observation SSE, and navigation into backend-reconstructed item/full-run Processing Flow before cleanup.
+
+Accepted browser verification features: `WEB.BROWSER_VERIFICATION`, `WEB.VISUAL_REGRESSION`, `WEB.LIVE_BACKEND_ACCEPTANCE`.
 
 ## Current limitations
 
-The following product capabilities are not implemented in the frontend:
+The frontend does not yet implement:
 
-- dedicated analysis-setting configuration beyond the current profile criteria map;
-- authentication and authorization.
+- dedicated typed Analysis-setting controls beyond the current criteria map;
+- login/session handling;
+- role-aware navigation and authorization UX;
+- ADMIN identity-management workflows;
+- viewer-specific Results presentation;
+- final production frontend deployment integration.
 
-Backend contracts used by the current configuration, live diagnostics, and flow visualization are available. Remaining limitations are product/security work rather than blockers in these diagnostic contracts.
+The backend repository now owns security capabilities and remains authoritative for their contract/behavior. The frontend's checked-in OpenAPI snapshot has not yet been synchronized to those security APIs, so the frontend security work remains a future contract-integration stage rather than current implemented behavior.

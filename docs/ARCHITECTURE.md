@@ -1,26 +1,30 @@
 ---
 type: Architecture
 title: SignalHarvester Web architecture
-description: Stable frontend boundaries, dependency direction, REST contract ownership, state management, delivery model, and testing direction.
+description: Stable frontend boundaries, dependency direction, contract ownership, state management, presentation, testing, and delivery model.
 ---
 # SignalHarvester Web architecture
 
 ## Purpose
 
-This document owns stable accepted frontend architecture. Active specifications describe intended changes and may contain more detail while work is in progress.
+This document owns stable accepted frontend architecture. Active specifications describe intended or verification-pending changes and may contain more detail while work is in progress.
 
-## Core architectural decisions
+Stable frontend capability names are owned by [`FEATURES.md`](FEATURES.md).
 
-SignalHarvester Web is a separate React application and repository. It consumes explicit backend application contracts and does not share backend source code, persistence models, or Kafka clients.
+## Core architectural decision
+
+SignalHarvester Web is a separate React application and repository. It consumes explicit backend application contracts and does not share backend source code, persistence models, Kafka clients, or generated Java types.
 
 The browser boundary is intentionally narrow:
 
-- request/response application APIs use REST/JSON;
-- REST request and response shapes come from the checked-in backend OpenAPI contract;
+- request/response APIs use REST/JSON;
+- REST request and response shapes come from the checked-in backend OpenAPI snapshot;
 - live browser updates use backend SSE/JSON;
 - the browser never connects directly to PostgreSQL or Kafka.
 
-The frontend is currently an administrative and operational application. It is also the foundation for the broader SignalHarvester product UI. A second frontend application should not be created merely to separate current admin screens from future product screens.
+The application is currently administrative and operational, but it is also the foundation for broader product-facing UI. Do not create a second frontend application merely to separate current admin screens from future viewer-oriented screens.
+
+Primary features: `WEB.APP_SHELL`, `WEB.CONTRACT_INTEGRATION`, `WEB.SERVER_STATE`.
 
 ## Dependency direction
 
@@ -34,18 +38,16 @@ flowchart LR
     BE --> K[Kafka / Redpanda]
 ```
 
-Frontend code may depend on public backend application contracts. It must not depend on backend implementation packages, database tables, Kafka topics as browser transports, or generated Java types.
+Frontend code may depend on public backend application contracts. It must not depend on backend implementation packages, database tables, or Kafka topics as browser transports.
 
 ## Repository structure
 
-The current layout is intentionally small:
-
 ```text
 signalharvester-web/
-├── docs/                       # Current-state docs and active specifications
+├── docs/                       # Current-state docs, feature vocabulary, specs
 ├── openapi/                    # Checked-in backend OpenAPI snapshot
 ├── src/
-│   ├── api/                    # HTTP boundary and OpenAPI-derived types
+│   ├── api/                    # HTTP/SSE boundary and OpenAPI-derived types
 │   ├── components/             # Shared presentation components
 │   ├── features/               # Screen-oriented feature code
 │   ├── lib/                    # Small deterministic helpers
@@ -53,16 +55,16 @@ signalharvester-web/
 │   ├── App.tsx                 # Route composition
 │   └── main.tsx                # React/query/router composition root
 ├── tests/e2e/                  # Deterministic and opt-in live Playwright tests
-├── playwright.config.ts        # Fast route-mocked browser suite
+├── playwright.config.ts        # Backend-independent browser suite
 ├── playwright.live.config.ts   # Real-backend browser suite
 ├── run_checks.sh               # Canonical routine verification
 ├── package.json
 └── vite.config.ts
 ```
 
-Feature folders own screen-specific presentation and interaction logic. Shared abstractions should be introduced only when they remove real duplication without hiding API behavior.
+Feature folders own screen-specific presentation and interaction logic. Introduce shared abstractions only when they remove real duplication without hiding API behavior.
 
-## Routing and application composition
+## Application composition and routing
 
 `src/main.tsx` owns browser composition:
 
@@ -71,24 +73,28 @@ Feature folders own screen-specific presentation and interaction logic. Shared a
 - `BrowserRouter`;
 - application-wide CSS.
 
-`src/App.tsx` owns the route table and loads primary feature screens through React lazy route imports. `AppShell` owns common navigation and page layout, keeps the shell visible behind a `Suspense` route-loading state, and contains route render/chunk failures inside the main content region through a route-resetting error boundary.
+`src/App.tsx` owns the route table. `AppShell` owns common navigation and layout.
 
-The current route set is:
+Primary routes are lazy-loaded:
 
 - `/` — Dashboard;
-- `/sources` — source configuration and bounded source diagnostics;
-- `/profiles` — monitoring-profile configuration;
-- `/runs` — profile-driven collection runs;
+- `/sources` — source configuration and Source Test;
+- `/profiles` — Monitoring Profile configuration;
+- `/runs` — profile-driven Collection Runs;
 - `/analysis` — normalized/deduplication inspection;
-- `/results` — analyzed result browsing, detail, and live updates;
+- `/results` — analyzed Results browsing, detail, and live updates;
 - `/events` — bounded technical event history/live updates;
-- `/flows` — reconstructed collection-run/item processing graphs.
+- `/flows` — backend-reconstructed run/item processing graphs.
 
-Future screens should extend this route structure rather than introducing a second routing layer. New primary screens should preserve route-level chunking unless eager inclusion is justified by measured delivery behavior.
+The shell remains mounted while a route module loads. A `Suspense` state exposes accessible loading feedback, and a route-resetting error boundary contains route import/render failures inside the main content region.
 
-## REST contract ownership
+Future screens should extend this routing model. Preserve route-level splitting for primary screens unless measured delivery behavior justifies eager loading.
 
-The backend OpenAPI document is the source of truth for REST wire shapes. This repository keeps a snapshot at:
+Primary features: `WEB.APP_SHELL`, `WEB.ROUTE_DELIVERY`, `WEB.ASYNC_FEEDBACK`.
+
+## Backend contract ownership
+
+The backend OpenAPI document is the source of truth for REST wire shapes. This repository keeps the consumed snapshot at:
 
 ```text
 openapi/signalharvester-v1.yaml
@@ -96,7 +102,7 @@ openapi/signalharvester-v1.yaml
 
 `openapi-typescript` generates `src/api/generated.ts`. Application-facing aliases live in `src/api/types.ts`.
 
-The intended flow is:
+The contract flow is:
 
 ```text
 backend OpenAPI
@@ -106,105 +112,127 @@ backend OpenAPI
     -> API adapter and feature code
 ```
 
-Do not manually duplicate backend DTOs. Do not hand-edit generated types after normal OpenAPI generation is available.
+Do not manually duplicate backend DTOs or hand-edit generated types after normal generation is available.
 
-## HTTP boundary
+`src/api/client.ts` is the current transport boundary. It owns API base URL handling, REST path/query construction, JSON request/response handling, and common HTTP error conversion. Feature components use this adapter through TanStack Query instead of issuing independent ad-hoc requests.
 
-`src/api/client.ts` is the current transport boundary. It owns:
+The adapter should remain small while that keeps behavior explicit. Introduce a larger generated client or another HTTP library only when the existing boundary becomes materially difficult to maintain.
 
-- API base URL handling;
-- REST paths and query-string construction;
-- JSON request/response handling;
-- common HTTP error conversion.
+Primary feature: `WEB.CONTRACT_INTEGRATION`.
 
-Feature components call this adapter through TanStack Query rather than issuing independent ad-hoc `fetch` requests.
+## Server and local state
 
-The adapter is intentionally small. A larger generated API client or additional HTTP library should be introduced only when the current boundary becomes difficult to maintain.
-
-## State ownership
-
-Server state belongs to TanStack Query. Examples include configured sources, monitoring profiles, collection runs, analysis inspection records, and Results projections.
+TanStack Query owns remote/server state such as Sources, Monitoring Profiles, Collection Runs, Analysis inspection records, Results, observed events, and Processing Flows.
 
 Local React state owns transient browser concerns such as:
 
 - form input before submission;
-- selected table rows;
-- unapplied filter values;
-- local panel visibility.
+- selected rows/details;
+- unapplied filters;
+- local panel visibility;
+- focus/interaction state.
 
-Backend state must not be copied into a second global client store without a concrete need. Redux or an equivalent global state framework is not currently required.
+Do not copy backend state into a second global client store without a concrete requirement.
 
-## Query behavior
+The shared Query Client currently uses a short stale period, one retry, and no automatic refetch on window focus. Durable REST state is supplemented by SSE where the backend publishes live contracts.
 
-The shared `QueryClient` currently uses a short stale period, one retry, and no automatic refetch on window focus.
+Primary feature: `WEB.SERVER_STATE`.
 
-This remains appropriate for durable server state. Live Results and Event Observation now supplement REST snapshots through SSE and merge updates into the same TanStack Query cache rather than introducing polling or a second global store.
+## Async and error behavior
 
-## Error, loading, and empty states
-
-Async screens must make these states explicit:
+Data-driven screens explicitly distinguish applicable states:
 
 - loading;
 - request failure;
 - successful empty result;
 - successful populated result.
 
-HTTP failures should preserve useful backend error text when available. Browser-side validation may provide immediate form feedback, but backend validation remains authoritative.
+Mutations and live connections expose enough feedback to distinguish success, failure, and reconnecting/stale states where freshness is affected.
 
-## Live updates
+HTTP failures should preserve useful backend error text when available. Browser-side validation may improve immediate feedback, but backend validation remains authoritative.
 
-The browser uses REST for durable snapshots and backend SSE for live Results and technical Event Observation. Native `EventSource` owns reconnect and `Last-Event-ID` behavior. The frontend waits for SSE `ready` before loading the REST snapshot, buffers later live messages during that request, and then merges both into the TanStack Query cache.
+Primary feature: `WEB.ASYNC_FEEDBACK`.
 
-SSE payloads use explicit backend application contracts. Reconnection remains bounded and understandable. Live delivery supplements durable REST reads rather than replacing them, and the browser still does not connect directly to Kafka.
+## Live Results and Event Observation
 
+The browser uses REST for durable snapshots and backend SSE for live Results and technical Event Observation.
 
-## Diagnostic flow projection
+Native `EventSource` owns reconnect and `Last-Event-ID` behavior. For race-free bootstrap, the frontend waits for SSE `ready`, then loads the REST snapshot while buffering subsequent live messages, and finally merges both into the TanStack Query cache.
 
-Processing Flow is a read-only presentation of the backend `ProcessingFlow` reconstruction contract. TanStack Query owns the fetched graph. The browser may order returned nodes for presentation, but it does not infer missing stages, synthesize evidence, or join raw Event Explorer rows into its own graph.
+Live delivery supplements durable reads. It does not replace backend persistence or turn the browser into an event-store client.
 
-The visualization preserves backend evidence classes and limitations. A horizontal lane per `branchId` keeps repeated logical items from different collection runs separate. Deep links between Runs, Results, Events, and Flow carry only public run/item/event identifiers.
+Primary features: `WEB.RESULTS_LIVE`, `WEB.EVENT_EXPLORER`, `WEB.SERVER_STATE`.
 
-The UI uses semantic buttons, text labels, and CSS layout rather than a graph library. This keeps the dependency surface small while the current graph is an ordered processing path rather than an arbitrary network.
+## Processing Flow projection
 
-## Presentation layer
+Processing Flow is a read-only presentation of the backend `ProcessingFlow` reconstruction contract.
 
-The current UI uses React components and repository-owned CSS without a component framework. This keeps the dependency surface small while the product model is still evolving. The application shell and shared async/live indicators prefer native landmarks, semantic status/alert roles, explicit accessible names, and normal keyboard focus behavior rather than accessibility behavior hidden inside a component framework.
+The browser may order returned nodes for presentation, but it must not:
 
-Large bounded datasets remain backend-owned responses. The browser may contain them with local table/list/graph scrolling and wrapping, but it must not invent pagination, truncation, or ordering semantics that the backend contract does not publish.
+- infer missing stages;
+- synthesize evidence;
+- join raw Event Explorer rows into an independent processing graph.
 
-A UI component library should be added only when repeated interaction or accessibility patterns justify it. Visual consistency must not depend on duplicating backend domain rules in presentation components.
+The visualization preserves backend evidence classes, state, and limitations. A horizontal lane per `branchId` keeps repeated logical items from different runs separate. Deep links between Runs, Results, Events, and Flow carry public run/item/event identifiers only.
+
+The current graph is an ordered processing path, so semantic controls and CSS layout are preferred over a general graph framework.
+
+Primary feature: `WEB.PROCESSING_FLOW`.
+
+## Presentation and responsive behavior
+
+The UI uses React components and repository-owned CSS without a third-party component framework.
+
+Accessibility behavior should remain explicit through semantic landmarks, native controls, accessible names, status/alert roles, and normal keyboard focus behavior.
+
+Large bounded backend responses remain backend-owned. The browser may use local table/list/graph scrolling and wrapping, but must not invent pagination, truncation, or ordering semantics that the backend contract does not publish.
+
+A component library should be added only when repeated interaction/accessibility patterns justify the dependency and migration cost.
+
+Primary features: `WEB.ACCESSIBILITY`, `WEB.RESPONSIVE_LAYOUT`.
 
 ## Security boundary
 
-Authentication and authorization are intentionally absent in the current local admin build. The UI and backend must be treated as trusted-environment software until an explicit security slice is implemented.
+Backend security is the enforcement boundary. Frontend role checks may control navigation and presentation, but they must not replace backend authorization.
 
-Before public/shared deployment, the design must address at least:
+The current frontend does not yet implement authentication/session or role-aware workflows. Until that slice is implemented against the backend contract, treat the application as trusted-environment software.
 
-- authentication and session/token handling;
-- authorization for configuration and operational actions;
-- backend CORS policy for separately hosted frontend builds;
-- CSRF implications for the chosen authentication model;
-- safe handling of configured external source destinations.
+A public/shared deployment must address at least:
+
+- authentication/session lifecycle;
+- authorization-aware navigation and workflows;
+- CSRF behavior required by cookie authentication;
+- compatible backend CORS policy for cross-origin hosting;
+- safe presentation of source-management capabilities that authorize backend outbound access.
+
+Planned features: `WEB.AUTH_SESSION`, `WEB.AUTHORIZATION_UX`, `WEB.IDENTITY_ADMIN`, `WEB.VIEWER_RESULTS`.
 
 ## Testing architecture
 
 Verification is split by ownership and dependency cost.
 
-Vitest owns small deterministic TypeScript logic. Its discovery is limited to `src/**/*.{test,spec}.{ts,tsx}` and optional `tests/unit/**/*.{test,spec}.{ts,tsx}` so it never imports Playwright suites. Playwright owns browser behavior under `tests/e2e/**`. The fast browser suite uses route-controlled REST responses and therefore does not require the backend, PostgreSQL, Kafka/Redpanda, or public internet sources. Its fixtures are typed with the same OpenAPI-derived aliases used by application code.
+Vitest owns small deterministic TypeScript logic. Playwright owns browser behavior under `tests/e2e/**`.
 
-The browser layers are:
+The browser verification layers are:
 
-1. `npm run e2e` — deterministic navigation, rendering, mutation/request construction, filters, detail loading, and representative async states with controlled REST responses;
-2. `npm run e2e:live` — one bounded cross-project path against a separately running real backend and a temporary deterministic RSS fixture, including real Results SSE delivery, Event Observation SSE delivery, and backend-reconstructed item/run Processing Flow navigation.
+1. `npm run e2e` — deterministic backend-independent navigation, rendering, forms, request construction, filters, detail loading, SSE browser behavior, accessibility, responsive edge cases, route loading/failure, and representative async states;
+2. `npm run e2e:visual` — focused non-updating comparison against the reviewed Results/detail golden;
+3. `npm run e2e:live` — bounded opt-in acceptance against a separately running backend and deterministic local RSS fixture.
 
-The live suite remains opt-in because the frontend repository does not own backend process or infrastructure lifecycle. It verifies browser-visible REST/SSE and diagnostic reconstruction behavior, not Kafka offsets, database rows, transactions, deduplication decisions, or backend analysis internals.
+The live suite verifies browser-visible REST/SSE and processing-flow behavior. It does not verify Kafka offsets, database rows, transactions, deduplication semantics, or backend analysis rules.
 
-Playwright retains traces and screenshots on failure under ignored generated directories. Successful runs do not create checked-in test artifacts. The deterministic suite also exercises delayed and failed lazy-route module delivery so shell/loading/error behavior remains observable without a backend. `./run_checks.sh` is the canonical routine frontend verification and includes the fast Playwright suite. The live suite stays opt-in because this repository does not own backend lifecycle.
+`./run_checks.sh` is the canonical routine repository gate and includes deterministic browser verification. Live-backend E2E remains separate because this repository does not own backend process/infrastructure lifecycle.
 
-Frontend tests should not reimplement backend business behavior. Backend integration tests remain responsible for persistence, Kafka, deduplication, analysis semantics, and other backend-owned guarantees.
+Primary features: `WEB.BROWSER_VERIFICATION`, `WEB.VISUAL_REGRESSION`, `WEB.LIVE_BACKEND_ACCEPTANCE`.
 
 ## Delivery model
 
-Development uses Vite and normally proxies `/api` to a local backend. Production-style builds are static frontend assets configured with a backend origin through `VITE_API_BASE_URL` at build time. Vite emits a production manifest; repository verification checks that the primary screen modules remain dynamic build entries and reports generated JavaScript/CSS raw and gzip sizes as an informational baseline. Numeric size gates require a reviewed measured baseline rather than an arbitrary threshold.
+Development uses Vite and normally proxies `/api` to a local backend.
 
-Backend and frontend remain independently buildable deliverables. The frontend must integrate through explicit REST/SSE contracts rather than source-level coupling.
+Production-style builds are static frontend assets configured with a backend origin through `VITE_API_BASE_URL` at build time. Vite emits a production manifest. Repository verification checks that primary screen modules remain dynamic entries and reports generated JavaScript/CSS raw and gzip sizes.
+
+The asset report is informational until a reviewed baseline and acceptable growth policy justify numeric budgets.
+
+Backend and frontend remain independently buildable deliverables joined through explicit REST/SSE contracts rather than source-level coupling.
+
+Primary features: `WEB.ROUTE_DELIVERY`, `WEB.CONTRACT_INTEGRATION`.
