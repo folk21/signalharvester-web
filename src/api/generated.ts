@@ -265,7 +265,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List recent analyzed results */
+        /** Browse analyzed results */
         get: operations["listResults"];
         put?: never;
         post?: never;
@@ -370,6 +370,156 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/analysis/dead-letters/{partition}/{offset}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Kafka partition of the owner-specific dead-letter topic. */
+                partition: components["parameters"]["DeadLetterPartition"];
+                /** @description Kafka offset of the owner-specific dead-letter topic. */
+                offset: components["parameters"]["DeadLetterOffset"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Inspect one Analysis dead-letter record
+         * @description Reads one real Analysis DLQ record by Kafka position without exposing its serialized source payload.
+         */
+        get: operations["inspectAnalysisDeadLetter"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/analysis/dead-letters/{partition}/{offset}/replay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Kafka partition of the owner-specific dead-letter topic. */
+                partition: components["parameters"]["DeadLetterPartition"];
+                /** @description Kafka offset of the owner-specific dead-letter topic. */
+                offset: components["parameters"]["DeadLetterOffset"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Replay one confirmed Analysis dead-letter record
+         * @description Reprocesses the stored original key and payload through the Analysis-owned decoder/application path without republishing the shared source event.
+         */
+        post: operations["replayAnalysisDeadLetter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/results/dead-letters/{partition}/{offset}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Kafka partition of the owner-specific dead-letter topic. */
+                partition: components["parameters"]["DeadLetterPartition"];
+                /** @description Kafka offset of the owner-specific dead-letter topic. */
+                offset: components["parameters"]["DeadLetterOffset"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Inspect one Results dead-letter record
+         * @description Reads one real Results DLQ record by Kafka position without exposing its serialized source payload.
+         */
+        get: operations["inspectResultsDeadLetter"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/results/dead-letters/{partition}/{offset}/replay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Kafka partition of the owner-specific dead-letter topic. */
+                partition: components["parameters"]["DeadLetterPartition"];
+                /** @description Kafka offset of the owner-specific dead-letter topic. */
+                offset: components["parameters"]["DeadLetterOffset"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Replay one confirmed Results dead-letter record
+         * @description Reprojects the stored original key and payload through the Results-owned decoder/application path without republishing the shared Analysis event.
+         */
+        post: operations["replayResultsDeadLetter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/event-observation/dead-letters/{partition}/{offset}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Kafka partition of the owner-specific dead-letter topic. */
+                partition: components["parameters"]["DeadLetterPartition"];
+                /** @description Kafka offset of the owner-specific dead-letter topic. */
+                offset: components["parameters"]["DeadLetterOffset"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Inspect one Event Observation dead-letter record
+         * @description Reads one real Event Observation DLQ record by Kafka position without exposing its serialized source payload.
+         */
+        get: operations["inspectEventObservationDeadLetter"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/event-observation/dead-letters/{partition}/{offset}/replay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Kafka partition of the owner-specific dead-letter topic. */
+                partition: components["parameters"]["DeadLetterPartition"];
+                /** @description Kafka offset of the owner-specific dead-letter topic. */
+                offset: components["parameters"]["DeadLetterOffset"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Replay one confirmed Event Observation dead-letter record
+         * @description Re-records the stored original key and payload through Event Observation only, preserving original source transport metadata and without republishing the shared source event.
+         */
+        post: operations["replayEventObservationDeadLetter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/users": {
         parameters: {
             query?: never;
@@ -412,6 +562,31 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        DeadLetterReplayRequest: {
+            /** @description Exact dead-letter identifier returned by inspection and required as an explicit replay confirmation. */
+            expectedDeadLetterId: string;
+        };
+        DeadLetterInspection: {
+            deadLetterId: string;
+            consumer: string;
+            consumerGroup: string;
+            deadLetterTopic: string;
+            deadLetterPartition: number;
+            /** Format: int64 */
+            deadLetterOffset: number;
+            sourceTopic: string;
+            sourcePartition: number;
+            /** Format: int64 */
+            sourceOffset: number;
+            /** @description Original Kafka key, or an empty string when the source record had no usable key. */
+            sourceKey: string;
+            failureType: string;
+            failureMessage: string;
+            attempts: number;
+            retryable: boolean;
+            /** @description Serialized source payload size; the payload bytes themselves are never returned by the administrative API. */
+            sourcePayloadBytes: number;
+        };
         LoginRequest: {
             username: string;
             password: string;
@@ -530,6 +705,7 @@ export interface components {
             criteria: {
                 [key: string]: string;
             };
+            analysisSettings: components["schemas"]["MonitoringProfileAnalysisSettings"];
         };
         MonitoringProfileUpsertRequest: {
             name: string;
@@ -542,6 +718,13 @@ export interface components {
             criteria: {
                 [key: string]: string;
             };
+            /** @description Optional compatibility bridge. Create omission uses deployment defaults; update omission preserves the current effective settings. New clients should round-trip this field. */
+            analysisSettings?: components["schemas"]["MonitoringProfileAnalysisSettings"];
+        };
+        MonitoringProfileAnalysisSettings: {
+            keywords: string[];
+            /** @description Must not exceed the number of unique normalized keywords. */
+            minimumMatches: number;
         };
         CollectionRunRequest: {
             /** Format: uuid */
@@ -763,6 +946,10 @@ export interface components {
     };
     responses: never;
     parameters: {
+        /** @description Kafka partition of the owner-specific dead-letter topic. */
+        DeadLetterPartition: number;
+        /** @description Kafka offset of the owner-specific dead-letter topic. */
+        DeadLetterOffset: number;
         /** @description Stable source identifier. */
         SourceId: string;
     };
@@ -1388,6 +1575,10 @@ export interface operations {
     listResults: {
         parameters: {
             query?: {
+                /** @description Opaque keyset cursor returned in the previous response X-Next-Cursor header. */
+                cursor?: string;
+                /** @description PostgreSQL web-style full-text search over result title and normalized content. */
+                search?: string;
                 limit?: number;
                 monitoringProfileId?: string;
                 sourceId?: string;
@@ -1403,9 +1594,11 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Recent analyzed results matching the supplied filters */
+            /** @description Analyzed results matching the supplied filters, search expression, and optional keyset cursor */
             200: {
                 headers: {
+                    /** @description Opaque cursor for the next page. Absent when the returned page is final. */
+                    "X-Next-Cursor"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -1576,6 +1769,483 @@ export interface operations {
             };
             /** @description Authentication required */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    inspectAnalysisDeadLetter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Kafka partition of the owner-specific dead-letter topic. */
+                partition: components["parameters"]["DeadLetterPartition"];
+                /** @description Kafka offset of the owner-specific dead-letter topic. */
+                offset: components["parameters"]["DeadLetterOffset"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sanitized Analysis dead-letter metadata */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeadLetterInspection"];
+                };
+            };
+            /** @description Invalid DLQ position */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description ADMIN role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description DLQ record not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description DLQ record is invalid for Analysis recovery */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Analysis recovery concurrency limit reached */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Kafka unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    replayAnalysisDeadLetter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Kafka partition of the owner-specific dead-letter topic. */
+                partition: components["parameters"]["DeadLetterPartition"];
+                /** @description Kafka offset of the owner-specific dead-letter topic. */
+                offset: components["parameters"]["DeadLetterOffset"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeadLetterReplayRequest"];
+            };
+        };
+        responses: {
+            /** @description Sanitized metadata for the replayed Analysis dead-letter record */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeadLetterInspection"];
+                };
+            };
+            /** @description Invalid request or DLQ position */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description ADMIN role required or CSRF validation failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description DLQ record not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Confirmation mismatch or Analysis replay failed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description DLQ record or stored source record is invalid for Analysis recovery */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Analysis recovery concurrency limit reached */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Kafka unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    inspectResultsDeadLetter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Kafka partition of the owner-specific dead-letter topic. */
+                partition: components["parameters"]["DeadLetterPartition"];
+                /** @description Kafka offset of the owner-specific dead-letter topic. */
+                offset: components["parameters"]["DeadLetterOffset"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sanitized Results dead-letter metadata */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeadLetterInspection"];
+                };
+            };
+            /** @description Invalid DLQ position */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description ADMIN role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description DLQ record not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description DLQ record is invalid for Results recovery */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Results recovery concurrency limit reached */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Kafka unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    replayResultsDeadLetter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Kafka partition of the owner-specific dead-letter topic. */
+                partition: components["parameters"]["DeadLetterPartition"];
+                /** @description Kafka offset of the owner-specific dead-letter topic. */
+                offset: components["parameters"]["DeadLetterOffset"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeadLetterReplayRequest"];
+            };
+        };
+        responses: {
+            /** @description Sanitized metadata for the replayed Results dead-letter record */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeadLetterInspection"];
+                };
+            };
+            /** @description Invalid request or DLQ position */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description ADMIN role required or CSRF validation failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description DLQ record not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Confirmation mismatch or Results replay failed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description DLQ record or stored source record is invalid for Results recovery */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Results recovery concurrency limit reached */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Kafka unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    inspectEventObservationDeadLetter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Kafka partition of the owner-specific dead-letter topic. */
+                partition: components["parameters"]["DeadLetterPartition"];
+                /** @description Kafka offset of the owner-specific dead-letter topic. */
+                offset: components["parameters"]["DeadLetterOffset"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sanitized Event Observation dead-letter metadata */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeadLetterInspection"];
+                };
+            };
+            /** @description Invalid DLQ position */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description ADMIN role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description DLQ record not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description DLQ record is invalid for Event Observation recovery */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event Observation recovery concurrency limit reached */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Kafka unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    replayEventObservationDeadLetter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Kafka partition of the owner-specific dead-letter topic. */
+                partition: components["parameters"]["DeadLetterPartition"];
+                /** @description Kafka offset of the owner-specific dead-letter topic. */
+                offset: components["parameters"]["DeadLetterOffset"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeadLetterReplayRequest"];
+            };
+        };
+        responses: {
+            /** @description Sanitized metadata for the replayed Event Observation dead-letter record */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeadLetterInspection"];
+                };
+            };
+            /** @description Invalid request or DLQ position */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description ADMIN role required or CSRF validation failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description DLQ record not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Confirmation mismatch or Event Observation replay failed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description DLQ record or stored source record is invalid for Event Observation recovery */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event Observation recovery concurrency limit reached */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Kafka unavailable */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

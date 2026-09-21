@@ -141,7 +141,7 @@ Umbrella:
 
 Current implementation focus:
 
-- [`active/subspecs/ui-monitoring-profile-analysis-settings.md`](active/subspecs/ui-monitoring-profile-analysis-settings.md) — contract-gated typed Monitoring Profile Analysis settings; runtime implementation is blocked until the backend publishes the profile-owned OpenAPI schema.
+- [`active/subspecs/ui-monitoring-profile-analysis-settings.md`](active/subspecs/ui-monitoring-profile-analysis-settings.md) — verification-pending typed Monitoring Profile Analysis settings over the synchronized backend OpenAPI contract.
 
 ## Recently completed sub-specifications
 

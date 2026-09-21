@@ -62,6 +62,10 @@ export const monitoringProfileFixture: MonitoringProfile = {
   collectionIntervalMinutes: 15,
   sourceIds: [sourceFixture.id],
   criteria: { query: 'backend' },
+  analysisSettings: {
+    keywords: ['backend', 'kafka'],
+    minimumMatches: 1,
+  },
 };
 
 export const createdMonitoringProfileFixture: MonitoringProfile = {
@@ -72,6 +76,10 @@ export const createdMonitoringProfileFixture: MonitoringProfile = {
   collectionIntervalMinutes: 30,
   sourceIds: [createdSourceFixture.id, sourceFixture.id],
   criteria: { query: 'java' },
+  analysisSettings: {
+    keywords: ['java', 'micronaut'],
+    minimumMatches: 2,
+  },
 };
 
 export const collectionRunFixture: CollectionRun = {

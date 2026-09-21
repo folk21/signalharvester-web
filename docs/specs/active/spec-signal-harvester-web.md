@@ -18,7 +18,7 @@ Frontend implementation details belong here rather than in the backend repositor
 
 ## Current implementation focus
 
-The current bounded focus is [`subspecs/ui-monitoring-profile-analysis-settings.md`](subspecs/ui-monitoring-profile-analysis-settings.md). Runtime implementation is blocked until the backend publishes a profile-owned typed Analysis-settings schema through OpenAPI and makes those settings authoritative for Analysis behavior.
+The current bounded focus is [`subspecs/ui-monitoring-profile-analysis-settings.md`](subspecs/ui-monitoring-profile-analysis-settings.md). The backend contract is now published and synchronized; the frontend implementation is verification-pending with typed create/edit controls, default-preserving create omission, replacement-PUT round-trip protection, and deterministic coverage.
 
 `WEB.IDENTITY_ADMIN`, `WEB.VIEWER_RESULTS`, `WEB.PRODUCTION_DELIVERY`, and the deployed Kubernetes browser-acceptance slice were accepted on 2026-09-17 after their required frontend verification passed and are archived.
 
@@ -92,6 +92,7 @@ The frontend does not own:
 | Viewer-specific Results presentation | Implemented and accepted |
 | Production frontend image | Implemented and accepted |
 | Deployed Kubernetes browser acceptance | Implemented and accepted |
+| Typed Monitoring Profile Analysis settings | Implemented, verification-pending |
 
 ## Requirement map
 

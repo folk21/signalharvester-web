@@ -152,6 +152,7 @@ test('Monitoring Profiles creates persisted source membership and schedule confi
         collectionIntervalMinutes: createdMonitoringProfileFixture.collectionIntervalMinutes,
         sourceIds: createdMonitoringProfileFixture.sourceIds,
         criteria: createdMonitoringProfileFixture.criteria,
+        analysisSettings: createdMonitoringProfileFixture.analysisSettings,
       });
       profiles.push(createdMonitoringProfileFixture);
       return fulfillJson(route, createdMonitoringProfileFixture, 201);
@@ -170,6 +171,13 @@ test('Monitoring Profiles creates persisted source membership and schedule confi
     .fill(String(createdMonitoringProfileFixture.collectionIntervalMinutes));
   await page.getByLabel(`Use source ${createdSourceFixture.name}`).check();
   await page.getByLabel(`Use source ${sourceFixture.name}`).check();
+  await page.getByLabel('Set profile-specific Analysis settings').check();
+  await page
+    .getByLabel('Analysis keywords (one per line)')
+    .fill(createdMonitoringProfileFixture.analysisSettings.keywords.join('\n'));
+  await page
+    .getByLabel('Minimum keyword matches')
+    .fill(String(createdMonitoringProfileFixture.analysisSettings.minimumMatches));
   await page
     .getByLabel('Criteria (JSON string map)')
     .fill(JSON.stringify(createdMonitoringProfileFixture.criteria));
@@ -179,6 +187,183 @@ test('Monitoring Profiles creates persisted source membership and schedule confi
   await expect(createdRow).toBeVisible();
   await expect(createdRow.getByText('GENERAL', { exact: true })).toBeVisible();
   await expect(createdRow.getByText('DISABLED', { exact: true })).toBeVisible();
+});
+
+
+test('Monitoring Profiles omits Analysis settings when backend defaults are selected on create', async ({ page }) => {
+  const defaultedProfile: MonitoringProfile = {
+    ...createdMonitoringProfileFixture,
+    id: '33333333-3333-4333-8333-333333333333',
+    name: 'Backend default analysis profile',
+    sourceIds: [sourceFixture.id],
+    criteria: {},
+    analysisSettings: monitoringProfileFixture.analysisSettings,
+  };
+  const profiles: MonitoringProfile[] = [];
+
+  await page.route('**/api/v1/**', async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+
+    if (url.pathname === '/api/v1/sources' && request.method() === 'GET') {
+      return fulfillJson(route, [sourceFixture]);
+    }
+    if (url.pathname === '/api/v1/monitoring-profiles' && request.method() === 'GET') {
+      return fulfillJson(route, profiles);
+    }
+    if (url.pathname === '/api/v1/monitoring-profiles' && request.method() === 'POST') {
+      expect(request.postDataJSON()).toEqual({
+        name: defaultedProfile.name,
+        informationCategory: defaultedProfile.informationCategory,
+        enabled: defaultedProfile.enabled,
+        collectionIntervalMinutes: defaultedProfile.collectionIntervalMinutes,
+        sourceIds: defaultedProfile.sourceIds,
+        criteria: {},
+      });
+      profiles.push(defaultedProfile);
+      return fulfillJson(route, defaultedProfile, 201);
+    }
+    return rejectUnexpectedApi(route);
+  });
+
+  await page.goto('/profiles');
+
+  await expect(page.getByLabel('Set profile-specific Analysis settings')).not.toBeChecked();
+  await expect(page.getByText(/backend apply its configured Analysis defaults/)).toBeVisible();
+  await page.getByLabel('Name').fill(defaultedProfile.name);
+  await page.getByLabel('Information category').fill(defaultedProfile.informationCategory);
+  await page
+    .getByLabel('Collection interval (minutes)')
+    .fill(String(defaultedProfile.collectionIntervalMinutes));
+  await page.getByLabel(`Use source ${sourceFixture.name}`).check();
+  await page.getByRole('button', { name: 'Create profile' }).click();
+
+  await expect(page.getByRole('row', { name: new RegExp(defaultedProfile.name) })).toBeVisible();
+});
+
+test('Monitoring Profiles edits Analysis settings and preserves them in enabled-state replacement PUTs', async ({ page }) => {
+  let profile: MonitoringProfile = structuredClone(monitoringProfileFixture);
+  const putPayloads: unknown[] = [];
+
+  await page.route('**/api/v1/**', async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+
+    if (url.pathname === '/api/v1/sources' && request.method() === 'GET') {
+      return fulfillJson(route, [sourceFixture]);
+    }
+    if (url.pathname === '/api/v1/monitoring-profiles' && request.method() === 'GET') {
+      return fulfillJson(route, [profile]);
+    }
+    if (
+      url.pathname === `/api/v1/monitoring-profiles/${profile.id}` &&
+      request.method() === 'PUT'
+    ) {
+      const payload = request.postDataJSON();
+      putPayloads.push(payload);
+      profile = { ...profile, ...payload, id: profile.id };
+      return fulfillJson(route, profile);
+    }
+    return rejectUnexpectedApi(route);
+  });
+
+  await page.goto('/profiles');
+
+  const editButton = page.getByRole('button', {
+    name: `Edit monitoring profile ${profile.name}`,
+  });
+  await editButton.click();
+  await expect(page.getByLabel('Analysis keywords (one per line)')).toHaveValue('backend\nkafka');
+  await expect(page.getByLabel('Minimum keyword matches')).toHaveValue('1');
+  await expect(page.getByLabel('Criteria (JSON string map)')).toHaveValue(
+    JSON.stringify(monitoringProfileFixture.criteria, null, 2),
+  );
+
+  await page.getByRole('button', { name: 'Save changes' }).click();
+
+  await expect.poll(() => putPayloads.length).toBe(1);
+  await expect(page.getByRole('button', { name: 'Create profile' })).toBeVisible();
+  expect(putPayloads[0]).toEqual({
+    name: monitoringProfileFixture.name,
+    informationCategory: monitoringProfileFixture.informationCategory,
+    enabled: monitoringProfileFixture.enabled,
+    collectionIntervalMinutes: monitoringProfileFixture.collectionIntervalMinutes,
+    sourceIds: monitoringProfileFixture.sourceIds,
+    criteria: monitoringProfileFixture.criteria,
+    analysisSettings: monitoringProfileFixture.analysisSettings,
+  });
+
+  await page
+    .getByRole('button', { name: `Edit monitoring profile ${profile.name}` })
+    .click();
+  await page.getByLabel('Analysis keywords (one per line)').fill('backend\nkafka\npostgresql');
+  await page.getByLabel('Minimum keyword matches').fill('2');
+  await page.getByRole('button', { name: 'Save changes' }).click();
+
+  await expect.poll(() => putPayloads.length).toBe(2);
+  await expect(page.getByRole('button', { name: 'Create profile' })).toBeVisible();
+  expect(putPayloads[1]).toEqual({
+    name: monitoringProfileFixture.name,
+    informationCategory: monitoringProfileFixture.informationCategory,
+    enabled: monitoringProfileFixture.enabled,
+    collectionIntervalMinutes: monitoringProfileFixture.collectionIntervalMinutes,
+    sourceIds: monitoringProfileFixture.sourceIds,
+    criteria: monitoringProfileFixture.criteria,
+    analysisSettings: {
+      keywords: ['backend', 'kafka', 'postgresql'],
+      minimumMatches: 2,
+    },
+  });
+
+  await page
+    .getByRole('button', { name: `Disable monitoring profile ${profile.name}` })
+    .click();
+  await expect.poll(() => putPayloads.length).toBe(3);
+  expect(putPayloads[2]).toEqual({
+    name: profile.name,
+    informationCategory: profile.informationCategory,
+    enabled: false,
+    collectionIntervalMinutes: profile.collectionIntervalMinutes,
+    sourceIds: profile.sourceIds,
+    criteria: profile.criteria,
+    analysisSettings: profile.analysisSettings,
+  });
+});
+
+test('Monitoring Profiles surfaces backend Analysis validation failures', async ({ page }) => {
+  await page.route('**/api/v1/**', async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+
+    if (url.pathname === '/api/v1/sources' && request.method() === 'GET') {
+      return fulfillJson(route, [sourceFixture]);
+    }
+    if (url.pathname === '/api/v1/monitoring-profiles' && request.method() === 'GET') {
+      return fulfillJson(route, [monitoringProfileFixture]);
+    }
+    if (
+      url.pathname === `/api/v1/monitoring-profiles/${monitoringProfileFixture.id}` &&
+      request.method() === 'PUT'
+    ) {
+      expect(request.postDataJSON()).toMatchObject({
+        analysisSettings: {
+          keywords: ['Backend', 'backend'],
+          minimumMatches: 1,
+        },
+      });
+      return fulfillJson(route, { message: 'keywords must be unique after normalization' }, 400);
+    }
+    return rejectUnexpectedApi(route);
+  });
+
+  await page.goto('/profiles');
+  await page
+    .getByRole('button', { name: `Edit monitoring profile ${monitoringProfileFixture.name}` })
+    .click();
+  await page.getByLabel('Analysis keywords (one per line)').fill('Backend\nbackend');
+  await page.getByRole('button', { name: 'Save changes' }).click();
+
+  await expect(page.getByRole('alert')).toContainText('keywords must be unique after normalization');
 });
 
 test('Collection Runs uses persisted monitoring profile identity for manual execution', async ({ page }) => {
