@@ -1,18 +1,18 @@
 ---
 type: Specification
 title: Monitoring Profile Analysis settings
-description: Contract-gated frontend slice for typed Monitoring Profile Analysis settings without inventing hidden criteria-map conventions.
+description: Verification-pending frontend slice for typed Monitoring Profile Analysis settings over the published backend contract.
 document_role: subspec
-spec_status: blocked
+spec_status: verification-pending
 parent: ../spec-signal-harvester-web.md
 ---
 # Monitoring Profile Analysis settings
 
 ## Status
 
-Blocked on the backend contract. The current checked-in OpenAPI schema exposes Monitoring Profile identity, category, enabled state, collection interval, ordered source membership, and the generic `criteria` string map, but it does not expose profile-owned Analysis settings.
+Implemented and verification-pending. The backend now publishes profile-owned typed Analysis settings through OpenAPI and uses them as the authoritative Monitoring Profile Analysis configuration. The frontend snapshot is synchronized to that contract, the form consumes generated types, and deterministic coverage protects create/edit/default/error and replacement-PUT preservation behavior.
 
-No runtime frontend implementation is allowed until the backend publishes the typed settings contract and the frontend OpenAPI snapshot is synchronized.
+Acceptance still requires the canonical frontend gate in a dependency-complete environment. The opt-in live-backend workflow now also creates a profile with explicit settings and verifies that the backend response round-trips them.
 
 ## Feature scope
 
@@ -32,32 +32,29 @@ Complete the Monitoring Profile configuration surface required by the initial pr
 
 The browser should present settings that the backend explicitly owns, persists, validates, and uses for deterministic Analysis. The frontend must not infer a schema from current backend configuration properties or from implementation details that are absent from OpenAPI.
 
-## Current state and blocker
+## Current state
 
-The current Monitoring Profile form owns:
+The synchronized backend contract exposes `MonitoringProfileAnalysisSettings` with:
 
-- name;
-- information category;
-- enabled/scheduled state;
-- collection interval;
-- ordered source membership;
-- generic string-map criteria.
+- one or more unique, non-blank `keywords`;
+- positive integer `minimumMatches`;
+- the backend invariant that `minimumMatches` must not exceed the number of unique normalized keywords.
 
-`MonitoringProfile` and `MonitoringProfileUpsertRequest` in the checked-in OpenAPI snapshot do not contain a typed Analysis-settings property. The current generated TypeScript aliases therefore provide no authoritative Analysis-settings shape for the browser.
+`MonitoringProfile.analysisSettings` is part of every profile read. `MonitoringProfileUpsertRequest.analysisSettings` is optional as a compatibility bridge: omission on create uses backend deployment defaults, while omission on update preserves the current effective settings. New clients are expected to round-trip the field.
 
-The existing backend snapshot still describes deterministic keyword rules as temporary global configuration until Monitoring Profiles own Analysis settings. That backend refinement must land first.
+The implemented browser behavior keeps generic `criteria` separate from Analysis settings. New-profile creation may deliberately leave Analysis settings omitted to use backend defaults. Explicit create and all edit/toggle replacement writes use the typed settings shape. Edit initializes from the effective settings returned by the backend.
 
-## Contract entry gate
+## Contract entry gate — satisfied
 
-Implementation may start only when all of the following are true:
+The implementation entry conditions are now satisfied:
 
 1. the backend OpenAPI schema exposes profile-owned Analysis settings on Monitoring Profile reads and create/update requests;
 2. backend persistence and validation own those settings;
 3. backend Analysis behavior consumes the profile-owned settings for newly processed work according to its documented semantics;
 4. the frontend `openapi/signalharvester-v1.yaml` snapshot has been replaced with that contract;
-5. `npm run api:generate` produces the corresponding types without handwritten transport DTOs.
+5. the generated TypeScript contract exposes the corresponding settings model without handwritten transport DTOs.
 
-If the backend chooses a shape different from current temporary keyword configuration, this specification follows the published contract. The frontend must not preserve assumptions about keywords, thresholds, defaults, or optionality that the contract does not define.
+Future contract evolution must continue to follow the published backend shape. The frontend must not preserve assumptions about keywords, thresholds, defaults, or optionality that the contract does not define.
 
 ## Requirements
 
@@ -141,7 +138,7 @@ This stage does not:
 - add Results pagination/search;
 - reinterpret the existing generic `criteria` map as Analysis configuration.
 
-## Validation after the contract exists
+## Acceptance validation
 
 The implementation is ready for acceptance when:
 

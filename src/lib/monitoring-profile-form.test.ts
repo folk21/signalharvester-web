@@ -1,60 +1,179 @@
 import { describe, expect, it } from 'vitest';
-import { validateMonitoringProfileForm } from './monitoring-profile-form';
+import type { MonitoringProfile } from '../api/types';
+import {
+  monitoringProfileToFormValues,
+  monitoringProfileToReplacementPayload,
+  validateMonitoringProfileForm,
+} from './monitoring-profile-form';
+
+const profile: MonitoringProfile = {
+  id: '33333333-3333-4333-8333-111111111111',
+  name: 'Research monitoring',
+  informationCategory: 'RESEARCH',
+  enabled: true,
+  collectionIntervalMinutes: 15,
+  sourceIds: ['source-b', 'source-a'],
+  criteria: { query: 'distributed systems' },
+  analysisSettings: {
+    keywords: ['java', 'kafka'],
+    minimumMatches: 2,
+  },
+};
 
 describe('validateMonitoringProfileForm', () => {
-  it('creates a trimmed profile payload while preserving source order', () => {
+  it('creates a trimmed profile payload while preserving source order and typed Analysis settings', () => {
     const result = validateMonitoringProfileForm({
-      name: '  Java monitoring  ',
-      informationCategory: '  JOB  ',
+      name: '  Research monitoring  ',
+      informationCategory: '  RESEARCH  ',
       enabled: true,
       collectionIntervalMinutes: '15',
       sourceIds: ['source-b', 'source-a'],
-      criteriaText: '{"query":"java backend"}',
+      criteriaText: '{"query":"distributed systems"}',
+      analysisSettingsEnabled: true,
+      analysisKeywordsText: '  java  \nkafka\n',
+      analysisMinimumMatches: '2',
     });
 
     expect(result.error).toBeUndefined();
     expect(result.payload).toEqual({
-      name: 'Java monitoring',
-      informationCategory: 'JOB',
+      name: 'Research monitoring',
+      informationCategory: 'RESEARCH',
       enabled: true,
       collectionIntervalMinutes: 15,
       sourceIds: ['source-b', 'source-a'],
-      criteria: { query: 'java backend' },
+      criteria: { query: 'distributed systems' },
+      analysisSettings: {
+        keywords: ['java', 'kafka'],
+        minimumMatches: 2,
+      },
+    });
+  });
+
+  it('omits Analysis settings on create when backend defaults are requested', () => {
+    const result = validateMonitoringProfileForm({
+      name: 'Default analysis',
+      informationCategory: 'GENERAL',
+      enabled: false,
+      collectionIntervalMinutes: '30',
+      sourceIds: ['source-a'],
+      criteriaText: '{}',
+      analysisSettingsEnabled: false,
+      analysisKeywordsText: '',
+      analysisMinimumMatches: '',
+    });
+
+    expect(result.payload).toEqual({
+      name: 'Default analysis',
+      informationCategory: 'GENERAL',
+      enabled: false,
+      collectionIntervalMinutes: 30,
+      sourceIds: ['source-a'],
+      criteria: {},
     });
   });
 
   it('rejects invalid intervals, empty source membership, and non-string criteria', () => {
+    const validBase = {
+      name: 'Profile',
+      informationCategory: 'GENERAL',
+      enabled: false,
+      collectionIntervalMinutes: '5',
+      sourceIds: ['source-a'],
+      criteriaText: '{}',
+      analysisSettingsEnabled: false,
+      analysisKeywordsText: '',
+      analysisMinimumMatches: '',
+    };
+
     expect(
       validateMonitoringProfileForm({
-        name: 'Profile',
-        informationCategory: 'JOB',
-        enabled: false,
+        ...validBase,
         collectionIntervalMinutes: '0',
-        sourceIds: ['source-a'],
-        criteriaText: '{}',
       }).error,
     ).toContain('positive whole number');
 
     expect(
       validateMonitoringProfileForm({
-        name: 'Profile',
-        informationCategory: 'JOB',
-        enabled: false,
-        collectionIntervalMinutes: '5',
+        ...validBase,
         sourceIds: [],
-        criteriaText: '{}',
       }).error,
     ).toContain('at least one source');
 
     expect(
       validateMonitoringProfileForm({
-        name: 'Profile',
-        informationCategory: 'JOB',
-        enabled: false,
-        collectionIntervalMinutes: '5',
-        sourceIds: ['source-a'],
+        ...validBase,
         criteriaText: '{"minimumScore":0.8}',
       }).error,
     ).toContain('must be a string');
+  });
+
+  it('validates explicit Analysis settings using published contract constraints', () => {
+    const validBase = {
+      name: 'Profile',
+      informationCategory: 'GENERAL',
+      enabled: false,
+      collectionIntervalMinutes: '5',
+      sourceIds: ['source-a'],
+      criteriaText: '{}',
+      analysisSettingsEnabled: true,
+      analysisKeywordsText: 'java\nkafka',
+      analysisMinimumMatches: '1',
+    };
+
+    expect(
+      validateMonitoringProfileForm({
+        ...validBase,
+        analysisKeywordsText: '',
+      }).error,
+    ).toContain('at least one Analysis keyword');
+
+    expect(
+      validateMonitoringProfileForm({
+        ...validBase,
+        analysisKeywordsText: 'java\njava',
+      }).error,
+    ).toContain('must be unique');
+
+    expect(
+      validateMonitoringProfileForm({
+        ...validBase,
+        analysisMinimumMatches: '0',
+      }).error,
+    ).toContain('positive whole number');
+
+    expect(
+      validateMonitoringProfileForm({
+        ...validBase,
+        analysisMinimumMatches: '3',
+      }).error,
+    ).toContain('must not exceed');
+  });
+});
+
+describe('Monitoring Profile contract mapping', () => {
+  it('initializes edit values from persisted Analysis settings', () => {
+    expect(monitoringProfileToFormValues(profile)).toEqual({
+      name: profile.name,
+      informationCategory: profile.informationCategory,
+      enabled: profile.enabled,
+      collectionIntervalMinutes: '15',
+      sourceIds: profile.sourceIds,
+      criteriaText: JSON.stringify(profile.criteria, null, 2),
+      analysisSettingsEnabled: true,
+      analysisKeywordsText: 'java\nkafka',
+      analysisMinimumMatches: '2',
+    });
+  });
+
+  it('preserves Analysis settings in replacement-style enabled-state updates', () => {
+    expect(monitoringProfileToReplacementPayload(profile, false)).toEqual({
+      name: profile.name,
+      informationCategory: profile.informationCategory,
+      enabled: false,
+      collectionIntervalMinutes: profile.collectionIntervalMinutes,
+      sourceIds: profile.sourceIds,
+      criteria: profile.criteria,
+      analysisSettings: profile.analysisSettings,
+    });
   });
 });

@@ -10,6 +10,8 @@ import { EmptyState, ErrorState, LoadingState } from '../../components/AsyncStat
 import { PageHeader } from '../../components/PageHeader';
 import { StatusBadge } from '../../components/StatusBadge';
 import {
+  monitoringProfileToFormValues,
+  monitoringProfileToReplacementPayload,
   validateMonitoringProfileForm,
   type MonitoringProfileFormValues,
 } from '../../lib/monitoring-profile-form';
@@ -21,6 +23,9 @@ const emptyForm: MonitoringProfileFormValues = {
   collectionIntervalMinutes: '15',
   sourceIds: [],
   criteriaText: '{}',
+  analysisSettingsEnabled: false,
+  analysisKeywordsText: '',
+  analysisMinimumMatches: '',
 };
 
 export function MonitoringProfilesPage() {
@@ -58,7 +63,10 @@ export function MonitoringProfilesPage() {
 
   const toggleMutation = useMutation({
     mutationFn: ({ profile, enabled }: { profile: MonitoringProfile; enabled: boolean }) =>
-      api.updateMonitoringProfile(profile.id, toPayload(profile, enabled)),
+      api.updateMonitoringProfile(
+        profile.id,
+        monitoringProfileToReplacementPayload(profile, enabled),
+      ),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['monitoring-profiles'] });
     },
@@ -99,14 +107,7 @@ export function MonitoringProfilesPage() {
   function beginEdit(profile: MonitoringProfile, returnFocus: HTMLButtonElement) {
     editReturnFocusRef.current = returnFocus;
     setEditing(profile);
-    setForm({
-      name: profile.name,
-      informationCategory: profile.informationCategory,
-      enabled: profile.enabled,
-      collectionIntervalMinutes: String(profile.collectionIntervalMinutes),
-      sourceIds: [...profile.sourceIds],
-      criteriaText: JSON.stringify(profile.criteria, null, 2),
-    });
+    setForm(monitoringProfileToFormValues(profile));
     setFormError(null);
     focusNameInput();
   }
@@ -151,7 +152,7 @@ export function MonitoringProfilesPage() {
       <PageHeader
         eyebrow="Configuration"
         title="Monitoring Profiles"
-        description="Group sources into persisted collection profiles with category, interval, criteria, and enabled state."
+        description="Group sources into persisted collection profiles with category, interval, criteria, Analysis settings, and enabled state."
         actions={
           <button className="button button--primary" onClick={beginCreate} ref={newProfileButtonRef} type="button">
             New profile
@@ -259,7 +260,7 @@ export function MonitoringProfilesPage() {
                 ref={nameInputRef}
                 value={form.name}
                 onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                placeholder="Java jobs"
+                placeholder="AI research monitoring"
               />
             </label>
             <label>
@@ -269,7 +270,7 @@ export function MonitoringProfilesPage() {
                 onChange={(event) =>
                   setForm((current) => ({ ...current, informationCategory: event.target.value }))
                 }
-                placeholder="JOB"
+                placeholder="RESEARCH"
               />
             </label>
             <label>
@@ -328,6 +329,67 @@ export function MonitoringProfilesPage() {
               )}
             </fieldset>
 
+            <fieldset className="analysis-settings">
+              <legend>Analysis settings</legend>
+              {editing ? (
+                <p className="field-note">
+                  These values are the effective settings returned by the backend and are round-tripped on save.
+                </p>
+              ) : (
+                <label className="checkbox-row">
+                  <input
+                    checked={form.analysisSettingsEnabled}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        analysisSettingsEnabled: event.target.checked,
+                      }))
+                    }
+                    type="checkbox"
+                  />
+                  <span>Set profile-specific Analysis settings</span>
+                </label>
+              )}
+              {!editing && !form.analysisSettingsEnabled ? (
+                <p className="field-note">
+                  Leave this disabled to let the backend apply its configured Analysis defaults when the profile is created.
+                </p>
+              ) : null}
+              {form.analysisSettingsEnabled ? (
+                <div className="analysis-settings__controls">
+                  <label>
+                    <span>Analysis keywords (one per line)</span>
+                    <textarea
+                      rows={5}
+                      value={form.analysisKeywordsText}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          analysisKeywordsText: event.target.value,
+                        }))
+                      }
+                      spellCheck={false}
+                    />
+                  </label>
+                  <label>
+                    <span>Minimum keyword matches</span>
+                    <input
+                      min="1"
+                      step="1"
+                      type="number"
+                      value={form.analysisMinimumMatches}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          analysisMinimumMatches: event.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+                </div>
+              ) : null}
+            </fieldset>
+
             <label>
               <span>Criteria (JSON string map)</span>
               <textarea
@@ -364,17 +426,6 @@ export function MonitoringProfilesPage() {
       </section>
     </div>
   );
-}
-
-function toPayload(profile: MonitoringProfile, enabled: boolean): MonitoringProfileUpsertRequest {
-  return {
-    name: profile.name,
-    informationCategory: profile.informationCategory,
-    enabled,
-    collectionIntervalMinutes: profile.collectionIntervalMinutes,
-    sourceIds: profile.sourceIds,
-    criteria: profile.criteria,
-  };
 }
 
 function orderSourcesForForm(sources: Source[], selectedIds: string[]): Source[] {

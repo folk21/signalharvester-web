@@ -7,11 +7,13 @@ description: Current frontend focus, accepted baseline, next product stages, bac
 
 ## Current position
 
-The deployed Kubernetes browser acceptance is accepted after the developer completed the production-image browser workflow on 2026-09-17. The current bounded focus is typed Monitoring Profile Analysis settings in [`docs/specs/active/subspecs/ui-monitoring-profile-analysis-settings.md`](specs/active/subspecs/ui-monitoring-profile-analysis-settings.md).
+The deployed Kubernetes browser acceptance is accepted after the developer completed the production-image browser workflow on 2026-09-17. The current bounded focus is the verification-pending typed Monitoring Profile Analysis-settings slice in [`docs/specs/active/subspecs/ui-monitoring-profile-analysis-settings.md`](specs/active/subspecs/ui-monitoring-profile-analysis-settings.md).
 
-That slice is contract-blocked. The checked-in backend OpenAPI snapshot still exposes the generic Monitoring Profile `criteria` map but no profile-owned Analysis-settings schema, so the frontend must not implement hidden conventions ahead of the backend contract.
+The backend now publishes and persists profile-owned `MonitoringProfileAnalysisSettings`. The frontend OpenAPI snapshot has been synchronized and the Monitoring Profile workflow now implements contract-derived create/edit controls, deliberate create omission for backend defaults, and replacement-PUT preservation for enable/disable toggles. The slice remains active until canonical frontend verification and developer acceptance complete.
 
-The backend OpenAPI snapshot is otherwise synchronized and browser authentication/session, CSRF-aware REST, credentialed SSE, `401`/`403` handling, additive role-aware routing/navigation, protected deterministic/live acceptance coverage, production-image delivery, and deployed Kubernetes browser acceptance are implemented and accepted.
+The synchronized backend Results contract also now publishes PostgreSQL text `search`, opaque keyset `cursor`, and `X-Next-Cursor`. That removes the previous contract blocker for the next bounded frontend Results browsing stage; implementation must still preserve the distinct SSE filtering contract rather than reproducing backend search client-side.
+
+Browser authentication/session, CSRF-aware REST, credentialed SSE, `401`/`403` handling, additive role-aware routing/navigation, protected deterministic/live acceptance coverage, production-image delivery, and deployed Kubernetes browser acceptance are implemented and accepted.
 
 `WEB.ROUTE_DELIVERY` is implemented and accepted after the 2026-09-17 canonical frontend gate passed.
 
@@ -48,36 +50,31 @@ The accepted baseline already includes configuration/operations, live Results, E
 
 ## Next frontend stages
 
-### 1. Add typed Analysis settings to Monitoring Profiles
+### 1. Accept typed Analysis settings for Monitoring Profiles
 
-This is the current frontend focus, but implementation is blocked on the backend publishing and using the profile-owned Analysis settings contract.
-
-After that contract exists:
-
-- synchronize OpenAPI;
-- regenerate frontend types;
-- add typed controls separate from the generic `criteria` map;
-- preserve the settings through create/edit and replacement-style enabled-state updates;
-- keep backend validation authoritative;
-- add deterministic browser coverage for create/edit/default/error and toggle-preservation behavior.
+Complete canonical verification and developer acceptance for the current verification-pending slice. After acceptance, move stable behavior into current-state documentation, archive the sub-spec, and advance the umbrella focus.
 
 Target features: `WEB.MONITORING_PROFILES`, `WEB.CONTRACT_INTEGRATION`, `WEB.BROWSER_VERIFICATION`.
 
-### 2. Expand viewer Results when backend browsing contracts justify it
+### 2. Consume production-oriented Results browsing
 
-The first viewer Results slice reuses the existing bounded Results REST/SSE contract and keeps `relevant=true`. If larger product datasets require cursor pagination, search, profile/source display names, or richer category-specific browsing, add those backend contracts before expanding frontend behavior.
+The backend contract now supports text search and opaque keyset continuation. The next bounded frontend spec should define how operational and viewer Results consume:
 
-Target features: `WEB.VIEWER_RESULTS`, `WEB.RESULTS_BROWSING`.
+- backend `search` rather than client-side imitation;
+- opaque `cursor` values without decoding or constructing them;
+- `X-Next-Cursor` for explicit continuation;
+- filter/search changes that reset the continuation chain;
+- SSE reconciliation when active REST-only filters such as text search cannot be represented by the stream contract.
+
+Target features: `WEB.VIEWER_RESULTS`, `WEB.RESULTS_BROWSING`, `WEB.RESULTS_LIVE`, `WEB.CONTRACT_INTEGRATION`.
 
 ## Backend dependencies
 
 The frontend must not invent missing backend contracts.
 
-Current backend dependencies for upcoming frontend work are:
+No backend contract change is required to finish the current Analysis-settings slice or to begin the next Results search/cursor slice. Future richer viewer browsing may still require backend-owned display-name, sorting, category-specific, or other product contracts before the browser exposes those behaviors.
 
-- profile-owned typed Analysis settings under `CONFIGURATION.MONITORING_PROFILES` / `ANALYSIS.CLASSIFICATION`;
-- any production Results pagination/search contract needed for larger viewer browsing under `RESULTS.BROWSING`;
-- future changes to authoritative security/OpenAPI shapes under `SECURITY.IDENTITY_ROLES`, `SECURITY.AUTHENTICATION`, and `SECURITY.AUTHORIZATION` (the current security contract is synchronized).
+Future authoritative security/OpenAPI changes remain backend-owned under `SECURITY.IDENTITY_ROLES`, `SECURITY.AUTHENTICATION`, and `SECURITY.AUTHORIZATION`.
 
 ## Deferred until justified
 

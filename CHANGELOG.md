@@ -7,6 +7,7 @@ description: Notable frontend changes organized by release state, with each chan
 
 ## Unreleased
 
+- 2026-09-21 — Added verification-pending typed Monitoring Profile Analysis settings over the synchronized backend OpenAPI contract, including explicit/default create semantics, edit round-trip, replacement-PUT preservation, deterministic browser coverage, and live-backend round-trip verification.
 - 2026-09-17 — Hardened viewer Result detail UX by omitting empty normalized-attribute sections and preserving readable primary-link hover contrast; documented that live/deployed acceptance leaves backend-owned Result/Event history and must use disposable test data.
 - 2026-09-17 — Accepted deployed Kubernetes production-browser verification and advanced the active frontend focus to typed Monitoring Profile Analysis settings, explicitly blocked until the backend publishes the profile-owned OpenAPI contract.
 - 2026-09-17 — Accepted production frontend delivery after the canonical repository gate and Docker-backed image verification passed; added verification-pending deployed Kubernetes browser acceptance that reuses the real-backend pipeline against an externally served production frontend.

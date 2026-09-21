@@ -17,6 +17,8 @@ export type SourceTestResult = components['schemas']['SourceTestResult'];
 
 export type MonitoringProfile = components['schemas']['MonitoringProfile'];
 export type MonitoringProfileUpsertRequest = components['schemas']['MonitoringProfileUpsertRequest'];
+export type MonitoringProfileAnalysisSettings =
+  components['schemas']['MonitoringProfileAnalysisSettings'];
 
 export type CollectionRunRequest = components['schemas']['CollectionRunRequest'];
 export type CollectionRun = components['schemas']['CollectionRun'];

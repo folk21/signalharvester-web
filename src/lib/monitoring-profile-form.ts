@@ -1,4 +1,8 @@
-import type { MonitoringProfileUpsertRequest } from '../api/types';
+import type {
+  MonitoringProfile,
+  MonitoringProfileAnalysisSettings,
+  MonitoringProfileUpsertRequest,
+} from '../api/types';
 
 export interface MonitoringProfileFormValues {
   name: string;
@@ -7,6 +11,9 @@ export interface MonitoringProfileFormValues {
   collectionIntervalMinutes: string;
   sourceIds: string[];
   criteriaText: string;
+  analysisSettingsEnabled: boolean;
+  analysisKeywordsText: string;
+  analysisMinimumMatches: string;
 }
 
 export interface MonitoringProfileFormValidation {
@@ -56,6 +63,11 @@ export function validateMonitoringProfileForm(
     };
   }
 
+  const analysisValidation = validateAnalysisSettings(values);
+  if (analysisValidation.error) {
+    return { error: analysisValidation.error };
+  }
+
   return {
     payload: {
       name,
@@ -64,6 +76,76 @@ export function validateMonitoringProfileForm(
       collectionIntervalMinutes,
       sourceIds: [...values.sourceIds],
       criteria,
+      ...(analysisValidation.settings ? { analysisSettings: analysisValidation.settings } : {}),
+    },
+  };
+}
+
+export function monitoringProfileToFormValues(
+  profile: MonitoringProfile,
+): MonitoringProfileFormValues {
+  return {
+    name: profile.name,
+    informationCategory: profile.informationCategory,
+    enabled: profile.enabled,
+    collectionIntervalMinutes: String(profile.collectionIntervalMinutes),
+    sourceIds: [...profile.sourceIds],
+    criteriaText: JSON.stringify(profile.criteria, null, 2),
+    analysisSettingsEnabled: true,
+    analysisKeywordsText: profile.analysisSettings.keywords.join('\n'),
+    analysisMinimumMatches: String(profile.analysisSettings.minimumMatches),
+  };
+}
+
+export function monitoringProfileToReplacementPayload(
+  profile: MonitoringProfile,
+  enabled: boolean,
+): MonitoringProfileUpsertRequest {
+  return {
+    name: profile.name,
+    informationCategory: profile.informationCategory,
+    enabled,
+    collectionIntervalMinutes: profile.collectionIntervalMinutes,
+    sourceIds: [...profile.sourceIds],
+    criteria: { ...profile.criteria },
+    analysisSettings: {
+      keywords: [...profile.analysisSettings.keywords],
+      minimumMatches: profile.analysisSettings.minimumMatches,
+    },
+  };
+}
+
+function validateAnalysisSettings(values: MonitoringProfileFormValues): {
+  settings?: MonitoringProfileAnalysisSettings;
+  error?: string;
+} {
+  if (!values.analysisSettingsEnabled) {
+    return {};
+  }
+
+  const keywords = values.analysisKeywordsText
+    .split(/\r?\n/)
+    .map((keyword) => keyword.trim())
+    .filter(Boolean);
+  if (keywords.length === 0) {
+    return { error: 'Add at least one Analysis keyword.' };
+  }
+  if (new Set(keywords).size !== keywords.length) {
+    return { error: 'Analysis keywords must be unique.' };
+  }
+
+  const minimumMatches = Number(values.analysisMinimumMatches);
+  if (!Number.isInteger(minimumMatches) || minimumMatches < 1) {
+    return { error: 'Minimum Analysis matches must be a positive whole number.' };
+  }
+  if (minimumMatches > keywords.length) {
+    return { error: 'Minimum Analysis matches must not exceed the number of keywords.' };
+  }
+
+  return {
+    settings: {
+      keywords,
+      minimumMatches,
     },
   };
 }

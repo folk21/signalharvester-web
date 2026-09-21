@@ -71,6 +71,9 @@ test('live browser flow verifies Results SSE, Event Observation SSE, and Process
     await page.getByLabel('Name').fill(profileName);
     await page.getByLabel('Information category').fill('GENERAL');
     await page.getByLabel(`Use source ${sourceName}`).check();
+    await page.getByLabel('Set profile-specific Analysis settings').check();
+    await page.getByLabel('Analysis keywords (one per line)').fill('browser');
+    await page.getByLabel('Minimum keyword matches').fill('1');
 
     const createProfileResponse = page.waitForResponse(
       (response) =>
@@ -79,6 +82,7 @@ test('live browser flow verifies Results SSE, Event Observation SSE, and Process
     );
     await page.getByRole('button', { name: 'Create profile' }).click();
     const profile = (await (await createProfileResponse).json()) as MonitoringProfile;
+    expect(profile.analysisSettings).toEqual({ keywords: ['browser'], minimumMatches: 1 });
     profileId = profile.id;
     const createdProfileId = profile.id;
 
