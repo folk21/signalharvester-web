@@ -19,7 +19,7 @@ Configuration and operations:
 
 - **Dashboard** (`/`) — bounded overview built from existing Source, Monitoring Profile, Collection Run, Analysis, and Results reads. Feature: `WEB.DASHBOARD`.
 - **Sources** (`/sources`) — Source CRUD, enabled state, and persisted Source Test. Features: `WEB.SOURCE_CONFIGURATION`, `WEB.SOURCE_TEST`.
-- **Monitoring Profiles** (`/profiles`) — profile CRUD, information category, scheduled enabled state, collection interval, ordered source membership, and criteria. Feature: `WEB.MONITORING_PROFILES`.
+- **Monitoring Profiles** (`/profiles`) — profile CRUD, information category, scheduled enabled state, collection interval, ordered source membership, criteria, and typed Analysis settings. Feature: `WEB.MONITORING_PROFILES`.
 - **Collection Runs** (`/runs`) — profile-driven manual runs, recent durable runs, and per-source/item outcomes. Feature: `WEB.COLLECTION_RUNS`.
 
 Results and diagnostics:
@@ -29,7 +29,7 @@ Results and diagnostics:
 - **Event Explorer** (`/events`) — bounded retained event history plus live SSE, filters, and event detail. Feature: `WEB.EVENT_EXPLORER`.
 - **Processing Flow** (`/flows`) — backend-reconstructed run/item branches, evidence, durations, limitations, and stage metadata. Feature: `WEB.PROCESSING_FLOW`.
 
-Cross-cutting accepted behavior includes deterministic browser verification, live-backend acceptance, targeted visual regression, accessibility hardening, responsive/large-data containment, route-level performance/runtime resilience, authentication/session role-aware presentation, ADMIN identity management, and viewer-oriented Results.
+Cross-cutting accepted behavior includes deterministic browser verification, live-backend acceptance, targeted visual regression, accessibility hardening, responsive/large-data containment, route-level performance/runtime resilience, authentication/session role-aware presentation, ADMIN identity management, viewer-oriented Results, and typed Monitoring Profile Analysis settings.
 
 ## Sources
 
@@ -56,7 +56,8 @@ The Monitoring Profiles screen supports:
 - information category;
 - collection interval in minutes;
 - ordered Source membership;
-- criteria as a JSON string map.
+- criteria as a JSON string map;
+- typed profile-owned Analysis settings with keyword rules and a minimum-match threshold.
 
 Existing Source order is preserved when other profile fields are edited. Newly selected Sources are appended to the membership order.
 
@@ -64,7 +65,7 @@ The UI shows Source enabled/disabled state for context, but backend scheduling/c
 
 Large Source/Profile collections remain fully rendered from the current backend response. Configuration tables use bounded local scrolling with sticky headers. The Source-membership editor uses a bounded native checkbox list instead of inventing frontend pagination or truncation.
 
-Dedicated typed Analysis settings are not yet available in this frontend contract. They remain planned under `WEB.MONITORING_PROFILES` after the backend publishes the corresponding profile-owned contract and the frontend snapshot is synchronized.
+Analysis settings are edited separately from the generic criteria map. New-profile creation may deliberately use backend defaults by omitting the optional settings request field; persisted profiles always expose effective settings, and edit plus replacement-style enabled-state updates round-trip those effective values.
 
 ## Collection Runs
 
@@ -84,8 +85,9 @@ It supports bounded reads with Monitoring Profile and Source filters. It is inte
 
 The Results screen consumes the bounded Results REST API.
 
-Current list filters are:
+Current list controls are:
 
+- backend full-text search;
 - Monitoring Profile;
 - Source;
 - information category;
@@ -93,9 +95,9 @@ Current list filters are:
 - classification;
 - analyzed time range.
 
-The list uses the summary representation. Selecting one Result loads the detailed representation separately, including normalized content, attributes, tags, analysis metadata, and provenance.
+The first REST page uses the summary representation. When the backend returns `X-Next-Cursor`, the screen exposes explicit continuation and sends that opaque cursor unchanged with the same criteria. Continuation pages append in backend order and de-duplicate by Result logical identity. Selecting one Result loads the detailed representation separately, including normalized content, attributes, tags, analysis metadata, and provenance.
 
-The browser opens Results SSE before loading the durable REST snapshot. It waits for SSE `ready`, buffers later live updates during the snapshot request, and then merges snapshot/live state into TanStack Query. Connection/reconnect state is visible.
+The browser opens Results SSE before loading the durable REST snapshot. It waits for SSE `ready`, buffers later live updates during the snapshot request, and then merges snapshot/live state into TanStack Query. Connection/reconnect state is visible. REST search and page cursors are not sent to SSE; while text search is active, received Result events trigger a fresh authoritative REST first page rather than client-side full-text matching.
 
 Long detail values remain contained through wrapping or local content scrolling on narrower layouts.
 
@@ -105,11 +107,11 @@ The operational Results presentation is rendered only when the principal has bot
 
 An explicit `VIEWER` principal without `ADMIN` uses a separate presentation component at the same `/results` route. It reuses the existing Results REST/detail/SSE contracts instead of introducing a duplicate backend API.
 
-The viewer list always requests `relevant=true`. The first bounded filter set exposes information category and analyzed time bounds only. Monitoring Profile ID, Source ID, classification, event/correlation/trace identifiers, and other operational filters are not presented as viewer controls.
+The viewer list always requests `relevant=true`. It exposes backend full-text search, information category, and analyzed time bounds. Monitoring Profile ID, Source ID, classification, event/correlation/trace identifiers, and other operational filters are not presented as viewer controls. Opaque continuation uses the same explicit `X-Next-Cursor` flow as operational Results.
 
 Selecting a viewer Result loads the same backend detail endpoint internally, but the rendered detail is limited to consumer-oriented content: title, category, source link, published/analyzed times, explanation, tags, normalized attributes when the backend provides them, and normalized content. The `Details` section is omitted when the contract-valid attributes map is empty. Profile/source/item identifiers, analyzer identity, event IDs, correlation/trace context, and links into Event Explorer or Processing Flow are intentionally not rendered.
 
-Viewer live delivery reuses the accepted Results `useLiveList` flow. SSE carries `relevant=true` and SSE-supported filters; analyzed time bounds are applied to received live summaries in the browser because the current stream contract does not publish time-range parameters.
+Viewer live delivery reuses the accepted Results live-list flow. SSE carries `relevant=true` and SSE-supported filters; analyzed time bounds are applied to received live summaries in the browser because the current stream contract does not publish time-range parameters. When viewer text search is active, live Result events reconcile through REST because the stream contract does not publish full-text search semantics.
 
 ## Event Explorer
 
@@ -258,9 +260,6 @@ The deterministic RSS fixture remains host-owned. `SIGNALHARVESTER_LIVE_FIXTURE_
 
 ## Current limitations
 
-The frontend does not yet implement:
+Production-oriented Results browsing is accepted. Operational and viewer Results use backend full-text search and opaque keyset continuation, while Results SSE keeps its independent resume/filter contract and searched live updates reconcile through authoritative REST reads.
 
-- dedicated typed Analysis-setting controls beyond the current criteria map;
-- production-scale viewer Results search/pagination beyond the current bounded backend contract;
-
-The authentication/session role-aware shell, route delivery, ADMIN identity management, viewer-oriented Results, production image delivery, and deployed Kubernetes browser acceptance are accepted. ADMIN identity management consumes the existing backend user-administration contract, and viewer-oriented Results reuse the existing Results REST/SSE boundary. Backend authorization, identity invariants, deployment manifests, Analysis semantics, and Result semantics remain authoritative regardless of frontend presentation.
+There is currently no bounded frontend implementation focus. The authentication/session role-aware shell, route delivery, ADMIN identity management, viewer-oriented Results, typed Monitoring Profile Analysis settings, production-oriented Results browsing, production image delivery, and deployed Kubernetes browser acceptance are accepted. ADMIN identity management consumes the existing backend user-administration contract, and viewer-oriented Results reuse the existing Results REST/SSE boundary. Backend authorization, identity invariants, deployment manifests, Analysis semantics, and Result semantics remain authoritative regardless of frontend presentation.

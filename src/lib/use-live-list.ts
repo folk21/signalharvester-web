@@ -12,7 +12,8 @@ interface UseLiveListOptions<TItem, TEnvelope> {
   decode: (data: string) => TEnvelope;
   itemFromEnvelope: (envelope: TEnvelope) => TItem | null;
   keyOf: (item: TItem) => string;
-  limit: number;
+  limit?: number;
+  reconcileOnEnvelope?: (envelope: TEnvelope) => boolean;
 }
 
 /** Coordinates an SSE stream with a durable REST snapshot stored in TanStack Query. */
@@ -118,6 +119,10 @@ export function useLiveList<TItem, TEnvelope>(
       }
       try {
         const envelope = options.decode(event.data);
+        if (options.reconcileOnEnvelope?.(envelope)) {
+          void synchronize();
+          return;
+        }
         const item = options.itemFromEnvelope(envelope);
         if (!item) {
           return;

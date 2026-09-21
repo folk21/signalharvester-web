@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type { MonitoringProfile, Source } from '../../src/api/types';
+import type { MonitoringProfile, ResultSummary, Source } from '../../src/api/types';
 import {
   analysisItemFixture,
   collectionRunFixture,
@@ -443,20 +443,37 @@ test('Analysis applies profile and source filters through the REST query', async
   await expect(page.getByText(analysisItemFixture.sourceUrl, { exact: true })).toBeVisible();
 });
 
-test('Results applies filters and loads bounded detail on selection', async ({ page }) => {
+test('Results searches, follows opaque continuation, de-duplicates pages, and loads detail', async ({ page }) => {
   await installMockEventSource(page, true);
+  const olderResult: ResultSummary = {
+    ...resultSummaryFixture,
+    normalizedItemId: 'b'.repeat(64),
+    title: 'Older distributed systems result',
+    analyzedAt: '2026-09-14T08:04:03Z',
+  };
+
   await page.route('**/api/v1/**', async (route) => {
     const request = route.request();
     const url = new URL(request.url());
 
     if (url.pathname === '/api/v1/results' && request.method() === 'GET') {
       const matches =
+        url.searchParams.get('search') === 'distributed systems' &&
         url.searchParams.get('monitoringProfileId') === resultSummaryFixture.monitoringProfileId &&
         url.searchParams.get('sourceId') === resultSummaryFixture.sourceId &&
         url.searchParams.get('informationCategory') === resultSummaryFixture.informationCategory &&
         url.searchParams.get('relevant') === 'true' &&
         url.searchParams.get('classification') === resultSummaryFixture.classification;
-      return fulfillJson(route, matches ? [resultSummaryFixture] : []);
+      if (!matches) {
+        return fulfillJson(route, []);
+      }
+
+      const cursor = url.searchParams.get('cursor');
+      if (cursor === null) {
+        return fulfillJson(route, [resultSummaryFixture], 200, { 'X-Next-Cursor': 'cursor-page-2' });
+      }
+      expect(cursor).toBe('cursor-page-2');
+      return fulfillJson(route, [resultSummaryFixture, olderResult]);
     }
 
     if (
@@ -473,6 +490,7 @@ test('Results applies filters and loads bounded detail on selection', async ({ p
   await page.goto('/results');
   await expect(page.getByText('No analyzed results match the current filters.')).toBeVisible();
 
+  await page.getByLabel('Search').fill('distributed systems');
   await page.getByLabel('Monitoring profile ID').fill(resultSummaryFixture.monitoringProfileId);
   await page.getByLabel('Source ID').fill(resultSummaryFixture.sourceId);
   await page.getByLabel('Information category').fill(resultSummaryFixture.informationCategory);
@@ -481,8 +499,18 @@ test('Results applies filters and loads bounded detail on selection', async ({ p
   await page.getByRole('button', { name: 'Apply filters' }).click();
 
   await expect(page.getByText(resultSummaryFixture.title!, { exact: true })).toBeVisible();
-  await page.getByRole('row', { name: new RegExp(resultSummaryFixture.title!) }).click();
+  await expect(page.getByRole('button', { name: 'Load more' })).toBeVisible();
+  await expect.poll(() => new URL(page.url()).searchParams.get('search')).toBe('distributed systems');
+  expect(await page.evaluate(() => (window as typeof window & { __signalHarvesterHasSseSource?: (value: string) => boolean }).__signalHarvesterHasSseSource?.('search=') ?? false)).toBe(false);
+  expect(await page.evaluate(() => (window as typeof window & { __signalHarvesterHasSseSource?: (value: string) => boolean }).__signalHarvesterHasSseSource?.('cursor=') ?? false)).toBe(false);
 
+  await page.getByRole('button', { name: 'Load more' }).click();
+  await expect(page.getByText(olderResult.title!, { exact: true })).toBeVisible();
+  await expect(page.getByText('2 loaded', { exact: true })).toBeVisible();
+  await expect(page.getByText(resultSummaryFixture.title!, { exact: true })).toHaveCount(1);
+  await expect(page.getByRole('button', { name: 'Load more' })).toHaveCount(0);
+
+  await page.getByRole('row', { name: new RegExp(resultSummaryFixture.title!) }).click();
   await expect(page.getByText(resultDetailFixture.normalizedContent, { exact: true })).toBeVisible();
   await expect(page.getByText('language', { exact: true })).toBeVisible();
   await expect(page.getByText('en', { exact: true })).toBeVisible();
@@ -492,6 +520,134 @@ test('Results applies filters and loads bounded detail on selection', async ({ p
     `/flows?collectionRunId=${resultDetailFixture.correlationId}&itemId=${resultDetailFixture.normalizedItemId}`,
   );
 });
+
+test('Results resets continuation when search changes', async ({ page }) => {
+  await installMockEventSource(page, true);
+  let kafkaSearchWithoutCursorSeen = false;
+
+  await page.route('**/api/v1/**', async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    if (url.pathname !== '/api/v1/results' || request.method() !== 'GET') {
+      return rejectUnexpectedApi(route);
+    }
+
+    const search = url.searchParams.get('search');
+    if (search === 'java') {
+      expect(url.searchParams.has('cursor')).toBe(false);
+      return fulfillJson(route, [resultSummaryFixture], 200, { 'X-Next-Cursor': 'java-cursor' });
+    }
+    if (search === 'kafka') {
+      expect(url.searchParams.has('cursor')).toBe(false);
+      kafkaSearchWithoutCursorSeen = true;
+      return fulfillJson(route, []);
+    }
+    return fulfillJson(route, []);
+  });
+
+  await page.goto('/results');
+  await page.getByLabel('Search').fill('java');
+  await page.getByRole('button', { name: 'Apply filters' }).click();
+  await expect(page.getByRole('button', { name: 'Load more' })).toBeVisible();
+
+  await page.getByLabel('Search').fill('kafka');
+  await page.getByRole('button', { name: 'Apply filters' }).click();
+  await expect.poll(() => kafkaSearchWithoutCursorSeen).toBe(true);
+  await expect(page.getByRole('button', { name: 'Load more' })).toHaveCount(0);
+});
+
+test('Results surfaces continuation cursor failures without discarding the loaded page', async ({ page }) => {
+  await installMockEventSource(page, true);
+
+  await page.route('**/api/v1/**', async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    if (url.pathname === '/api/v1/results' && request.method() === 'GET') {
+      if (url.searchParams.get('cursor') === 'stale-cursor') {
+        return fulfillJson(route, { message: 'Result cursor does not match the current criteria' }, 400);
+      }
+      if (url.searchParams.get('search') === 'cursor failure') {
+        return fulfillJson(route, [resultSummaryFixture], 200, { 'X-Next-Cursor': 'stale-cursor' });
+      }
+      return fulfillJson(route, []);
+    }
+    return rejectUnexpectedApi(route);
+  });
+
+  await page.goto('/results');
+  await page.getByLabel('Search').fill('cursor failure');
+  await page.getByRole('button', { name: 'Apply filters' }).click();
+  await expect(page.getByText(resultSummaryFixture.title!, { exact: true })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Load more' }).click();
+  await expect(page.getByRole('alert')).toContainText('Result cursor does not match the current criteria');
+  await expect(page.getByText(resultSummaryFixture.title!, { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Load more' })).toBeVisible();
+});
+
+test('Results reconciles searched live events through REST instead of client-side search', async ({ page }) => {
+  await installMockEventSource(page, true);
+  let searchedSnapshotCount = 0;
+  let continuationRequested = false;
+  let releaseContinuation!: () => void;
+  const continuationGate = new Promise<void>((resolve) => {
+    releaseContinuation = resolve;
+  });
+  const unrelatedLiveResult: ResultSummary = {
+    ...resultSummaryFixture,
+    normalizedItemId: 'c'.repeat(64),
+    title: 'Unrelated live result',
+    analyzedAt: '2026-09-14T08:06:03Z',
+  };
+  const staleContinuationResult: ResultSummary = {
+    ...resultSummaryFixture,
+    normalizedItemId: 'd'.repeat(64),
+    title: 'Stale continuation result',
+    analyzedAt: '2026-09-14T08:04:03Z',
+  };
+
+  await page.route('**/api/v1/**', async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    if (url.pathname === '/api/v1/results' && request.method() === 'GET') {
+      if (url.searchParams.get('search') === 'browser fixture') {
+        if (url.searchParams.get('cursor') === 'searched-cursor-2') {
+          continuationRequested = true;
+          await continuationGate;
+          return fulfillJson(route, [staleContinuationResult]);
+        }
+        searchedSnapshotCount += 1;
+        return searchedSnapshotCount === 1
+          ? fulfillJson(route, [resultSummaryFixture], 200, { 'X-Next-Cursor': 'searched-cursor-2' })
+          : fulfillJson(route, [resultSummaryFixture]);
+      }
+      return fulfillJson(route, []);
+    }
+    return rejectUnexpectedApi(route);
+  });
+
+  await page.goto('/results');
+  await page.getByLabel('Search').fill('browser fixture');
+  await page.getByRole('button', { name: 'Apply filters' }).click();
+  await expect.poll(() => searchedSnapshotCount).toBe(1);
+  await expect(page.getByText(resultSummaryFixture.title!, { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Load more' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Load more' }).click();
+  await expect.poll(() => continuationRequested).toBe(true);
+
+  await waitForSseSource(page, '/api/v1/results/stream');
+  await emitSse(page, 'result', { cursor: 90, result: unrelatedLiveResult }, '/api/v1/results/stream');
+
+  await expect.poll(() => searchedSnapshotCount).toBe(2);
+  await expect(page.getByRole('button', { name: 'Load more' })).toHaveCount(0);
+  releaseContinuation();
+  await expect(page.getByText(unrelatedLiveResult.title!, { exact: true })).toHaveCount(0);
+  await expect(page.getByText(staleContinuationResult.title!, { exact: true })).toHaveCount(0);
+  await expect(page.getByText(resultSummaryFixture.title!, { exact: true })).toBeVisible();
+  await expect(page.getByText('1 loaded', { exact: true })).toBeVisible();
+});
+
 
 
 
