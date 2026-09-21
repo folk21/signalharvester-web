@@ -4,7 +4,6 @@ title: SignalHarvester Web initial product specification
 description: Active frontend umbrella specification for configuration, operational inspection, Results, live updates, and event-flow diagnostics.
 document_role: umbrella
 spec_status: active
-current_focus: subspecs/ui-results-production-browsing.md
 ---
 # SignalHarvester Web initial product specification
 
@@ -18,7 +17,7 @@ Frontend implementation details belong here rather than in the backend repositor
 
 ## Current implementation focus
 
-The current bounded focus is [`subspecs/ui-results-production-browsing.md`](subspecs/ui-results-production-browsing.md). The frontend implementation is verification-pending with backend full-text search, opaque keyset continuation, page de-duplication, and REST reconciliation when search cannot be represented by the Results SSE contract.
+There is currently no bounded frontend implementation focus. Production-oriented Results browsing is accepted after the developer confirmed the canonical frontend gate passed; the completed sub-spec is archived. The next bounded slice should be created only for a concrete product, operational, or contract-consumption need.
 
 Typed Monitoring Profile Analysis settings were accepted on 2026-09-21 after the canonical frontend gate passed and are archived.
 

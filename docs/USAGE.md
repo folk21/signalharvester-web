@@ -143,9 +143,11 @@ Principals with both explicit `ADMIN` and explicit `VIEWER` receive the operatio
 - analyzed-from time;
 - analyzed-to time.
 
+Use **Search** for backend-owned full-text matching together with the structured filters. When another page exists, **Load more** follows the opaque backend continuation cursor; changing search or filters starts a fresh first page.
+
 Selecting a row loads detail separately. Result detail includes normalized content, attributes, tags, analysis metadata, and event/correlation provenance.
 
-The page opens backend SSE before loading its durable REST snapshot. Matching live updates then appear without manual refresh. A visible indicator shows live or reconnecting state.
+The page opens backend SSE before loading its durable REST snapshot. Matching live updates then appear without manual refresh. A visible indicator shows live or reconnecting state. Search and page cursors are REST-only; while text search is active, a live Result event causes the browser to re-read the authoritative first REST page instead of trying to reproduce backend full-text matching.
 
 Result detail can navigate to Event Explorer or the exact run/item Processing Flow when the required identifiers are available.
 
@@ -153,11 +155,11 @@ Result detail can navigate to Event Explorer or the exact run/item Processing Fl
 
 A `VIEWER` principal without `ADMIN` uses the same `/results` route with a consumer-oriented presentation. The browser reuses the existing Results REST/detail/SSE contracts and always requests `relevant=true` for the viewer feed.
 
-The viewer filters are limited to information category and analyzed time range. Monitoring Profile ID, Source ID, classification, item/event/correlation/trace identifiers, and diagnostic filters are not presented.
+The viewer controls are limited to backend full-text search, information category, and analyzed time range. Monitoring Profile ID, Source ID, classification, item/event/correlation/trace identifiers, and diagnostic filters are not presented. **Load more** is available when the backend publishes another opaque continuation cursor.
 
 Selecting a viewer Result shows consumer content such as title, category, source link, publication/analyzed times, summary/explanation, tags, normalized attributes, and normalized content. The viewer presentation does not render analyzer identity, internal provenance IDs, trace context, or links into Event Explorer and Processing Flow.
 
-The viewer feed opens Results SSE before its durable snapshot using the same race-free synchronization behavior as the operational Results screen. New matching relevant Results appear without manual page refresh.
+The viewer feed opens Results SSE before its durable snapshot using the same race-free synchronization behavior as the operational Results screen. New matching relevant Results appear without manual page refresh. During active text search, live events reconcile through REST because search is not an SSE filter.
 
 ## Event Explorer
 

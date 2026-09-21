@@ -7,13 +7,13 @@ description: Current frontend focus, accepted baseline, next product stages, bac
 
 ## Current position
 
-Typed Monitoring Profile Analysis settings were accepted on 2026-09-21 after the developer confirmed the canonical frontend gate passed. The completed sub-spec is archived.
+Typed Monitoring Profile Analysis settings and production-oriented Results browsing are accepted after the developer confirmed the canonical frontend gate passed on 2026-09-21. Their completed sub-specifications are archived.
 
-The current bounded focus is verification-pending production-oriented Results browsing in [`docs/specs/active/subspecs/ui-results-production-browsing.md`](specs/active/subspecs/ui-results-production-browsing.md). Both operational and viewer Results now consume backend `search`, opaque `cursor`, and `X-Next-Cursor`, with explicit continuation and logical-row de-duplication.
+Both operational and viewer Results consume backend `search`, opaque `cursor`, and `X-Next-Cursor`, with explicit continuation and logical-row de-duplication. Results SSE remains a separate backend contract: REST search/cursors are never sent to the stream, and active text search reconciles received Result events through a fresh authoritative REST first page instead of browser-side full-text matching.
 
-Results SSE remains a separate backend contract. REST search/cursors are never sent to the stream. When text search is active, a received Result SSE event triggers a first-page REST reconciliation instead of client-side imitation of backend full-text search.
+There is currently no bounded frontend implementation focus. The next product slice should be chosen from concrete user feedback, dataset scale, or an explicit operational need. Backend-owned display data, sorting semantics, category-specific fields, cleanup behavior, or other server semantics must be published by the backend before the browser depends on them.
 
-Browser authentication/session, CSRF-aware REST, credentialed SSE, `401`/`403` handling, additive role-aware routing/navigation, protected deterministic/live acceptance coverage, typed Monitoring Profile Analysis settings, production-image delivery, and deployed Kubernetes browser acceptance are implemented and accepted.
+Browser authentication/session, CSRF-aware REST, credentialed SSE, `401`/`403` handling, additive role-aware routing/navigation, protected deterministic/live acceptance coverage, typed Monitoring Profile Analysis settings, production-oriented Results browsing, production-image delivery, and deployed Kubernetes browser acceptance are implemented and accepted.
 
 `WEB.ROUTE_DELIVERY` is implemented and accepted after the 2026-09-17 canonical frontend gate passed.
 
@@ -50,15 +50,13 @@ The accepted baseline already includes configuration/operations, live Results, E
 
 ## Next frontend stages
 
-### 1. Accept production-oriented Results browsing
+### 1. Select the next bounded product slice from evidence
 
-Complete canonical verification and developer acceptance for the current verification-pending slice. After acceptance, move stable search/continuation/reconciliation behavior into current-state documentation, archive the sub-spec, and advance the umbrella focus.
+Use actual product feedback, representative dataset size, or a concrete operational workflow to decide the next bounded frontend change. Likely candidates include profile/source display names in Results, explicit backend sorting, category-specific presentation, saved searches, or another viewer workflow. Do not select one merely because it is technically possible.
 
-Target features: `WEB.VIEWER_RESULTS`, `WEB.RESULTS_BROWSING`, `WEB.RESULTS_LIVE`, `WEB.CONTRACT_INTEGRATION`, `WEB.BROWSER_VERIFICATION`.
+### 2. Add backend contracts first when the selected slice needs backend-owned semantics
 
-### 2. Reconcile the next viewer/product browsing need
-
-After production-oriented Results browsing is accepted, use actual product feedback and dataset scale to decide whether the next bounded slice needs profile/source display names, explicit sorting, category-specific presentation, saved searches, or another viewer workflow. Add backend contracts first when those capabilities require backend-owned data or semantics.
+If the selected frontend need requires new display data, ordering/search semantics, cleanup operations, or authorization behavior, define and accept the corresponding backend contract/specification before implementing browser behavior. Pure presentation changes over already published contracts can remain frontend-only.
 
 ## Backend dependencies
 

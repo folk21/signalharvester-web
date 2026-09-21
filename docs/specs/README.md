@@ -141,10 +141,13 @@ Umbrella:
 
 Current implementation focus:
 
-- [`active/subspecs/ui-results-production-browsing.md`](active/subspecs/ui-results-production-browsing.md) — verification-pending Results text search, opaque keyset continuation, and REST/SSE reconciliation.
+- none; there is currently no bounded frontend implementation sub-spec.
 
 ## Recently completed sub-specifications
 
+Accepted on 2026-09-21:
+
+- [`archive/subspecs/ui-results-production-browsing.md`](archive/subspecs/ui-results-production-browsing.md) — backend text search, opaque keyset continuation, and REST/SSE reconciliation; accepted after the developer confirmed the canonical frontend gate passed.
 - [`archive/subspecs/ui-monitoring-profile-analysis-settings.md`](archive/subspecs/ui-monitoring-profile-analysis-settings.md) — typed Monitoring Profile Analysis settings with default-preserving create semantics and replacement-PUT round-trip protection, accepted on 2026-09-21.
 - [`archive/subspecs/ui-deployed-kubernetes-browser-acceptance.md`](archive/subspecs/ui-deployed-kubernetes-browser-acceptance.md) — production-image browser verification through the backend-owned Kubernetes frontend workload, accepted on 2026-09-17.
 - [`archive/subspecs/ui-production-delivery.md`](archive/subspecs/ui-production-delivery.md) — independently buildable non-root production image and container runtime verification, accepted on 2026-09-17.
