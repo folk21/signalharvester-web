@@ -2,20 +2,22 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { api, type ResultFilters } from '../../api/client';
-import type { ResultDetail, ResultLiveEvent, ResultSummary } from '../../api/types';
+import type { ResultDetail, ResultSummary } from '../../api/types';
 import { EmptyState, ErrorState, LoadingState } from '../../components/AsyncState';
 import { LiveConnectionStatus } from '../../components/LiveConnectionStatus';
 import { PageHeader } from '../../components/PageHeader';
 import { formatDateTime } from '../../lib/format';
-import { useLiveList } from '../../lib/use-live-list';
+import { resultIdentity, useResultBrowser } from './use-result-browser';
 
 const emptyFilters: ViewerResultFilterForm = {
+  search: '',
   informationCategory: '',
   analyzedFrom: '',
   analyzedTo: '',
 };
 
 interface ViewerResultFilterForm {
+  search: string;
   informationCategory: string;
   analyzedFrom: string;
   analyzedTo: string;
@@ -28,22 +30,15 @@ export function ViewerResultsPage() {
   const [filters, setFilters] = useState<ResultFilters>(() => toViewerResultFilters(initialForm));
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
-  const liveOptions = useMemo(() => ({
-    queryKey: ['viewer-results', filters] as const,
-    fetchSnapshot: () => api.listResults(filters),
-    streamUrl: api.resultStreamUrl(filters),
-    eventName: 'result',
-    decode: (data: string) => JSON.parse(data) as ResultLiveEvent,
-    itemFromEnvelope: (envelope: ResultLiveEvent) =>
-      envelope.result && matchesViewerResultFilters(envelope.result, filters) ? envelope.result : null,
-    keyOf: resultKey,
-    limit: filters.limit ?? 50,
-  }), [filters]);
-  const liveResults = useLiveList(liveOptions);
-  const results = liveResults.data;
+  const resultBrowser = useResultBrowser({
+    cacheKey: 'viewer-results',
+    filters,
+    matchesLiveResult: matchesViewerResultFilters,
+  });
+  const results = resultBrowser.data;
 
   const selectedSummary = useMemo(
-    () => results.find((result) => resultKey(result) === selectedKey) ?? null,
+    () => results.find((result) => resultIdentity(result) === selectedKey) ?? null,
     [results, selectedKey],
   );
   const detailQuery = useQuery({
@@ -70,6 +65,15 @@ export function ViewerResultsPage() {
 
       <section className="panel filter-panel">
         <form aria-label="Viewer result filters" className="filter-form viewer-results-filter" onSubmit={applyFilters}>
+          <label>
+            <span>Search</span>
+            <input
+              maxLength={200}
+              value={form.search}
+              onChange={(event) => setForm({ ...form, search: event.target.value })}
+              placeholder="title or content terms"
+            />
+          </label>
           <label>
             <span>Information category</span>
             <input
@@ -112,10 +116,10 @@ export function ViewerResultsPage() {
         </form>
       </section>
 
-      {liveResults.error ? (
+      {resultBrowser.error ? (
         <ErrorState
-          error={liveResults.error}
-          action={<button className="button button--ghost" onClick={() => void liveResults.refresh()}>Retry results</button>}
+          error={resultBrowser.error}
+          action={<button className="button button--ghost" onClick={() => void resultBrowser.refresh()}>Retry results</button>}
         />
       ) : null}
 
@@ -127,18 +131,18 @@ export function ViewerResultsPage() {
               <span>{results.length} loaded</span>
             </div>
             <div className="panel-actions">
-              <LiveConnectionStatus status={liveResults.connectionStatus} />
-              <button className="button button--ghost" type="button" onClick={() => void liveResults.refresh()}>Refresh</button>
+              <LiveConnectionStatus status={resultBrowser.connectionStatus} />
+              <button className="button button--ghost" type="button" onClick={() => void resultBrowser.refresh()}>Refresh</button>
             </div>
           </div>
-          {!liveResults.hasSnapshot && liveResults.syncing ? (
+          {!resultBrowser.hasSnapshot && resultBrowser.syncing ? (
             <LoadingState label="Loading relevant results…" />
           ) : results.length === 0 ? (
             <EmptyState>No relevant results match the current filters.</EmptyState>
           ) : (
             <ul className="viewer-result-list" aria-label="Relevant results">
               {results.map((result) => {
-                const key = resultKey(result);
+                const key = resultIdentity(result);
                 const title = displayTitle(result);
                 return (
                   <li key={key}>
@@ -162,6 +166,19 @@ export function ViewerResultsPage() {
               })}
             </ul>
           )}
+          {resultBrowser.loadMoreError ? (
+            <ErrorState
+              error={resultBrowser.loadMoreError}
+              action={<button className="button button--ghost" type="button" onClick={() => void resultBrowser.loadMore()}>Retry continuation</button>}
+            />
+          ) : null}
+          {resultBrowser.hasNextPage ? (
+            <div className="results-pagination">
+              <button className="button button--ghost" type="button" disabled={resultBrowser.loadingMore} onClick={() => void resultBrowser.loadMore()}>
+                {resultBrowser.loadingMore ? 'Loading more…' : 'Load more'}
+              </button>
+            </div>
+          ) : null}
         </article>
 
         <article className="panel viewer-result-detail-panel">
@@ -235,12 +252,13 @@ function displayTitle(result: ResultSummary | ResultDetail): string {
   return result.title?.trim() || 'Untitled result';
 }
 
-function resultKey(result: ResultSummary): string {
-  return `${result.monitoringProfileId}:${result.normalizedItemId}`;
-}
 
 function toViewerResultFilters(form: ViewerResultFilterForm): ResultFilters {
   const filters: ResultFilters = { limit: 50, relevant: true };
+  const search = form.search.trim();
+  if (search) {
+    filters.search = search;
+  }
   const informationCategory = form.informationCategory.trim();
   if (informationCategory) {
     filters.informationCategory = informationCategory;
@@ -273,6 +291,7 @@ function matchesViewerResultFilters(result: ResultSummary, filters: ResultFilter
 function viewerResultFormFromSearch(search: URLSearchParams): ViewerResultFilterForm {
   return {
     ...emptyFilters,
+    search: search.get('search') ?? '',
     informationCategory: search.get('informationCategory') ?? '',
     analyzedFrom: search.get('analyzedFrom') ?? '',
     analyzedTo: search.get('analyzedTo') ?? '',
@@ -281,6 +300,9 @@ function viewerResultFormFromSearch(search: URLSearchParams): ViewerResultFilter
 
 function viewerResultSearchParams(form: ViewerResultFilterForm): URLSearchParams {
   const search = new URLSearchParams();
+  if (form.search.trim()) {
+    search.set('search', form.search.trim());
+  }
   if (form.informationCategory.trim()) {
     search.set('informationCategory', form.informationCategory.trim());
   }

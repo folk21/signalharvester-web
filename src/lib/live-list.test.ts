@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mergeLiveItems } from './live-list';
+import { appendUniqueItems, mergeLiveItems } from './live-list';
 
 describe('mergeLiveItems', () => {
   it('puts live rows first and replaces snapshot rows with the same logical key', () => {
@@ -19,7 +19,7 @@ describe('mergeLiveItems', () => {
     ]);
   });
 
-  it('keeps the merged list bounded', () => {
+  it('keeps the merged list bounded when a limit is provided', () => {
     expect(
       mergeLiveItems(
         [{ id: 'a' }, { id: 'b' }, { id: 'c' }],
@@ -28,5 +28,27 @@ describe('mergeLiveItems', () => {
         2,
       ),
     ).toEqual([{ id: 'd' }, { id: 'a' }]);
+  });
+
+  it('preserves all loaded rows when no merge limit is provided', () => {
+    expect(
+      mergeLiveItems(
+        [{ id: 'a' }, { id: 'b' }],
+        [{ id: 'c' }],
+        (item) => item.id,
+      ),
+    ).toEqual([{ id: 'c' }, { id: 'a' }, { id: 'b' }]);
+  });
+});
+
+describe('appendUniqueItems', () => {
+  it('keeps continuation order while dropping rows already present in earlier pages', () => {
+    expect(
+      appendUniqueItems(
+        [{ id: 'a' }, { id: 'b' }],
+        [{ id: 'b' }, { id: 'c' }, { id: 'c' }, { id: 'd' }],
+        (item) => item.id,
+      ),
+    ).toEqual([{ id: 'a' }, { id: 'b' }, { id: 'c' }, { id: 'd' }]);
   });
 });

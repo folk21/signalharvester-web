@@ -2,19 +2,20 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api, type ResultFilters } from '../../api/client';
-import type { ResultDetail, ResultLiveEvent, ResultSummary } from '../../api/types';
+import type { ResultDetail, ResultSummary } from '../../api/types';
 import { EmptyState, ErrorState, LoadingState } from '../../components/AsyncState';
 import { LiveConnectionStatus } from '../../components/LiveConnectionStatus';
 import { PageHeader } from '../../components/PageHeader';
 import { StatusBadge } from '../../components/StatusBadge';
 import { formatDateTime, shortId } from '../../lib/format';
-import { useLiveList } from '../../lib/use-live-list';
+import { resultIdentity, useResultBrowser } from './use-result-browser';
 
 const emptyFilters: ResultFilterForm = {
-  monitoringProfileId: '', sourceId: '', informationCategory: '', relevance: '', classification: '', analyzedFrom: '', analyzedTo: '',
+  search: '', monitoringProfileId: '', sourceId: '', informationCategory: '', relevance: '', classification: '', analyzedFrom: '', analyzedTo: '',
 };
 
 interface ResultFilterForm {
+  search: string;
   monitoringProfileId: string;
   sourceId: string;
   informationCategory: string;
@@ -31,19 +32,12 @@ export function ResultsPage() {
   const [filters, setFilters] = useState<ResultFilters>(() => toResultFilters(initialForm));
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
-  const liveOptions = useMemo(() => ({
-    queryKey: ['results', filters] as const,
-    fetchSnapshot: () => api.listResults(filters),
-    streamUrl: api.resultStreamUrl(filters),
-    eventName: 'result',
-    decode: (data: string) => JSON.parse(data) as ResultLiveEvent,
-    itemFromEnvelope: (envelope: ResultLiveEvent) =>
-      envelope.result && matchesResultFilters(envelope.result, filters) ? envelope.result : null,
-    keyOf: resultKey,
-    limit: filters.limit ?? 50,
-  }), [filters]);
-  const liveResults = useLiveList(liveOptions);
-  const results = liveResults.data;
+  const resultBrowser = useResultBrowser({
+    cacheKey: 'results',
+    filters,
+    matchesLiveResult: matchesResultFilters,
+  });
+  const results = resultBrowser.data;
   const deepLinkedNormalizedItemId = searchParams.get('normalizedItemId');
   const deepLinkedProfileId = searchParams.get('monitoringProfileId');
 
@@ -55,12 +49,12 @@ export function ResultsPage() {
       result.normalizedItemId === deepLinkedNormalizedItemId
       && (!deepLinkedProfileId || result.monitoringProfileId === deepLinkedProfileId));
     if (target) {
-      setSelectedKey(resultKey(target));
+      setSelectedKey(resultIdentity(target));
     }
   }, [deepLinkedNormalizedItemId, deepLinkedProfileId, results]);
 
   const selectedSummary = useMemo(
-    () => results.find((result) => resultKey(result) === selectedKey) ?? null,
+    () => results.find((result) => resultIdentity(result) === selectedKey) ?? null,
     [results, selectedKey],
   );
   const detailQuery = useQuery({
@@ -87,6 +81,7 @@ export function ResultsPage() {
 
       <section className="panel filter-panel">
         <form aria-label="Result filters" className="filter-form filter-form--results" onSubmit={applyFilters}>
+          <label><span>Search</span><input maxLength={200} value={form.search} onChange={(event) => setForm({ ...form, search: event.target.value })} placeholder="title or content terms" /></label>
           <TextFilter label="Monitoring profile ID" value={form.monitoringProfileId} onChange={(value) => setForm({ ...form, monitoringProfileId: value })} />
           <TextFilter label="Source ID" value={form.sourceId} onChange={(value) => setForm({ ...form, sourceId: value })} />
           <TextFilter label="Information category" value={form.informationCategory} onChange={(value) => setForm({ ...form, informationCategory: value })} />
@@ -101,23 +96,36 @@ export function ResultsPage() {
         </form>
       </section>
 
-      {liveResults.error ? <ErrorState error={liveResults.error} action={<button className="button button--ghost" onClick={() => void liveResults.refresh()}>Retry snapshot</button>} /> : null}
+      {resultBrowser.error ? <ErrorState error={resultBrowser.error} action={<button className="button button--ghost" onClick={() => void resultBrowser.refresh()}>Retry snapshot</button>} /> : null}
 
       <section className="workspace-grid workspace-grid--results">
         <article className="panel table-panel">
           <div className="panel__header">
             <div><h2>Results</h2><span>{results.length} loaded</span></div>
-            <div className="panel-actions"><LiveConnectionStatus status={liveResults.connectionStatus} /><button className="button button--ghost" onClick={() => void liveResults.refresh()} type="button">Refresh</button></div>
+            <div className="panel-actions"><LiveConnectionStatus status={resultBrowser.connectionStatus} /><button className="button button--ghost" onClick={() => void resultBrowser.refresh()} type="button">Refresh</button></div>
           </div>
-          {!liveResults.hasSnapshot && liveResults.syncing ? <LoadingState label="Loading analyzed results…" /> : results.length === 0 ? (
+          {!resultBrowser.hasSnapshot && resultBrowser.syncing ? <LoadingState label="Loading analyzed results…" /> : results.length === 0 ? (
             <EmptyState>No analyzed results match the current filters.</EmptyState>
           ) : (
             <div className="table-wrap"><table aria-label="Analyzed results"><thead><tr><th>Result</th><th>Category</th><th>Classification</th><th>Score</th><th>Relevant</th><th>Analyzed</th></tr></thead><tbody>{results.map((result) => (
-              <tr key={resultKey(result)} className={selectedKey === resultKey(result) ? 'table-row--selected' : ''} onClick={() => setSelectedKey(resultKey(result))}>
-                <td><button className="table-row-select" type="button" onClick={() => setSelectedKey(resultKey(result))} aria-label={`Inspect result ${result.title?.trim() || result.normalizedItemId}`}><strong>{result.title?.trim() || shortId(result.normalizedItemId, 18)}</strong><small>{shortId(result.normalizedItemId, 18)}</small></button></td><td>{result.informationCategory}</td><td><StatusBadge value={result.classification} /></td><td>{result.score}</td><td>{result.relevant ? 'Yes' : 'No'}</td><td>{formatDateTime(result.analyzedAt)}</td>
+              <tr key={resultIdentity(result)} className={selectedKey === resultIdentity(result) ? 'table-row--selected' : ''} onClick={() => setSelectedKey(resultIdentity(result))}>
+                <td><button className="table-row-select" type="button" onClick={() => setSelectedKey(resultIdentity(result))} aria-label={`Inspect result ${result.title?.trim() || result.normalizedItemId}`}><strong>{result.title?.trim() || shortId(result.normalizedItemId, 18)}</strong><small>{shortId(result.normalizedItemId, 18)}</small></button></td><td>{result.informationCategory}</td><td><StatusBadge value={result.classification} /></td><td>{result.score}</td><td>{result.relevant ? 'Yes' : 'No'}</td><td>{formatDateTime(result.analyzedAt)}</td>
               </tr>
             ))}</tbody></table></div>
           )}
+          {resultBrowser.loadMoreError ? (
+            <ErrorState
+              error={resultBrowser.loadMoreError}
+              action={<button className="button button--ghost" type="button" onClick={() => void resultBrowser.loadMore()}>Retry continuation</button>}
+            />
+          ) : null}
+          {resultBrowser.hasNextPage ? (
+            <div className="results-pagination">
+              <button className="button button--ghost" type="button" disabled={resultBrowser.loadingMore} onClick={() => void resultBrowser.loadMore()}>
+                {resultBrowser.loadingMore ? 'Loading more…' : 'Load more'}
+              </button>
+            </div>
+          ) : null}
         </article>
 
         <article className="panel detail-panel">
@@ -150,10 +158,10 @@ function ResultDetailView({ result }: { result: ResultDetail }) {
   </div>;
 }
 
-function resultKey(result: ResultSummary): string { return `${result.monitoringProfileId}:${result.normalizedItemId}`; }
 
 function toResultFilters(form: ResultFilterForm): ResultFilters {
   const filters: ResultFilters = { limit: 50 };
+  assignTrimmed(filters, 'search', form.search);
   assignTrimmed(filters, 'monitoringProfileId', form.monitoringProfileId); assignTrimmed(filters, 'sourceId', form.sourceId); assignTrimmed(filters, 'informationCategory', form.informationCategory); assignTrimmed(filters, 'classification', form.classification);
   if (form.relevance) filters.relevant = form.relevance === 'true';
   if (form.analyzedFrom) filters.analyzedFrom = new Date(form.analyzedFrom).toISOString();
@@ -170,7 +178,7 @@ function matchesResultFilters(result: ResultSummary, filters: ResultFilters): bo
 function assignTrimmed<K extends keyof ResultFilters>(target: ResultFilters, key: K, value: string) { const trimmed = value.trim(); if (trimmed) target[key] = trimmed as ResultFilters[K]; }
 
 function resultFormFromSearch(search: URLSearchParams): ResultFilterForm {
-  return { ...emptyFilters, monitoringProfileId: search.get('monitoringProfileId') ?? '', sourceId: search.get('sourceId') ?? '', informationCategory: search.get('informationCategory') ?? '', relevance: search.get('relevant') === 'true' || search.get('relevant') === 'false' ? search.get('relevant') as 'true' | 'false' : '', classification: search.get('classification') ?? '' };
+  return { ...emptyFilters, search: search.get('search') ?? '', monitoringProfileId: search.get('monitoringProfileId') ?? '', sourceId: search.get('sourceId') ?? '', informationCategory: search.get('informationCategory') ?? '', relevance: search.get('relevant') === 'true' || search.get('relevant') === 'false' ? search.get('relevant') as 'true' | 'false' : '', classification: search.get('classification') ?? '', analyzedFrom: search.get('analyzedFrom') ?? '', analyzedTo: search.get('analyzedTo') ?? '' };
 }
 
 function resultSearchParams(form: ResultFilterForm): URLSearchParams {

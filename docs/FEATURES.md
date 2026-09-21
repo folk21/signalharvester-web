@@ -72,7 +72,7 @@ Current implementation state belongs in `docs/IMPLEMENTATION.md` and `docs/ROADM
 ### Results and diagnostics
 
 - `WEB.ANALYSIS_INSPECTION` — bounded technical inspection of normalized/deduplication state. Related backend feature IDs: `DIAGNOSTICS.ANALYSIS_INSPECTION`, `ANALYSIS.NORMALIZATION`, `ANALYSIS.DEDUPLICATION`.
-- `WEB.RESULTS_BROWSING` — analyzed Result list/filter/detail presentation and provenance navigation. Related backend feature IDs: `RESULTS.BROWSING`, `RESULTS.MATERIALIZATION`, `DATA.PROVENANCE`.
+- `WEB.RESULTS_BROWSING` — analyzed Result list/filter/search/continuation/detail presentation and provenance navigation. Related backend feature IDs: `RESULTS.BROWSING`, `RESULTS.MATERIALIZATION`, `DATA.PROVENANCE`.
 - `WEB.RESULTS_LIVE` — race-free live Result updates over backend SSE merged with durable REST state. Related backend feature IDs: `RESULTS.LIVE`, `CONTRACTS.HTTP`.
 - `WEB.EVENT_EXPLORER` — bounded technical event history, live updates, filtering, detail, and diagnostic navigation. Related backend feature IDs: `DIAGNOSTICS.EVENT_OBSERVATION`, `EVENTING.CORRELATION`.
 - `WEB.PROCESSING_FLOW` — read-only visualization of backend-reconstructed Collection Run/item processing graphs. Related backend feature IDs: `DIAGNOSTICS.PROCESSING_FLOW`, `EVENTING.CORRELATION`, `DATA.PROVENANCE`.

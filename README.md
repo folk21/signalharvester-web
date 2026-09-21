@@ -2,7 +2,7 @@
 
 SignalHarvester Web is the React/TypeScript frontend for SignalHarvester. It is one coherent browser application for configuration, operations, analyzed Results, and pipeline diagnostics over backend REST/OpenAPI and SSE contracts.
 
-The current build includes the accepted authentication/session, ADMIN identity management, viewer-oriented Results, route-delivery, production-image, and deployed Kubernetes browser-acceptance workflows over the backend cookie/CSRF/RBAC and Results contracts. The current frontend focus is the verification-pending typed Monitoring Profile Analysis-settings slice against the now-published backend contract. Backend authorization, identity invariants, deployment manifests, Analysis semantics, and Result semantics remain authoritative. The browser never reads PostgreSQL or Kafka directly.
+The current build includes the accepted authentication/session, ADMIN identity management, viewer-oriented Results, route-delivery, production-image, deployed Kubernetes browser-acceptance, and typed Monitoring Profile Analysis-settings workflows over the backend cookie/CSRF/RBAC and Results contracts. The current frontend focus is verification-pending production-oriented Results browsing with backend text search, opaque keyset continuation, and REST/SSE reconciliation. Backend authorization, identity invariants, deployment manifests, Analysis semantics, and Result semantics remain authoritative. The browser never reads PostgreSQL or Kafka directly.
 
 ## Interface
 
@@ -26,7 +26,7 @@ Configuration and operations:
 
 - **Dashboard** — bounded operational overview.
 - **Sources** — CRUD, enabled state, and persisted-source diagnostic Test.
-- **Monitoring Profiles** — profile CRUD, category, interval, ordered source membership, criteria, and scheduled enabled state.
+- **Monitoring Profiles** — profile CRUD, category, interval, ordered source membership, criteria, typed Analysis settings, and scheduled enabled state.
 - **Collection Runs** — profile-driven manual execution and durable run/source outcomes.
 
 Results and diagnostics:
@@ -37,7 +37,7 @@ Results and diagnostics:
 - **Processing Flow** — backend-reconstructed run/item stages, evidence, durations, limitations, and diagnostic metadata.
 - **Identity Administration** — ADMIN list/create/update workflows for persisted application identities and explicit roles.
 
-Cross-cutting browser capabilities include authentication/session bootstrap, role-aware navigation, credentialed REST/SSE transport, deterministic Playwright verification, targeted visual regression, accessibility hardening, responsive/large-data containment, route-level code splitting with recoverable lazy-route failures, an independently buildable non-root production image, and deployed production-browser verification. The security foundation, identity administration, viewer Results, route delivery, production image delivery, and deployed Kubernetes browser acceptance are accepted.
+Cross-cutting browser capabilities include authentication/session bootstrap, role-aware navigation, credentialed REST/SSE transport, deterministic Playwright verification, targeted visual regression, accessibility hardening, responsive/large-data containment, route-level code splitting with recoverable lazy-route failures, an independently buildable non-root production image, and deployed production-browser verification. The security foundation, identity administration, viewer Results, typed Monitoring Profile Analysis settings, route delivery, production image delivery, and deployed Kubernetes browser acceptance are accepted.
 
 ## Technology
 

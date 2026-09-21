@@ -46,7 +46,7 @@ A representative current workflow is:
 
 1. create or edit one or more Sources;
 2. use **Test** on a persisted Source to verify fetch/extraction and inspect bounded preview items;
-3. create a Monitoring Profile with category, interval, criteria, and ordered Source membership;
+3. create a Monitoring Profile with category, interval, criteria, typed Analysis settings when needed, and ordered Source membership;
 4. enable scheduled collection when desired;
 5. start the profile manually from Collection Runs when immediate execution is useful;
 6. inspect per-source/item run outcomes;
@@ -100,13 +100,14 @@ A current Monitoring Profile contains:
 - scheduled enabled/disabled state;
 - collection interval in minutes;
 - one or more ordered Source references;
-- criteria as a string map entered as JSON.
+- criteria as a string map entered as JSON;
+- typed Analysis settings with keywords and a minimum match count.
 
 The Source list shows each Source's type and enabled state. Existing membership order is preserved when unrelated profile fields are edited; newly selected Sources are appended.
 
 A disabled profile may still be selected for a manual Collection Run. The enabled flag controls scheduled collection, not whether the persisted profile may be run manually.
 
-Dedicated typed Analysis settings are not yet exposed by the current frontend contract.
+Analysis settings are separate from the generic criteria map. For a new profile, leave **Use custom Analysis settings** disabled to use backend defaults, or enable it to provide explicit keywords and a minimum match count. Editing an existing profile starts from the effective persisted settings returned by the backend, and enabled/disabled toggles preserve those settings.
 
 ## Collection Runs
 

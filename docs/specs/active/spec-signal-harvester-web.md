@@ -4,7 +4,7 @@ title: SignalHarvester Web initial product specification
 description: Active frontend umbrella specification for configuration, operational inspection, Results, live updates, and event-flow diagnostics.
 document_role: umbrella
 spec_status: active
-current_focus: subspecs/ui-monitoring-profile-analysis-settings.md
+current_focus: subspecs/ui-results-production-browsing.md
 ---
 # SignalHarvester Web initial product specification
 
@@ -18,7 +18,9 @@ Frontend implementation details belong here rather than in the backend repositor
 
 ## Current implementation focus
 
-The current bounded focus is [`subspecs/ui-monitoring-profile-analysis-settings.md`](subspecs/ui-monitoring-profile-analysis-settings.md). The backend contract is now published and synchronized; the frontend implementation is verification-pending with typed create/edit controls, default-preserving create omission, replacement-PUT round-trip protection, and deterministic coverage.
+The current bounded focus is [`subspecs/ui-results-production-browsing.md`](subspecs/ui-results-production-browsing.md). The frontend implementation is verification-pending with backend full-text search, opaque keyset continuation, page de-duplication, and REST reconciliation when search cannot be represented by the Results SSE contract.
+
+Typed Monitoring Profile Analysis settings were accepted on 2026-09-21 after the canonical frontend gate passed and are archived.
 
 `WEB.IDENTITY_ADMIN`, `WEB.VIEWER_RESULTS`, `WEB.PRODUCTION_DELIVERY`, and the deployed Kubernetes browser-acceptance slice were accepted on 2026-09-17 after their required frontend verification passed and are archived.
 
@@ -92,7 +94,8 @@ The frontend does not own:
 | Viewer-specific Results presentation | Implemented and accepted |
 | Production frontend image | Implemented and accepted |
 | Deployed Kubernetes browser acceptance | Implemented and accepted |
-| Typed Monitoring Profile Analysis settings | Implemented, verification-pending |
+| Typed Monitoring Profile Analysis settings | Implemented and accepted |
+| Results text search and keyset continuation | Implemented, verification-pending |
 
 ## Requirement map
 
@@ -191,7 +194,7 @@ When the backend monitoring-profile contract exists, the UI must support:
 
 The UI must make profile/source relationships understandable and editable without process restart or redeployment.
 
-Current status: monitoring-profile CRUD, source assignment, interval, category, enabled state, and criteria are implemented and accepted. Dedicated analysis-setting UI remains pending a backend contract.
+Current status: monitoring-profile CRUD, source assignment, interval, category, enabled state, criteria, and typed profile-owned Analysis settings are implemented and accepted.
 
 ### UI-R6 — collection operations and run inspection
 
@@ -238,7 +241,7 @@ Where available, the presentation should expose useful content fields such as ti
 
 Large normalized content and detailed provenance should be loaded through the bounded detail representation rather than duplicated into every list row.
 
-Current status: implemented against the current Results REST API. Category-specific presentation can be refined as richer normalized attributes become available.
+Current status: the accepted baseline provides bounded list/filter/detail browsing. Backend text search and opaque keyset continuation are implemented in the current verification-pending frontend slice; category-specific presentation can be refined only when supporting contracts justify it.
 
 ### UI-R9 — live Results
 

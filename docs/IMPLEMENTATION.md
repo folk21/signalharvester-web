@@ -19,7 +19,7 @@ Configuration and operations:
 
 - **Dashboard** (`/`) — bounded overview built from existing Source, Monitoring Profile, Collection Run, Analysis, and Results reads. Feature: `WEB.DASHBOARD`.
 - **Sources** (`/sources`) — Source CRUD, enabled state, and persisted Source Test. Features: `WEB.SOURCE_CONFIGURATION`, `WEB.SOURCE_TEST`.
-- **Monitoring Profiles** (`/profiles`) — profile CRUD, information category, scheduled enabled state, collection interval, ordered source membership, and criteria. Feature: `WEB.MONITORING_PROFILES`.
+- **Monitoring Profiles** (`/profiles`) — profile CRUD, information category, scheduled enabled state, collection interval, ordered source membership, criteria, and typed Analysis settings. Feature: `WEB.MONITORING_PROFILES`.
 - **Collection Runs** (`/runs`) — profile-driven manual runs, recent durable runs, and per-source/item outcomes. Feature: `WEB.COLLECTION_RUNS`.
 
 Results and diagnostics:
@@ -29,7 +29,7 @@ Results and diagnostics:
 - **Event Explorer** (`/events`) — bounded retained event history plus live SSE, filters, and event detail. Feature: `WEB.EVENT_EXPLORER`.
 - **Processing Flow** (`/flows`) — backend-reconstructed run/item branches, evidence, durations, limitations, and stage metadata. Feature: `WEB.PROCESSING_FLOW`.
 
-Cross-cutting accepted behavior includes deterministic browser verification, live-backend acceptance, targeted visual regression, accessibility hardening, responsive/large-data containment, route-level performance/runtime resilience, authentication/session role-aware presentation, ADMIN identity management, and viewer-oriented Results.
+Cross-cutting accepted behavior includes deterministic browser verification, live-backend acceptance, targeted visual regression, accessibility hardening, responsive/large-data containment, route-level performance/runtime resilience, authentication/session role-aware presentation, ADMIN identity management, viewer-oriented Results, and typed Monitoring Profile Analysis settings.
 
 ## Sources
 
@@ -56,7 +56,8 @@ The Monitoring Profiles screen supports:
 - information category;
 - collection interval in minutes;
 - ordered Source membership;
-- criteria as a JSON string map.
+- criteria as a JSON string map;
+- typed profile-owned Analysis settings with keyword rules and a minimum-match threshold.
 
 Existing Source order is preserved when other profile fields are edited. Newly selected Sources are appended to the membership order.
 
@@ -64,7 +65,7 @@ The UI shows Source enabled/disabled state for context, but backend scheduling/c
 
 Large Source/Profile collections remain fully rendered from the current backend response. Configuration tables use bounded local scrolling with sticky headers. The Source-membership editor uses a bounded native checkbox list instead of inventing frontend pagination or truncation.
 
-Dedicated typed Analysis settings are not yet available in this frontend contract. They remain planned under `WEB.MONITORING_PROFILES` after the backend publishes the corresponding profile-owned contract and the frontend snapshot is synchronized.
+Analysis settings are edited separately from the generic criteria map. New-profile creation may deliberately use backend defaults by omitting the optional settings request field; persisted profiles always expose effective settings, and edit plus replacement-style enabled-state updates round-trip those effective values.
 
 ## Collection Runs
 
@@ -258,9 +259,6 @@ The deterministic RSS fixture remains host-owned. `SIGNALHARVESTER_LIVE_FIXTURE_
 
 ## Current limitations
 
-The frontend does not yet implement:
-
-- dedicated typed Analysis-setting controls beyond the current criteria map;
-- production-scale viewer Results search/pagination beyond the current bounded backend contract;
+The frontend has a verification-pending production-oriented Results browsing slice for backend text search and opaque keyset continuation. Until that slice is accepted, the stable Results workflow remains the previously accepted bounded list/filter/detail experience.
 
 The authentication/session role-aware shell, route delivery, ADMIN identity management, viewer-oriented Results, production image delivery, and deployed Kubernetes browser acceptance are accepted. ADMIN identity management consumes the existing backend user-administration contract, and viewer-oriented Results reuse the existing Results REST/SSE boundary. Backend authorization, identity invariants, deployment manifests, Analysis semantics, and Result semantics remain authoritative regardless of frontend presentation.

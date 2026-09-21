@@ -1,18 +1,16 @@
 ---
 type: Specification
 title: Monitoring Profile Analysis settings
-description: Verification-pending frontend slice for typed Monitoring Profile Analysis settings over the published backend contract.
+description: Accepted frontend slice for typed Monitoring Profile Analysis settings over the published backend contract.
 document_role: subspec
-spec_status: verification-pending
+spec_status: completed
 parent: ../spec-signal-harvester-web.md
 ---
 # Monitoring Profile Analysis settings
 
 ## Status
 
-Implemented and verification-pending. The backend now publishes profile-owned typed Analysis settings through OpenAPI and uses them as the authoritative Monitoring Profile Analysis configuration. The frontend snapshot is synchronized to that contract, the form consumes generated types, and deterministic coverage protects create/edit/default/error and replacement-PUT preservation behavior.
-
-Acceptance still requires the canonical frontend gate in a dependency-complete environment. The opt-in live-backend workflow now also creates a profile with explicit settings and verifies that the backend response round-trips them.
+Accepted on 2026-09-21 after the developer confirmed the canonical frontend gate passed. The frontend consumes the backend-owned typed Analysis settings, preserves backend-default create omission, round-trips effective settings through edit/replacement writes, and protects the behavior with deterministic browser coverage.
 
 ## Feature scope
 

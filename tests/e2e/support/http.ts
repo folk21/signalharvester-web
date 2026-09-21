@@ -8,10 +8,16 @@ export const defaultAdminPrincipal: CurrentPrincipal = {
   roles: ['USER', 'VIEWER', 'ADMIN'],
 };
 
-export async function fulfillJson(route: Route, body: unknown, status = 200): Promise<void> {
+export async function fulfillJson(
+  route: Route,
+  body: unknown,
+  status = 200,
+  headers?: Record<string, string>,
+): Promise<void> {
   await route.fulfill({
     status,
     contentType: 'application/json',
+    ...(headers === undefined ? {} : { headers }),
     body: JSON.stringify(body),
   });
 }

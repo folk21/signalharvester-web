@@ -42,6 +42,8 @@ export interface EventFilters {
 
 export interface ResultFilters {
   limit?: number;
+  cursor?: string;
+  search?: string;
   monitoringProfileId?: string;
   sourceId?: string;
   informationCategory?: string;
@@ -49,6 +51,11 @@ export interface ResultFilters {
   classification?: string;
   analyzedFrom?: string;
   analyzedTo?: string;
+}
+
+export interface ResultBrowsePage {
+  results: ResultSummary[];
+  nextCursor: string | null;
 }
 
 export class ApiError extends Error {
@@ -64,6 +71,13 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  return (await requestWithMetadata<T>(path, init)).data;
+}
+
+async function requestWithMetadata<T>(
+  path: string,
+  init?: RequestInit,
+): Promise<{ data: T; headers: Headers }> {
   const headers = new Headers(init?.headers);
   const method = (init?.method ?? 'GET').toUpperCase();
   // Keep bodyless mutations inside the JSON CSRF filter with a parseable empty payload.
@@ -101,19 +115,19 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   if (response.status === 204) {
-    return undefined as T;
+    return { data: undefined as T, headers: response.headers };
   }
 
   const body = await response.text();
   if (!body.trim()) {
-    return undefined as T;
+    return { data: undefined as T, headers: response.headers };
   }
 
   const contentType = response.headers.get('content-type') ?? '';
-  if (contentType.includes('application/json')) {
-    return JSON.parse(body) as T;
-  }
-  return body as T;
+  const data = contentType.includes('application/json')
+    ? JSON.parse(body) as T
+    : body as T;
+  return { data, headers: response.headers };
 }
 
 async function parseResponseBody(response: Response): Promise<unknown> {
@@ -281,20 +295,9 @@ export const api = {
     );
   },
 
-  listResults: (query: ResultFilters) => {
-    const search = new URLSearchParams();
-    search.set('limit', String(query.limit ?? 50));
-    appendIfPresent(search, 'monitoringProfileId', query.monitoringProfileId);
-    appendIfPresent(search, 'sourceId', query.sourceId);
-    appendIfPresent(search, 'informationCategory', query.informationCategory);
-    appendIfPresent(search, 'classification', query.classification);
-    appendIfPresent(search, 'analyzedFrom', query.analyzedFrom);
-    appendIfPresent(search, 'analyzedTo', query.analyzedTo);
-    if (query.relevant !== undefined) {
-      search.set('relevant', String(query.relevant));
-    }
-    return request<ResultSummary[]>(`/api/v1/results?${search}`);
-  },
+  browseResults,
+
+  listResults: async (query: ResultFilters) => (await browseResults(query)).results,
 
   resultStreamUrl: (query: ResultFilters) => buildUrl('/api/v1/results/stream', resultStreamSearch(query)),
 
@@ -323,6 +326,33 @@ export const api = {
     );
   },
 };
+
+
+async function browseResults(query: ResultFilters): Promise<ResultBrowsePage> {
+  const search = resultBrowseSearch(query);
+  const response = await requestWithMetadata<ResultSummary[]>(`/api/v1/results?${search}`);
+  return {
+    results: response.data,
+    nextCursor: response.headers.get('X-Next-Cursor'),
+  };
+}
+
+function resultBrowseSearch(query: ResultFilters): URLSearchParams {
+  const search = new URLSearchParams();
+  search.set('limit', String(query.limit ?? 50));
+  appendIfPresent(search, 'cursor', query.cursor);
+  appendIfPresent(search, 'search', query.search);
+  appendIfPresent(search, 'monitoringProfileId', query.monitoringProfileId);
+  appendIfPresent(search, 'sourceId', query.sourceId);
+  appendIfPresent(search, 'informationCategory', query.informationCategory);
+  appendIfPresent(search, 'classification', query.classification);
+  appendIfPresent(search, 'analyzedFrom', query.analyzedFrom);
+  appendIfPresent(search, 'analyzedTo', query.analyzedTo);
+  if (query.relevant !== undefined) {
+    search.set('relevant', String(query.relevant));
+  }
+  return search;
+}
 
 function appendIfPresent(search: URLSearchParams, name: string, value?: string) {
   const trimmed = value?.trim();
