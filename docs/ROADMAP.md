@@ -9,6 +9,8 @@ description: Current frontend focus, accepted baseline, next product stages, bac
 
 Typed Monitoring Profile Analysis settings and production-oriented Results browsing are accepted after the developer confirmed the canonical frontend gate passed on 2026-09-21. Their completed sub-specifications are archived.
 
+A bounded verification-pending follow-up started on 2026-09-22 after live manual acceptance: Monitoring Profiles now expose keyword filtering as opt-in all-relevant semantics, and Source deletion receives explicit success/409 browser coverage.
+
 Both operational and viewer Results consume backend `search`, opaque `cursor`, and `X-Next-Cursor`, with explicit continuation and logical-row de-duplication. Results SSE remains a separate backend contract: REST search/cursors are never sent to the stream, and active text search reconciles received Result events through a fresh authoritative REST first page instead of browser-side full-text matching.
 
 There is currently no bounded frontend implementation focus. The next product slice should be chosen from concrete user feedback, dataset scale, or an explicit operational need. Backend-owned display data, sorting semantics, category-specific fields, cleanup behavior, or other server semantics must be published by the backend before the browser depends on them.

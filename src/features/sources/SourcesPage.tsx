@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '../../api/client';
+import { ApiError, api } from '../../api/client';
 import type {
   Source,
   SourceTestResult,
@@ -138,9 +138,14 @@ export function SourcesPage() {
 
   function remove(source: Source) {
     if (window.confirm(`Delete source "${source.name}"?`)) {
+      deleteMutation.reset();
       deleteMutation.mutate(source.id);
     }
   }
+
+  const deleteErrorMessage = deleteMutation.error instanceof ApiError && deleteMutation.error.status === 409
+    ? 'Source cannot be deleted while it is referenced by a Monitoring Profile. Remove it from the profile first.'
+    : deleteMutation.error?.message;
 
   if (sourcesQuery.isPending) {
     return <LoadingState label="Loading source configuration…" />;
@@ -170,6 +175,7 @@ export function SourcesPage() {
               <span>{sortedSources.length} total</span>
             </div>
           </div>
+          {deleteErrorMessage ? <div className="inline-error" role="alert">{deleteErrorMessage}</div> : null}
           {sortedSources.length === 0 ? (
             <EmptyState>Create the first source using the form.</EmptyState>
           ) : (
@@ -228,7 +234,13 @@ export function SourcesPage() {
                           >
                             {source.enabled ? 'Disable' : 'Enable'}
                           </button>
-                          <button aria-label={`Delete source ${source.name}`} className="button button--danger-ghost" onClick={() => remove(source)} type="button">
+                          <button
+                            aria-label={`Delete source ${source.name}`}
+                            className="button button--danger-ghost"
+                            disabled={deleteMutation.isPending}
+                            onClick={() => remove(source)}
+                            type="button"
+                          >
                             Delete
                           </button>
                         </div>
@@ -306,7 +318,6 @@ export function SourcesPage() {
 
             {formError ? <div className="inline-error" id="source-form-validation-error" role="alert">{formError}</div> : null}
             {saveMutation.error ? <div className="inline-error" role="alert">{saveMutation.error.message}</div> : null}
-            {deleteMutation.error ? <div className="inline-error" role="alert">{deleteMutation.error.message}</div> : null}
             {toggleMutation.error ? <div className="inline-error" role="alert">{toggleMutation.error.message}</div> : null}
 
             <div className="form-actions">

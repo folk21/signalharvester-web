@@ -6,6 +6,7 @@ description: Notable frontend changes organized by release state, with each chan
 # Changelog
 
 ## Unreleased
+- 2026-09-22 — Added verification-pending all-relevant Monitoring Profile Analysis UX, clarified typed Analysis settings versus string-map criteria, and added Source delete success/409 browser coverage with actionable conflict feedback.
 
 - 2026-09-21 — Accepted production-oriented Results browsing after the developer confirmed the canonical frontend gate passed; archived the completed slice and cleared the bounded frontend focus pending a concrete next product need.
 - 2026-09-21 — Added verification-pending production-oriented Results browsing with backend full-text search, opaque `X-Next-Cursor` continuation, page de-duplication, continuation error handling, and REST reconciliation for searched SSE updates.

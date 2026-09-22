@@ -718,12 +718,13 @@ export interface components {
             criteria: {
                 [key: string]: string;
             };
-            /** @description Optional compatibility bridge. Create omission uses deployment defaults; update omission preserves the current effective settings. New clients should round-trip this field. */
+            /** @description Optional replacement field. Create omission means all analyzed items are relevant; update omission preserves the current effective settings. New clients should round-trip this field. */
             analysisSettings?: components["schemas"]["MonitoringProfileAnalysisSettings"];
         };
         MonitoringProfileAnalysisSettings: {
+            /** @description Normalized keyword filters. An empty list means all analyzed items are relevant. */
             keywords: string[];
-            /** @description Must not exceed the number of unique normalized keywords. */
+            /** @description Must be zero when keywords is empty; otherwise must be positive and no greater than the number of unique normalized keywords. */
             minimumMatches: number;
         };
         CollectionRunRequest: {

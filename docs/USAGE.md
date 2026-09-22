@@ -87,6 +87,8 @@ The backend uses the normal fetch/extraction boundary without publishing normal 
 
 Disabled Sources may be tested. A successful preview does not mean that the items were inserted into Results.
 
+Delete is allowed only when no Monitoring Profile references the Source. A backend `409` is shown in the Sources workspace with guidance to remove the Source from the profile first.
+
 Source management authorizes backend outbound access to configured destinations. The route is presented only to explicit `ADMIN`, but backend authorization and external-source destination policy remain the enforcement boundaries.
 
 ## Monitoring Profiles
@@ -107,7 +109,7 @@ The Source list shows each Source's type and enabled state. Existing membership 
 
 A disabled profile may still be selected for a manual Collection Run. The enabled flag controls scheduled collection, not whether the persisted profile may be run manually.
 
-Analysis settings are separate from the generic criteria map. For a new profile, leave **Use custom Analysis settings** disabled to use backend defaults, or enable it to provide explicit keywords and a minimum match count. Editing an existing profile starts from the effective persisted settings returned by the backend, and enabled/disabled toggles preserve those settings.
+Analysis settings are separate from the generic criteria map. Leave **Filter relevance by keywords** disabled when every newly analyzed item should be relevant. Enable it only when relevance should require explicit keywords and a minimum match count. The generic criteria editor accepts only string values. Editing an existing profile starts from the effective persisted settings returned by the backend, and enabled/disabled toggles preserve those settings.
 
 ## Collection Runs
 

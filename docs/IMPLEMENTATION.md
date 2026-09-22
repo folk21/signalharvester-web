@@ -39,7 +39,7 @@ The Sources screen consumes the backend Source contract and supports:
 - create a Source;
 - edit Source fields;
 - enable or disable a Source;
-- delete a Source;
+- delete an unreferenced Source, with backend `409` conflicts explained when a Monitoring Profile still references it;
 - run a bounded diagnostic Test for a persisted Source.
 
 The form exposes backend source-specific settings as a JSON string map.
@@ -65,7 +65,7 @@ The UI shows Source enabled/disabled state for context, but backend scheduling/c
 
 Large Source/Profile collections remain fully rendered from the current backend response. Configuration tables use bounded local scrolling with sticky headers. The Source-membership editor uses a bounded native checkbox list instead of inventing frontend pagination or truncation.
 
-Analysis settings are edited separately from the generic criteria map. New-profile creation may deliberately use backend defaults by omitting the optional settings request field; persisted profiles always expose effective settings, and edit plus replacement-style enabled-state updates round-trip those effective values.
+Analysis settings are edited separately from the generic criteria map. Keyword filtering is opt-in: disabled filtering sends the explicit all-relevant settings `keywords=[]` and `minimumMatches=0`; enabled filtering sends typed keywords plus the threshold. Persisted profiles always expose effective settings, and edit plus replacement-style enabled-state updates round-trip those values.
 
 ## Collection Runs
 

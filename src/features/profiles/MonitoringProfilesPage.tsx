@@ -333,26 +333,25 @@ export function MonitoringProfilesPage() {
               <legend>Analysis settings</legend>
               {editing ? (
                 <p className="field-note">
-                  These values are the effective settings returned by the backend and are round-tripped on save.
+                  These are the effective relevance settings returned by the backend and are round-tripped on save.
                 </p>
-              ) : (
-                <label className="checkbox-row">
-                  <input
-                    checked={form.analysisSettingsEnabled}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        analysisSettingsEnabled: event.target.checked,
-                      }))
-                    }
-                    type="checkbox"
-                  />
-                  <span>Set profile-specific Analysis settings</span>
-                </label>
-              )}
-              {!editing && !form.analysisSettingsEnabled ? (
+              ) : null}
+              <label className="checkbox-row">
+                <input
+                  checked={form.analysisSettingsEnabled}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      analysisSettingsEnabled: event.target.checked,
+                    }))
+                  }
+                  type="checkbox"
+                />
+                <span>Filter relevance by keywords</span>
+              </label>
+              {!form.analysisSettingsEnabled ? (
                 <p className="field-note">
-                  Leave this disabled to let the backend apply its configured Analysis defaults when the profile is created.
+                  Keyword filtering is disabled. Every newly analyzed item is classified as relevant.
                 </p>
               ) : null}
               {form.analysisSettingsEnabled ? (
@@ -392,6 +391,7 @@ export function MonitoringProfilesPage() {
 
             <label>
               <span>Criteria (JSON string map)</span>
+              <small className="field-note">Separate from Analysis settings. Every criteria value must be a string.</small>
               <textarea
                 rows={6}
                 value={form.criteriaText}

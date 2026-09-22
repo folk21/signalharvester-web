@@ -2,7 +2,7 @@
 
 SignalHarvester Web is the React/TypeScript frontend for SignalHarvester. It is one coherent browser application for configuration, operations, analyzed Results, and pipeline diagnostics over backend REST/OpenAPI and SSE contracts.
 
-The current build includes the accepted authentication/session, ADMIN identity management, viewer-oriented Results, route-delivery, production-image, deployed Kubernetes browser-acceptance, typed Monitoring Profile Analysis settings, and production-oriented Results browsing over the backend cookie/CSRF/RBAC and Results contracts. There is currently no bounded frontend implementation focus; the next product slice should be selected from concrete user or dataset needs and must use backend-owned contracts for backend data and semantics. Backend authorization, identity invariants, deployment manifests, Analysis semantics, and Result semantics remain authoritative. The browser never reads PostgreSQL or Kafka directly.
+The current build includes the accepted authentication/session, ADMIN identity management, viewer-oriented Results, route-delivery, production-image, deployed Kubernetes browser-acceptance, typed Monitoring Profile Analysis settings, and production-oriented Results browsing over the backend cookie/CSRF/RBAC and Results contracts. The current bounded frontend focus is verification of all-relevant Monitoring Profile Analysis UX and Source delete feedback discovered during live manual acceptance; backend-owned contracts remain authoritative for backend data and semantics. Backend authorization, identity invariants, deployment manifests, Analysis semantics, and Result semantics remain authoritative. The browser never reads PostgreSQL or Kafka directly.
 
 ## Interface
 

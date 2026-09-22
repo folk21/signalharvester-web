@@ -131,6 +131,53 @@ test('Sources creates a source and shows bounded source-test diagnostics', async
   await expect(createdRow.getByText('ENABLED', { exact: true })).toBeVisible();
 });
 
+test('Sources deletes an unreferenced source after confirmation', async ({ page }) => {
+  let sources = [sourceFixture];
+
+  await page.route('**/api/v1/**', async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    if (url.pathname === '/api/v1/sources' && request.method() === 'GET') {
+      return fulfillJson(route, sources);
+    }
+    if (url.pathname === `/api/v1/sources/${sourceFixture.id}` && request.method() === 'DELETE') {
+      sources = [];
+      return route.fulfill({ status: 204 });
+    }
+    return rejectUnexpectedApi(route);
+  });
+
+  await page.goto('/sources');
+  page.once('dialog', (dialog) => void dialog.accept());
+  await page.getByRole('button', { name: `Delete source ${sourceFixture.name}` }).click();
+
+  await expect(page.getByRole('row', { name: new RegExp(sourceFixture.name) })).toHaveCount(0);
+  await expect(page.getByText('Create the first source using the form.')).toBeVisible();
+});
+
+test('Sources explains backend 409 when a monitoring profile still references the source', async ({ page }) => {
+  await page.route('**/api/v1/**', async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    if (url.pathname === '/api/v1/sources' && request.method() === 'GET') {
+      return fulfillJson(route, [sourceFixture]);
+    }
+    if (url.pathname === `/api/v1/sources/${sourceFixture.id}` && request.method() === 'DELETE') {
+      return route.fulfill({ status: 409 });
+    }
+    return rejectUnexpectedApi(route);
+  });
+
+  await page.goto('/sources');
+  page.once('dialog', (dialog) => void dialog.accept());
+  await page.getByRole('button', { name: `Delete source ${sourceFixture.name}` }).click();
+
+  await expect(page.getByRole('alert')).toContainText(
+    'Source cannot be deleted while it is referenced by a Monitoring Profile.',
+  );
+  await expect(page.getByRole('row', { name: new RegExp(sourceFixture.name) })).toBeVisible();
+});
+
 test('Monitoring Profiles creates persisted source membership and schedule configuration', async ({ page }) => {
   const profiles: MonitoringProfile[] = [monitoringProfileFixture];
 
@@ -171,7 +218,7 @@ test('Monitoring Profiles creates persisted source membership and schedule confi
     .fill(String(createdMonitoringProfileFixture.collectionIntervalMinutes));
   await page.getByLabel(`Use source ${createdSourceFixture.name}`).check();
   await page.getByLabel(`Use source ${sourceFixture.name}`).check();
-  await page.getByLabel('Set profile-specific Analysis settings').check();
+  await page.getByLabel('Filter relevance by keywords').check();
   await page
     .getByLabel('Analysis keywords (one per line)')
     .fill(createdMonitoringProfileFixture.analysisSettings.keywords.join('\n'));
@@ -190,14 +237,14 @@ test('Monitoring Profiles creates persisted source membership and schedule confi
 });
 
 
-test('Monitoring Profiles omits Analysis settings when backend defaults are selected on create', async ({ page }) => {
+test('Monitoring Profiles creates all-relevant settings when keyword filtering is disabled', async ({ page }) => {
   const defaultedProfile: MonitoringProfile = {
     ...createdMonitoringProfileFixture,
     id: '33333333-3333-4333-8333-333333333333',
     name: 'Backend default analysis profile',
     sourceIds: [sourceFixture.id],
     criteria: {},
-    analysisSettings: monitoringProfileFixture.analysisSettings,
+    analysisSettings: { keywords: [], minimumMatches: 0 },
   };
   const profiles: MonitoringProfile[] = [];
 
@@ -219,6 +266,7 @@ test('Monitoring Profiles omits Analysis settings when backend defaults are sele
         collectionIntervalMinutes: defaultedProfile.collectionIntervalMinutes,
         sourceIds: defaultedProfile.sourceIds,
         criteria: {},
+        analysisSettings: { keywords: [], minimumMatches: 0 },
       });
       profiles.push(defaultedProfile);
       return fulfillJson(route, defaultedProfile, 201);
@@ -228,8 +276,8 @@ test('Monitoring Profiles omits Analysis settings when backend defaults are sele
 
   await page.goto('/profiles');
 
-  await expect(page.getByLabel('Set profile-specific Analysis settings')).not.toBeChecked();
-  await expect(page.getByText(/backend apply its configured Analysis defaults/)).toBeVisible();
+  await expect(page.getByLabel('Filter relevance by keywords')).not.toBeChecked();
+  await expect(page.getByText(/Every newly analyzed item is classified as relevant/)).toBeVisible();
   await page.getByLabel('Name').fill(defaultedProfile.name);
   await page.getByLabel('Information category').fill(defaultedProfile.informationCategory);
   await page
@@ -316,10 +364,22 @@ test('Monitoring Profiles edits Analysis settings and preserves them in enabled-
   });
 
   await page
+    .getByRole('button', { name: `Edit monitoring profile ${profile.name}` })
+    .click();
+  await page.getByLabel('Filter relevance by keywords').uncheck();
+  await expect(page.getByText(/Every newly analyzed item is classified as relevant/)).toBeVisible();
+  await page.getByRole('button', { name: 'Save changes' }).click();
+
+  await expect.poll(() => putPayloads.length).toBe(3);
+  expect(putPayloads[2]).toMatchObject({
+    analysisSettings: { keywords: [], minimumMatches: 0 },
+  });
+
+  await page
     .getByRole('button', { name: `Disable monitoring profile ${profile.name}` })
     .click();
-  await expect.poll(() => putPayloads.length).toBe(3);
-  expect(putPayloads[2]).toEqual({
+  await expect.poll(() => putPayloads.length).toBe(4);
+  expect(putPayloads[3]).toEqual({
     name: profile.name,
     informationCategory: profile.informationCategory,
     enabled: false,
