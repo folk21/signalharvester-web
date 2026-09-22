@@ -91,9 +91,11 @@ export function monitoringProfileToFormValues(
     collectionIntervalMinutes: String(profile.collectionIntervalMinutes),
     sourceIds: [...profile.sourceIds],
     criteriaText: JSON.stringify(profile.criteria, null, 2),
-    analysisSettingsEnabled: true,
+    analysisSettingsEnabled: profile.analysisSettings.keywords.length > 0,
     analysisKeywordsText: profile.analysisSettings.keywords.join('\n'),
-    analysisMinimumMatches: String(profile.analysisSettings.minimumMatches),
+    analysisMinimumMatches: profile.analysisSettings.keywords.length > 0
+      ? String(profile.analysisSettings.minimumMatches)
+      : '',
   };
 }
 
@@ -120,7 +122,12 @@ function validateAnalysisSettings(values: MonitoringProfileFormValues): {
   error?: string;
 } {
   if (!values.analysisSettingsEnabled) {
-    return {};
+    return {
+      settings: {
+        keywords: [],
+        minimumMatches: 0,
+      },
+    };
   }
 
   const keywords = values.analysisKeywordsText

@@ -141,7 +141,7 @@ Umbrella:
 
 Current implementation focus:
 
-- none; there is currently no bounded frontend implementation sub-spec.
+- [`active/subspecs/ui-analysis-all-relevant-source-delete.md`](active/subspecs/ui-analysis-all-relevant-source-delete.md) — all-relevant Monitoring Profile Analysis UX plus Source delete success/conflict coverage; verification pending.
 
 ## Recently completed sub-specifications
 

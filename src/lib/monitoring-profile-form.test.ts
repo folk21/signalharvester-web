@@ -49,7 +49,7 @@ describe('validateMonitoringProfileForm', () => {
     });
   });
 
-  it('omits Analysis settings on create when backend defaults are requested', () => {
+  it('sends explicit all-relevant Analysis settings when keyword filtering is disabled', () => {
     const result = validateMonitoringProfileForm({
       name: 'Default analysis',
       informationCategory: 'GENERAL',
@@ -69,6 +69,10 @@ describe('validateMonitoringProfileForm', () => {
       collectionIntervalMinutes: 30,
       sourceIds: ['source-a'],
       criteria: {},
+      analysisSettings: {
+        keywords: [],
+        minimumMatches: 0,
+      },
     });
   });
 
@@ -105,6 +109,13 @@ describe('validateMonitoringProfileForm', () => {
         criteriaText: '{"minimumScore":0.8}',
       }).error,
     ).toContain('must be a string');
+
+    expect(
+      validateMonitoringProfileForm({
+        ...validBase,
+        criteriaText: '{"keywords":["earthquake","magnitude"],"minimumMatches":1}',
+      }).error,
+    ).toContain('Criterion "keywords" must be a string');
   });
 
   it('validates explicit Analysis settings using published contract constraints', () => {
@@ -162,6 +173,17 @@ describe('Monitoring Profile contract mapping', () => {
       analysisSettingsEnabled: true,
       analysisKeywordsText: 'java\nkafka',
       analysisMinimumMatches: '2',
+    });
+  });
+
+  it('initializes all-relevant profiles with keyword filtering disabled', () => {
+    expect(monitoringProfileToFormValues({
+      ...profile,
+      analysisSettings: { keywords: [], minimumMatches: 0 },
+    })).toMatchObject({
+      analysisSettingsEnabled: false,
+      analysisKeywordsText: '',
+      analysisMinimumMatches: '',
     });
   });
 

@@ -4,6 +4,7 @@ title: SignalHarvester Web initial product specification
 description: Active frontend umbrella specification for configuration, operational inspection, Results, live updates, and event-flow diagnostics.
 document_role: umbrella
 spec_status: active
+current_focus: subspecs/ui-analysis-all-relevant-source-delete.md
 ---
 # SignalHarvester Web initial product specification
 
@@ -17,7 +18,7 @@ Frontend implementation details belong here rather than in the backend repositor
 
 ## Current implementation focus
 
-There is currently no bounded frontend implementation focus. Production-oriented Results browsing is accepted after the developer confirmed the canonical frontend gate passed; the completed sub-spec is archived. The next bounded slice should be created only for a concrete product, operational, or contract-consumption need.
+The current bounded frontend focus is `ui-analysis-all-relevant-source-delete`: align Monitoring Profile UX with the backend all-relevant default, clarify typed Analysis settings versus generic criteria, and harden Source delete feedback/tests.
 
 Typed Monitoring Profile Analysis settings were accepted on 2026-09-21 after the canonical frontend gate passed and are archived.
 
